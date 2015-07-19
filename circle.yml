@@ -3,4 +3,4 @@ test:
     - pip install flake8
     - flake8 . humilis
     - pip install -r test-requirements.txt
-    - py.test
+    - py.test tests
