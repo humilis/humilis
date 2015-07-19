@@ -1,6 +1,10 @@
 # humilis
 Helps you deploy AWS infrastructure (based on the cumulus project)
 
+Build status
+----------------------------------
+[![Circle CI](https://circleci.com/gh/germangh/humilis/tree/master.svg?style=svg)](https://circleci.com/gh/germangh/humilis/tree/master)
+
 This project is heavily based on
 [cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py). 
 I decided to create a new repository instead of forking the cumulus project
