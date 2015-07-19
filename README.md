@@ -11,5 +11,5 @@ This project is based on the
 project. See [CUMULUS_LICENSE][cumulus_licence] for license information.
 
 [cumulus]: https://github.com/cotdsa/cumulus
-[CUMULUS_LICENSE]: https://github.com/germangh/humilis/blob/master/CUMULUS_LICENSE
+[cumulus_license]: https://github.com/germangh/humilis/blob/master/CUMULUS_LICENSE
 
