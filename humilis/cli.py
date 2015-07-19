@@ -8,6 +8,7 @@ LOG_LEVELS = ['critical', 'error', 'warning', 'info', 'debug']
 
 
 def validate_log_level(ctx, param, value):
+    value = value.lower()
     if value not in LOG_LEVELS:
         raise click.BadParameter('Should one of %s' % LOG_LEVELS)
 
