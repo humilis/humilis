@@ -8,7 +8,7 @@ Build status
 
 This project is based on the
 [cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py).
-project. See [CUMULUS_LICENSE][cumulus_licence] for license information.
+project. See [CUMULUS_LICENSE][cumulus_license] for license information.
 
 [cumulus]: https://github.com/cotdsa/cumulus
 [cumulus_license]: https://github.com/germangh/humilis/blob/master/CUMULUS_LICENSE
