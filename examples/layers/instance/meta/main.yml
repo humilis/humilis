@@ -1,0 +1,6 @@
+---
+aws-template-version: 2010-09-09
+description:
+    Creates a VPC ready for instances
+dependencies:
+    - { layer: vpc, some_parameter: 3 }

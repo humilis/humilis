@@ -1,0 +1,4 @@
+---
+aws-template-version: 2010-09-09
+description:
+    Creates a VPC ready for instances
