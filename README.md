@@ -1,14 +1,15 @@
 # humilis
-Helps you deploy AWS infrastructure (based on the cumulus project)
+Helps you deploy AWS infrastructure.
+
 
 Build status
 ----------------------------------
 [![Circle CI](https://circleci.com/gh/germangh/humilis/tree/master.svg?style=svg)](https://circleci.com/gh/germangh/humilis/tree/master)
 
-This project is heavily based on
-[cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py). 
-I decided to create a new repository instead of forking the cumulus project
-because I am planning to make some major changes that will break backwards 
-compatibility. Also, the development of cumulus seems to have stopped 
-and their maintainers are not merging pull requests all that quickly. The 
-original cumulus licence is included in file CUMULUS_LICENSE.
+This project is based on the
+[cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py).
+project. See [CUMULUS_LICENSE][cumulus_licence] for license information.
+
+[cumulus]: https://github.com/cotdsa/cumulus
+[CUMULUS_LICENSE]: https://github.com/germangh/humilis/blob/master/CUMULUS_LICENSE
+
