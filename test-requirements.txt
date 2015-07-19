@@ -1,0 +1,5 @@
+PyYAML
+click
+boto
+jinja2
+pytest

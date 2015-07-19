@@ -12,10 +12,10 @@ setup(
     include_package_data=True,
     install_requires=[
         'PyYAML',
-        'click',
+        'Click',
         'boto',
         'jinja2'],
     entry_points={
         'console_scripts': [
-            'humilis=humilis:cli']}
+            'humilis=humilis.cli:main']}
 )
