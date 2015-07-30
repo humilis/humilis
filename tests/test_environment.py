@@ -5,7 +5,6 @@
 import pytest
 import os
 from humilis.environment import Environment
-from humilis.cloudformation import CloudFormation
 
 
 @pytest.yield_fixture(scope="module")

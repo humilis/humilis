@@ -69,10 +69,11 @@ def delete_layer(cfc, layer):
         cfc.delete_stack(layer.name)
 
 
-def wait_for_layer_to_be_deleted(cfc, layer, nb_seconds=2):
-    curr_status = 'DELETE'
+def wait_for_status_change(cfc, layer, status, nb_seconds=2):
     counter = 0
-    while curr_status:
+    curr_status = status
+    time.sleep(1)
+    while curr_status and curr_status == status:
         time.sleep(1)
         counter += 1
         statuses = get_cf_statuses(cfc)
@@ -139,7 +140,8 @@ def test_create_and_delete_stack(humilis_vpc_layer):
 
     # Delete the stack
     humilis_vpc_layer.delete()
-    wait_for_layer_to_be_deleted(cf_connection, humilis_vpc_layer, 20)
+    wait_for_status_change(cf_connection, humilis_vpc_layer,
+                           'DELETE_IN_PROGRESS', 40)
     statuses = get_cf_statuses(cf_connection)
     assert humilis_vpc_layer.name not in statuses
 
@@ -153,3 +155,11 @@ def test_create_stack_lacking_dependencies(humilis_instance_layer):
     time.sleep(2)
     statuses = get_cf_statuses(cf_connection)
     assert humilis_instance_layer.name not in statuses
+
+
+def test_create_dependant_stack(humilis_vpc_layer, humilis_instance_layer):
+    """Creates two stacks, the second depending on the first"""
+    statuses = get_cf_statuses(cf_connection)
+    assert humilis_vpc_layer.name not in statuses
+    wait_for_status_change(cf_connection, humilis_vpc_layer,
+                           'CREATE_IN_PROGRESS')
