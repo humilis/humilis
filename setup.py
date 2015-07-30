@@ -15,6 +15,8 @@ setup(
         'Click',
         'boto',
         'jinja2'],
+    classifiers=[
+        "Programming Language :: Python :: 3"],
     entry_points={
         'console_scripts': [
             'humilis=humilis.cli:main']}
