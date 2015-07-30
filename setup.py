@@ -6,6 +6,7 @@ setup(
     version="0.3a0",
     author="German Gomez-Herrero",
     author_email='g@germangh.com',
+    url='http://github.com/germangh/humilis',
     license='Apache Software License 2.0',
     description='Manages AWS Cloudformation stacks',
     packages=find_packages(),
