@@ -15,6 +15,13 @@ import io
 import time
 
 
+class FileFormatError(Exception):
+    def __init__(self, filename, logger):
+        message = "Wrongly formatted file: {}".format(filename)
+        super().__init__(message)
+        logger.critical(message)
+
+
 class Layer():
     """
     A layer of infrastructure that translates into a single cloudformation (CF)
@@ -100,8 +107,7 @@ class Layer():
                 continue
 
             if len(this_data) != 1:
-                self.logger.critical("Wrongly formatted file: %s" % filename)
-                exit(1)
+                raise FileFormatError(filename, self.logger)
 
             data_key = list(this_data.keys())[0]
             if data_key.lower() != section.lower():
