@@ -1,0 +1,20 @@
+{
+    "Resources": {
+    "VPC": {
+      "Type": "AWS::EC2::VPC",
+      "Properties": {
+        "CidrBlock": "{{ vpc_cidr }}"
+      }
+    },
+    "Subnet": {
+      "Type": "AWS::EC2::Subnet",
+      "Properties": {
+        "VpcId": {
+          "Ref": "VPC"
+        },
+        "CidrBlock": "{{ subnet_cidr}}"
+      }
+    }
+}
+}
+

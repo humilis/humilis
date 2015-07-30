@@ -3,8 +3,11 @@
 
 
 from click.testing import CliRunner
+import humilis
 import humilis.cli
 import pytest
+import humilis.config as config
+import os
 
 
 ENV_ACTIONS = ['create', 'delete']
@@ -16,9 +19,17 @@ def runner():
     yield CliRunner()
 
 
-def test_actions(runner):
+@pytest.yield_fixture(scope="module")
+def humilis_example_environment():
+    yield os.path.join(humilis.__path__[0], '..', 'examples',
+                       'example-environment.yml')
+
+
+def test_actions(runner, humilis_example_environment):
     for action in ENV_ACTIONS:
-        result = runner.invoke(humilis.cli.main, [action, 'testenv'])
+        result = runner.invoke(humilis.cli.main, [action,
+                                                  '--pretend',
+                                                  humilis_example_environment])
         assert result.exit_code == 0
 
 
@@ -35,22 +46,37 @@ def test_invalid_log_level(runner):
     assert isinstance(result.exception, SystemExit)
 
 
-def test_valid_log_level(runner):
+def test_valid_log_level(runner, humilis_example_environment):
     for level in ['critical', 'error', 'warning', 'info', 'debug']:
         result = runner.invoke(humilis.cli.main, ['--log', level, 'create',
-                                                  'testenv'])
+                                                  humilis_example_environment,
+                                                  '--pretend'])
         assert result.exit_code == 0
 
 
-def test_invalid_botolog_level(runner):
+def test_invalid_botolog_level(runner, humilis_example_environment):
     result = runner.invoke(humilis.cli.main, ['--log', 'invalid', 'create',
-                                              'testenv'])
+                                              humilis_example_environment,
+                                              '--pretend'])
     assert result.exit_code > 0
     assert isinstance(result.exception, SystemExit)
 
 
-def test_valid_botolog_level(runner):
+def test_valid_botolog_level(runner, humilis_example_environment):
     for level in LOG_LEVELS:
         result = runner.invoke(humilis.cli.main, ['--log', level, 'create',
-                                                  'testenv'])
+                                                  humilis_example_environment,
+                                                  '--pretend'])
         assert result.exit_code == 0
+
+
+def test_invalid_region(runner):
+    result = runner.invoke(humilis.cli.create, ['--region', 'invalid_region',
+                                                '--pretend'])
+    assert result.exit_code > 0
+
+
+def test_default_region_should_be_valid(runner):
+    result = runner.invoke(humilis.cli.create, ['--region', config.region,
+                                                '--pretend'])
+    assert result.exit_code > 0

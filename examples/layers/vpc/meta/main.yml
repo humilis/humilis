@@ -1,4 +1,14 @@
 ---
-aws-template-version: 2010-09-09
-description:
-    Creates a VPC ready for instances
+meta:
+    description:
+        Creates a VPC ready for instances
+    parameters:
+        # Meta-parameters. These parameters are sent to jinja2 when compiling 
+        # jinja2 templates. You must give defaults to ALL parameters that 
+        # appear in your layer templates.
+        vpc_cidr:
+            description: The CIDR block of the generated VPC
+            value: 10.0.0.0/16
+        subnet_cidr:
+            description: The CIDR block of the subnet that will hold instances
+            value: 10.0.0.0/24
