@@ -36,7 +36,7 @@ def humilis_layer(humilis_environment, cf_connection):
 def cf_connection():
     yield boto.cloudformation.connect_to_region(
         config.region,
-        aws_access_key=os.environ.get('AWS_ACCESS_KEY'),
+        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
         aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
 
 

@@ -10,17 +10,17 @@ class CloudFormation:
     """
     A proxy to AWS CloudFormation service
     """
-    def __init__(self, region, aws_access_key=None,
+    def __init__(self, region, aws_access_key_id=None,
                  aws_secret_access_key=None):
         self.region = region
-        if aws_access_key is None:
-            aws_access_key = os.environ.get('AWS_ACCESS_KEY')
+        if aws_access_key_id is None:
+            aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
         if aws_secret_access_key is None:
             aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
 
         self.connection = boto.cloudformation.connect_to_region(
             self.region,
-            aws_access_key_id=aws_access_key,
+            aws_access_key_id=aws_access_key_id,
             aws_secret_access_key=aws_secret_access_key)
 
     @property
