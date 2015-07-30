@@ -34,7 +34,10 @@ def humilis_layer(humilis_environment, cf_connection):
 
 @pytest.yield_fixture(scope="module")
 def cf_connection():
-    yield boto.cloudformation.connect_to_region(config.region)
+    yield boto.cloudformation.connect_to_region(
+        config.region,
+        aws_access_key=os.environ.get('AWS_ACCESS_KEY'),
+        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
 
 
 @pytest.yield_fixture(scope="module")
