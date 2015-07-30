@@ -21,8 +21,7 @@ def runner():
 
 @pytest.yield_fixture(scope="module")
 def humilis_example_environment():
-    yield os.path.join(humilis.__path__[0], '..', 'examples',
-                       'example-environment.yml')
+    yield os.path.join('examples', 'example-environment.yml')
 
 
 def test_actions(runner, humilis_example_environment):
