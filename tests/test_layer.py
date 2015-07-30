@@ -27,6 +27,9 @@ def humilis_vpc_layer(humilis_environment, cf_connection):
     layer = Layer(humilis_environment, 'vpc')
     yield layer
     delete_layer(cf_connection, layer)
+    if layer.already_in_cf:
+        wait_for_status_change(cf_connection, layer, 'DELETE_IN_PROGRESS',
+                               2*60)
 
 
 @pytest.yield_fixture(scope="module")
@@ -34,6 +37,9 @@ def humilis_instance_layer(humilis_environment, cf_connection):
     layer = Layer(humilis_environment, 'instance')
     yield layer
     delete_layer(cf_connection, layer)
+    if layer.already_in_cf:
+        wait_for_status_change(cf_connection, layer, 'DELETE_IN_PROGRESS',
+                               2*60)
 
 
 @pytest.yield_fixture(scope="module")
@@ -69,7 +75,7 @@ def delete_layer(cfc, layer):
         cfc.delete_stack(layer.name)
 
 
-def wait_for_status_change(cfc, layer, status, nb_seconds=2):
+def wait_for_status_change(cfc, layer, status, nb_seconds=20):
     counter = 0
     curr_status = status
     time.sleep(1)
@@ -80,6 +86,11 @@ def wait_for_status_change(cfc, layer, status, nb_seconds=2):
         curr_status = statuses.get(layer.name)
         if counter >= nb_seconds:
             break
+
+
+def layer_in_cf(cfc, layer):
+    statuses = get_cf_statuses(cfc)
+    return layer.name in statuses
 
 
 def test_create_environment_object(humilis_environment):
@@ -157,9 +168,24 @@ def test_create_stack_lacking_dependencies(humilis_instance_layer):
     assert humilis_instance_layer.name not in statuses
 
 
-def test_create_dependant_stack(humilis_vpc_layer, humilis_instance_layer):
+def test_create_dependant_stack(cf_connection, humilis_vpc_layer,
+                                humilis_instance_layer):
     """Creates two stacks, the second depending on the first"""
     statuses = get_cf_statuses(cf_connection)
     assert humilis_vpc_layer.name not in statuses
+    humilis_vpc_layer.create()
     wait_for_status_change(cf_connection, humilis_vpc_layer,
-                           'CREATE_IN_PROGRESS')
+                           'CREATE_IN_PROGRESS', 2*60)
+    assert layer_in_cf(cf_connection, humilis_vpc_layer)
+    humilis_instance_layer.create()
+    wait_for_status_change(cf_connection, humilis_instance_layer,
+                           'CREATE_IN_PROGRESS', 2*60)
+    assert layer_in_cf(cf_connection, humilis_instance_layer)
+    delete_layer(cf_connection, humilis_instance_layer)
+    wait_for_status_change(cf_connection, humilis_instance_layer,
+                           'DELETE_IN_PROGRESS', 4*60)
+    assert not layer_in_cf(cf_connection, humilis_instance_layer)
+    delete_layer(cf_connection, humilis_vpc_layer)
+    wait_for_status_change(cf_connection, humilis_vpc_layer,
+                           'DELETE_IN_PROGRESS', 2*60)
+    assert not layer_in_cf(cf_connection, humilis_vpc_layer)

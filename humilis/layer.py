@@ -16,10 +16,17 @@ import time
 
 
 class FileFormatError(Exception):
-    def __init__(self, filename, logger):
+    def __init__(self, filename, logger=None):
         message = "Wrongly formatted file: {}".format(filename)
         super().__init__(message)
         logger.critical(message)
+
+
+class ReferenceError(Exception):
+    def __init__(self, ref, msg, logger=None):
+        msg = "Can't parse reference {}: {}".format(ref, msg)
+        super().__init__(msg)
+        logger.critical(msg)
 
 
 class Layer():
@@ -152,6 +159,7 @@ class Layer():
         cf_template = {
             'AWSTemplateFormatVersion': str(config.cf_template_version),
             'Description': self.meta.get('description', ''),
+            'Mappings': self.section.get('mappings', {}),
             'Parameters': self.section.get('parameters', {}),
             'Resources': self.section.get('resources', {}),
             'Outputs': self.section.get('outputs', {})
@@ -211,21 +219,23 @@ class Layer():
         Resolves a reference to an existing stack component
         """
         try:
-            layer_name, component_name, item_name, prop_name = ref.split('/')
+            layer_name, resource_name = ref.split('/')
         except ValueError:
-            error_msg = "Can't parse reference {}".format(ref)
-            self.logger.critical(error_msg)
-            raise
+            raise ReferenceError(ref, ValueError, self.logger)
         stack_name = "{}-{}".format(self.env_name, layer_name)
         stack = self.cf.get_stack(stack_name)
-        component = getattr(stack, component_name, None)
-        prop_value = getattr(component, prop_name, None)
-        if prop_value is None:
-            error_msg = "Layer {layer}: Can't dereference {ref}".format(
-                ref=ref, layer=self.relname)
-            self.logger.critical(error_msg)
-            exit(1)
-        return prop_value
+        resource = [x for x in stack.describe_resources()
+                    if x.logical_resource_id == resource_name]
+        if len(resource) != 1:
+            all_stack_resources = [x.logical_resource_id for x
+                                   in stack.describe_resources()]
+            msg = "{} does not exist in stack {} (with resources {})".format(
+                resource_name, stack_name, all_stack_resources)
+            raise ReferenceError(ref, msg, self.logger)
+        else:
+            resource = resource[0]
+
+        return resource.physical_resource_id
 
     def delete(self):
         """Deletes a stack in CF"""

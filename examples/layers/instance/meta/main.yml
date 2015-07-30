@@ -14,14 +14,13 @@ meta:
             value: m1.small
         keyname:
             description: The name of the key granting SSH access to the instance
-            value: humilis-test-key
+            value: humilis-key
         vpc:
             description: The physical ID of the VPC where the image will be created
             value:
-                ref: vpc/resources/Vpc/physical_resource_id
+                ref: vpc/VPC
         subnet:
             description: The physical ID of the subnet where the instance will be 
                 launched
             value: 
-                - ref: vpc/resources/SubNetA/physical_resource_id
-                - ref: vpc/resources/SubNetB/physical_resource_id
+                ref: vpc/Subnet
