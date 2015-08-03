@@ -1,7 +1,11 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
+
+# For Python 2.x compatibility
+from __future__ import print_function
 import boto.ec2
 import os
-
-
 import humilis.config as config
 import logging
 from humilis.exceptions import CloudFormationError

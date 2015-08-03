@@ -15,7 +15,7 @@ test_key = 'humilis-testkey'
 keys_dir = os.path.join(os.path.expanduser('~'), '.ssh')
 
 # Default amount of time to wait for CF to carry out an operation
-default_wait = 5*60
+default_wait = 10*60
 
 cf_template_version = datetime.date(2010, 9, 9)
 layer_sections = ['parameters', 'mappings', 'resources']

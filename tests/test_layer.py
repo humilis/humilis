@@ -44,15 +44,14 @@ def humilis_environment(humilis_example_environment):
 def humilis_vpc_layer(cf, humilis_environment):
     layer = Layer(humilis_environment, 'vpc')
     yield layer
-    # Delete the stack and allow it to take at most 5 minutes
-    cf.delete_stack(layer.name, wait=5*60)
+    cf.delete_stack(layer.name)
 
 
 @pytest.yield_fixture(scope="module")
 def humilis_instance_layer(cf, humilis_environment, humilis_testkey):
     layer = Layer(humilis_environment, 'instance', keyname=humilis_testkey)
     yield layer
-    cf.delete_stack(layer.name, wait=5*60)
+    cf.delete_stack(layer.name)
 
 
 def test_create_environment_object(humilis_environment):

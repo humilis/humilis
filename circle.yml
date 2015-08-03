@@ -6,4 +6,4 @@ test:
     - py.test tests
 machine:
   python:
-    version: 3.4.2
+    version: 2.7
