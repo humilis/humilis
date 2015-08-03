@@ -54,14 +54,6 @@ def humilis_instance_layer(cf, humilis_environment, humilis_testkey):
     cf.delete_stack(layer.name)
 
 
-def test_create_environment_object(humilis_environment):
-    env = humilis_environment
-    assert env.name == 'example-environment'
-    assert env.region == config.region
-    assert isinstance(env.cf, CloudFormation)
-    assert env.tags.get('humilis-environment') == env.name
-
-
 def test_create_layer_object(humilis_environment, humilis_vpc_layer):
     layer = humilis_vpc_layer
     assert layer.relname == 'vpc'

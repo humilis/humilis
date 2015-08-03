@@ -51,7 +51,7 @@ class EC2:
         with open(target_file, 'a') as f:
             print(key.material, file=f)
 
-    def delete_key_pair(self, key_name, key_path):
+    def delete_key_pair(self, key_name):
         if not self.key_pair_exists(key_name):
             msg = "Key {} does not exist: cannot delete it".format(key_name)
             self.logger.info(msg)

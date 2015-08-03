@@ -13,6 +13,7 @@ import jinja2
 import json
 import io
 import time
+import datetime
 
 
 class FileFormatError(Exception):
@@ -62,7 +63,9 @@ class Layer():
 
         self.region = environment.region
         self.sns_topic_arn = environment.sns_topic_arn
-        self.tags = {'humilis-layer': self.name}
+        self.tags = {
+            'humilis-layer': self.name,
+            'humilis-created-on': str(datetime.datetime.now())}
         for tagname, tagvalue in environment.tags.items():
             self.tags[tagname] = tagvalue
 

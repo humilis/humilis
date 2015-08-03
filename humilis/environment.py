@@ -51,6 +51,13 @@ class Environment():
         for layer in self.layers:
             layer.create()
 
+    def delete(self):
+        """
+        Deletes all layers in an environment
+        """
+        for layer in reversed(self.layers):
+            layer.delete()
+
     def __repr__(self):
         return str(self)
 
