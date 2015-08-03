@@ -5,7 +5,7 @@
 import boto.cloudformation
 import os
 import time
-from humilis.exceptions import TakesTooLongError, CloudFormationError
+from humilis.exceptions import TakesTooLongError, CloudformationError
 import humilis.config as config
 import logging
 
@@ -60,7 +60,7 @@ class CloudFormation:
         if stack_status and stack_status.find('FAILED') > -1:
             msg = "Failed to delete stack {}. Stack status is {}.".format(
                 stack_name, stack_status)
-            raise CloudFormationError(msg, logger=self.logger)
+            raise CloudformationError(msg, logger=self.logger)
 
     def create_stack(self, stack_name, **kwargs):
         """Creates a CF stack, unless it already exists"""
@@ -78,7 +78,7 @@ class CloudFormation:
         if stack_status.find('FAILED') > -1:
             msg = "Failed to create stack {}. Stack status is {}.".format(
                 stack_name, stack_status)
-            raise CloudFormationError(msg, logger=self.logger)
+            raise CloudformationError(msg, logger=self.logger)
 
     def stack_exists(self, stack_name):
         """Checks whether a stack exists in CF"""

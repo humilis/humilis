@@ -8,7 +8,7 @@ import boto.ec2
 import os
 import humilis.config as config
 import logging
-from humilis.exceptions import CloudFormationError
+from humilis.exceptions import CloudformationError
 
 
 class EC2:
@@ -60,7 +60,7 @@ class EC2:
             success = self.connection.delete_key_pair(key_name)
             if not success:
                 msg = "CF failed to create key {}".format(key_name)
-                raise CloudFormationError(msg, logger=self.logger)
+                raise CloudformationError(msg, logger=self.logger)
             return True
 
     def key_pair_exists(self, key_name):

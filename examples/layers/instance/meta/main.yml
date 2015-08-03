@@ -14,7 +14,7 @@ meta:
             value: m1.small
         keyname:
             description: The name of the key granting SSH access to the instance
-            value: humilis-key
+            value: humilis-testkey
         vpc:
             description: The physical ID of the VPC where the image will be created
             value:

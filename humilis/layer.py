@@ -5,59 +5,41 @@
 import os
 import os.path
 import re
-import yaml
 import logging
 import humilis.config as config
-from sys import exit
-import jinja2
+from humilis.utils import DirTreeBackedObject
+from humilis.exceptions import ReferenceError, CloudformationError
 import json
-import io
 import time
 import datetime
 
 
-class FileFormatError(Exception):
-    def __init__(self, filename, logger=None):
-        message = "Wrongly formatted file: {}".format(filename)
-        super().__init__(message)
-        if logger:
-            logger.critical(message)
-
-
-class ReferenceError(Exception):
-    def __init__(self, ref, msg, logger=None):
-        msg = "Can't parse reference {}: {}".format(ref, msg)
-        super().__init__(msg)
-        if logger:
-            logger.critical(msg)
-
-
-class CloudformationError(Exception):
-    def __init__(self, msg, cf_exception, logger=None):
-        msg = "{}: {}".format(msg, cf_exception)
-        super().__init__(msg)
-        if logger:
-            logger.critical(msg)
-
-
-class Layer():
+class Layer(DirTreeBackedObject):
     """
     A layer of infrastructure that translates into a single cloudformation (CF)
     stack.
     """
 
-    def __init__(self, environment, name, **user_params):
+    def __init__(self, environment, name, logger=None, loader=None,
+                 **user_params):
         self.__environment_repr = repr(environment)
         self.cf = environment.cf
-        self.logger = logging.getLogger(__name__)
+        if logger is None:
+            self.logger = logging.getLogger(__name__)
+        else:
+            self.logger = logger
         self.name = "{}-{}".format(environment.name, name)
         self.relname = name
         self.env_name = environment.name
         self.env_basedir = environment.basedir
         self.depends_on = []
         self.section = {}
+        if loader is None:
+            loader = DirTreeBackedObject(self.basedir, self.logger)
+        self.loader = loader
+        self.children = set()
 
-        self.meta = self.load_section('meta', self.get_section_files('meta'))
+        self.meta = self.loader.load_section('meta')
         for dep in self.meta.get('dependencies', []):
             self.depends_on.append("{}-{}".format(environment.name, dep))
 
@@ -99,74 +81,32 @@ class Layer():
         """
         return self.name in {stk.stack_name for stk in self.cf.stacks}
 
-    def get_section_files(self, section):
+    @property
+    def children_in_cf(self):
         """
-        Produces a list of all files associated with a layer section:
-        parameters, resources, mappings, meta, etc
+        List of (already created) children layers
         """
-        # We read all files within the section dir, and merge them in a dict
-        basedir = os.path.join(self.basedir, section)
-        section_files = []
-        for (dirpath, dirnames, filenames) in os.walk(basedir):
-            section_files += [os.path.join(dirpath, fn) for fn in filenames]
+        if self.already_in_cf:
+            clist = self.cf.get_stack(self.name).tags.get('humilis-children')
+            if len(clist) > 0:
+                return clist.split(',')
 
-        return section_files
-
-    def load_section(self, section, files):
+    def add_child(self, child_name):
         """
-        Reads all files associated with a layer section (parameters, resources,
-        mappings, etc)
+        Adds a child to this layer
         """
-        data = self.section.get(section, {})
-
-        for filename in files:
-            self.logger.info("Loading {}".format(filename))
-            with open(filename, 'r') as f:
-                this_data = self.load_file(filename, f)
-            if this_data is None:
-                continue
-
-            if len(this_data) != 1:
-                raise FileFormatError(filename, self.logger)
-
-            data_key = list(this_data.keys())[0]
-            if data_key.lower() != section.lower():
-                self.logger.critical("Error parsing %s: %s was expected but "
-                                     "%s was found" %
-                                     (filename, section.title(), data_key))
-                exit(1)
-            for k, v in list(this_data.values())[0].items():
-                data[k] = v
-
-        return data
-
-    def load_file(self, filename, f):
-        filename, file_ext = os.path.splitext(filename)
-        if file_ext in {'.yml', '.yaml'}:
-            data = yaml.load(f)
-        elif file_ext == '.json':
-            data = json.load(f)
-        elif file_ext == '.j2':
-            template = jinja2.Template(f.read())
-            params = {pname: p['value'] for pname, p in self.params.items()}
-            data = template.render(**params)
-            data = self.load_file(filename, io.StringIO(data))
-        else:
-            self.logger.critical("Error loading %s: unknown file "
-                                 "extension %s" % filename, file_ext)
-            exit(1)
-
-        return data
+        self.children.add(child_name)
+        self.tags['humilis-children'] = ','.join(self.children)
 
     def compile(self):
         """Loads all files associated to a layer"""
         # Some templates may refer to params, so populate them first
         self.populate_params()
+        self.loader.params = self.params
 
         # Load all files with layer contents
         for section in config.layer_sections:
-            section_files = self.get_section_files(section)
-            self.section[section] = self.load_section(section, section_files)
+            self.section[section] = self.loader.load_section(section)
 
         # Package the layer as a CF template
         cf_template = {
@@ -244,7 +184,7 @@ class Layer():
                                    in stack.describe_resources()]
             msg = "{} does not exist in stack {} (with resources {})".format(
                 resource_name, stack_name, all_stack_resources)
-            raise ReferenceError(ref, msg, self.logger)
+            raise ReferenceError(ref, msg, logger=self.logger)
         else:
             resource = resource[0]
 
@@ -254,7 +194,12 @@ class Layer():
         """Deletes a stack in CF"""
         msg = "Deleting stack {} from CF".format(self.name)
         self.logger.info(msg)
-        self.cf.delete_stack(self.name)
+        if self.children:
+            msg = "Layer {} has dependencies ({}) : will not be deleted".\
+                format(self.name, self.children)
+            self.logger.info(msg)
+        else:
+            self.cf.delete_stack(self.name)
 
     def create(self):
         """Creates a stack in CF"""
@@ -278,7 +223,7 @@ class Layer():
                 notification_arns=self.sns_topic_arn,
                 tags=self.tags)
         except Exception as exception:
-                raise CloudformationError(msg, exception)
+                raise CloudformationError(msg, exception, logger=self.logger)
 
         return cf_template
 
@@ -320,5 +265,9 @@ class Layer():
 
     def __str__(self):
         args = re.sub(r'\'(\w+)\'\s*:\s*', r'\1=', str(self.user_params))[1:-1]
-        return "Layer({env}, '{name}', {args})".format(
+        if len(args) > 0:
+            basestr = "Layer({env}, '{name}', {args})"
+        else:
+            basestr = "Layer({env}, '{name}')"
+        return basestr.format(
             env=self.__environment_repr, name=self.relname, args=args)

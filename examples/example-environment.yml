@@ -2,7 +2,8 @@
 example-environment:
     description:
         Adapted from the example mega-stack in the cumulus project
-    region: us-west-2
+    region: eu-west-1
     layers:
-        - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4}
+        # Layers will be created in the order given here
+        - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16}
         - {layer: instance}

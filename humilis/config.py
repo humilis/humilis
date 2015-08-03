@@ -8,7 +8,9 @@ import os
 
 # The name of the keypair to use for testing purposes. If this key does not
 # exist already in AWS, it will be automatically created when running the
-# test suite.
+# test suite. If you change the name of the testkey remember to modify
+# accordingly the default parameters of the instance layer. Otherwise the test
+# suite will break.
 test_key = 'humilis-testkey'
 
 # The local directory where SSH key pairs should be saved to
