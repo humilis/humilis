@@ -19,14 +19,24 @@ class FileFormatError(Exception):
     def __init__(self, filename, logger=None):
         message = "Wrongly formatted file: {}".format(filename)
         super().__init__(message)
-        logger.critical(message)
+        if logger:
+            logger.critical(message)
 
 
 class ReferenceError(Exception):
     def __init__(self, ref, msg, logger=None):
         msg = "Can't parse reference {}: {}".format(ref, msg)
         super().__init__(msg)
-        logger.critical(msg)
+        if logger:
+            logger.critical(msg)
+
+
+class CloudformationError(Exception):
+    def __init__(self, msg, cf_exception, logger=None):
+        msg = "{}: {}".format(msg, cf_exception)
+        super().__init__(msg)
+        if logger:
+            logger.critical(msg)
 
 
 class Layer():
@@ -48,7 +58,7 @@ class Layer():
 
         self.meta = self.load_section('meta', self.get_section_files('meta'))
         for dep in self.meta.get('dependencies', []):
-            self.depends_on.append("%s-%s" % (environment.name, dep))
+            self.depends_on.append("{}-{}".format(environment.name, dep))
 
         self.region = environment.region
         self.sns_topic_arn = environment.sns_topic_arn
@@ -241,24 +251,12 @@ class Layer():
         """Deletes a stack in CF"""
         msg = "Deleting stack {} from CF".format(self.name)
         self.logger.info(msg)
-        if not self.already_in_cf:
-            msg = ("Layer {layer} (stack {stack}) does not exist in "
-                   "CloudFormation, skipping".format(
-                       layer=self.relname, stack=self.name))
-            self.logger.info(msg)
-            return
         self.cf.delete_stack(self.name)
 
     def create(self):
         """Creates a stack in CF"""
         msg = "Starting checks for creation of layer {}".format(self.name)
         self.logger.info(msg)
-        if self.already_in_cf:
-            msg = ("Layer {layer} (stack {stack}) already exists in "
-                   "CloudFormation, skipping".format(
-                       layer=self.relname, stack=self.name))
-            self.logger.info(msg)
-            return
 
         if not self.dependencies_met:
             msg = "Dependencies for layer {layer} are not met, skipping"\
@@ -271,16 +269,13 @@ class Layer():
         # resources, but we add it  always for simplicity.
         try:
             self.cf.create_stack(
-                stack_name=self.name,
-                template_body=json.dumps(cf_template),
+                self.name,
+                template_body=json.dumps(cf_template, indent=4),
                 capabilities=['CAPABILITY_IAM'],
                 notification_arns=self.sns_topic_arn,
                 tags=self.tags)
         except Exception as exception:
-            self.logger.critical(
-                "Creating layer {} failed. Error: {}".format(
-                    self.name, exception))
-            exit(1)
+                raise CloudformationError(msg, exception)
 
         return cf_template
 

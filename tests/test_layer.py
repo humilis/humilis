@@ -7,9 +7,27 @@ import os
 from humilis.layer import Layer
 from humilis.environment import Environment
 from humilis.cloudformation import CloudFormation
+from humilis.ec2 import EC2
 import humilis.config as config
-import boto.cloudformation
-import time
+
+
+@pytest.yield_fixture(scope="module")
+def cf():
+    yield CloudFormation()
+
+
+@pytest.yield_fixture(scope="module")
+def ec2():
+    yield EC2()
+
+
+@pytest.yield_fixture(scope="module")
+def humilis_testkey(ec2):
+    # Create a keypair used for testing purposes
+    created = ec2.create_key_pair(config.test_key)
+    yield config.test_key
+    if created:
+        ec2.delete_key_pair(config.test_key)
 
 
 @pytest.yield_fixture(scope="module")
@@ -23,74 +41,18 @@ def humilis_environment(humilis_example_environment):
 
 
 @pytest.yield_fixture(scope="module")
-def humilis_vpc_layer(humilis_environment, cf_connection):
+def humilis_vpc_layer(cf, humilis_environment):
     layer = Layer(humilis_environment, 'vpc')
     yield layer
-    delete_layer(cf_connection, layer)
-    if layer.already_in_cf:
-        wait_for_status_change(cf_connection, layer, 'DELETE_IN_PROGRESS',
-                               2*60)
+    # Delete the stack and allow it to take at most 5 minutes
+    cf.delete_stack(layer.name, wait=5*60)
 
 
 @pytest.yield_fixture(scope="module")
-def humilis_instance_layer(humilis_environment, cf_connection):
-    layer = Layer(humilis_environment, 'instance')
+def humilis_instance_layer(cf, humilis_environment, humilis_testkey):
+    layer = Layer(humilis_environment, 'instance', keyname=humilis_testkey)
     yield layer
-    delete_layer(cf_connection, layer)
-    if layer.already_in_cf:
-        wait_for_status_change(cf_connection, layer, 'DELETE_IN_PROGRESS',
-                               2*60)
-
-
-@pytest.yield_fixture(scope="module")
-def cf_connection():
-    yield boto.cloudformation.connect_to_region(
-        config.region,
-        aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY'))
-
-
-@pytest.yield_fixture(scope="module")
-def cf_stacks(cf_connection):
-    yield cf_connection.describe_stacks()
-
-
-@pytest.yield_fixture(scope="function")
-def newly_created_cf_stack(humilis_vpc_layer):
-    yield humilis_vpc_layer.create()
-    time.sleep(5)
-    humilis_vpc_layer.delete()
-
-
-def get_cf_statuses(cf_connection):
-    conn = boto.cloudformation.connect_to_region(config.region)
-    stacks = {s.stack_name: s.stack_status for s in conn.describe_stacks()}
-    return stacks
-
-
-def delete_layer(cfc, layer):
-    statuses = get_cf_statuses(cfc)
-    if layer.name in statuses and \
-            not statuses[layer.name].startswith('DELETE'):
-        cfc.delete_stack(layer.name)
-
-
-def wait_for_status_change(cfc, layer, status, nb_seconds=20):
-    counter = 0
-    curr_status = status
-    time.sleep(1)
-    while curr_status and curr_status == status:
-        time.sleep(1)
-        counter += 1
-        statuses = get_cf_statuses(cfc)
-        curr_status = statuses.get(layer.name)
-        if counter >= nb_seconds:
-            break
-
-
-def layer_in_cf(cfc, layer):
-    statuses = get_cf_statuses(cfc)
-    return layer.name in statuses
+    cf.delete_stack(layer.name, wait=5*60)
 
 
 def test_create_environment_object(humilis_environment):
@@ -136,56 +98,37 @@ def test_compile_template(humilis_vpc_layer):
            len(cf_template['Description']) > 0
 
 
-def test_create_and_delete_stack(humilis_vpc_layer):
+def test_create_and_delete_stack(cf, humilis_vpc_layer):
     """Creates a sample stack in CF"""
     # Make sure the stack wasn't there already
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_vpc_layer.name not in statuses
+    assert not cf.stack_exists(humilis_vpc_layer.name)
 
     # Create the stack, and make sure it has been pushed to CF
     cf_template = humilis_vpc_layer.create()
     assert isinstance(cf_template, dict)
-    time.sleep(2)
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_vpc_layer.name in statuses
+    assert cf.stack_ok(humilis_vpc_layer.name)
 
     # Delete the stack
     humilis_vpc_layer.delete()
-    wait_for_status_change(cf_connection, humilis_vpc_layer,
-                           'DELETE_IN_PROGRESS', 40)
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_vpc_layer.name not in statuses
+    assert not cf.stack_exists(humilis_vpc_layer.name)
 
 
-def test_create_stack_lacking_dependencies(humilis_instance_layer):
+def test_create_stack_lacking_dependencies(cf, humilis_instance_layer):
     """Attempts to create a stack lacking dependencies: exception"""
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_instance_layer.name not in statuses
+    assert not cf.stack_exists(humilis_instance_layer.name)
     # Should simply skip the layer since dependencies are not met
     humilis_instance_layer.create()
-    time.sleep(2)
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_instance_layer.name not in statuses
+    assert not cf.stack_exists(humilis_instance_layer.name)
 
 
-def test_create_dependant_stack(cf_connection, humilis_vpc_layer,
-                                humilis_instance_layer):
+def test_create_dependant_stack(cf, humilis_vpc_layer, humilis_instance_layer):
     """Creates two stacks, the second depending on the first"""
-    statuses = get_cf_statuses(cf_connection)
-    assert humilis_vpc_layer.name not in statuses
+    assert not cf.stack_exists(humilis_vpc_layer.name)
     humilis_vpc_layer.create()
-    wait_for_status_change(cf_connection, humilis_vpc_layer,
-                           'CREATE_IN_PROGRESS', 2*60)
-    assert layer_in_cf(cf_connection, humilis_vpc_layer)
+    assert cf.stack_ok(humilis_vpc_layer.name)
     humilis_instance_layer.create()
-    wait_for_status_change(cf_connection, humilis_instance_layer,
-                           'CREATE_IN_PROGRESS', 2*60)
-    assert layer_in_cf(cf_connection, humilis_instance_layer)
-    delete_layer(cf_connection, humilis_instance_layer)
-    wait_for_status_change(cf_connection, humilis_instance_layer,
-                           'DELETE_IN_PROGRESS', 4*60)
-    assert not layer_in_cf(cf_connection, humilis_instance_layer)
-    delete_layer(cf_connection, humilis_vpc_layer)
-    wait_for_status_change(cf_connection, humilis_vpc_layer,
-                           'DELETE_IN_PROGRESS', 2*60)
-    assert not layer_in_cf(cf_connection, humilis_vpc_layer)
+    assert cf.stack_ok(humilis_instance_layer.name)
+    humilis_instance_layer.delete()
+    assert not cf.stack_exists(humilis_instance_layer.name)
+    humilis_vpc_layer.delete()
+    assert not cf.stack_exists(humilis_vpc_layer.name)

@@ -3,7 +3,19 @@
 
 
 import datetime
+import os
 
+
+# The name of the keypair to use for testing purposes. If this key does not
+# exist already in AWS, it will be automatically created when running the
+# test suite.
+test_key = 'humilis-testkey'
+
+# The local directory where SSH key pairs should be saved to
+keys_dir = os.path.join(os.path.expanduser('~'), '.ssh')
+
+# Default amount of time to wait for CF to carry out an operation
+default_wait = 5*60
 
 cf_template_version = datetime.date(2010, 9, 9)
 layer_sections = ['parameters', 'mappings', 'resources']
