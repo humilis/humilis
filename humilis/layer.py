@@ -161,9 +161,14 @@ class Layer(DirTreeBackedObject):
         Parses yaml parameters
         """
         if isinstance(pval, list):
+            # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
         elif isinstance(pval, dict) and 'ref' in pval:
+            # Reference to a physical resource in another layer
             return self._resolve_ref(pval['ref'])
+        elif isinstance(pval, dict) and 'envvar' in pval:
+            # An environment variable
+            return os.environ(pval['envvar'])
         else:
             return pval
 
