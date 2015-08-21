@@ -54,6 +54,14 @@ def humilis_instance_layer(cf, humilis_environment, humilis_testkey):
     cf.delete_stack(layer.name)
 
 
+@pytest.yield_fixture(scope="module")
+def humilis_named_instance_layer(cf, humilis_environment, humilis_testkey):
+    layer = Layer(humilis_environment, 'namedinstance',
+                  keyname=humilis_testkey)
+    yield layer
+    cf.delete_stack(layer.name)
+
+
 def test_create_layer_object(humilis_environment, humilis_vpc_layer):
     layer = humilis_vpc_layer
     assert layer.relname == 'vpc'
@@ -121,5 +129,19 @@ def test_create_dependant_stack(cf, humilis_vpc_layer, humilis_instance_layer):
     assert cf.stack_ok(humilis_instance_layer.name)
     humilis_instance_layer.delete()
     assert not cf.stack_exists(humilis_instance_layer.name)
+    humilis_vpc_layer.delete()
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+
+
+def test_create_namedinstance_stack(cf, humilis_vpc_layer,
+                                    humilis_named_instance_layer):
+    """Creates an instance whose AMI uses a reference to the AMI tags"""
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+    humilis_vpc_layer.create()
+    assert cf.stack_ok(humilis_vpc_layer.name)
+    humilis_named_instance_layer.create()
+    assert cf.stack_ok(humilis_named_instance_layer.name)
+    humilis_named_instance_layer.delete()
+    assert not cf.stack_exists(humilis_named_instance_layer.name)
     humilis_vpc_layer.delete()
     assert not cf.stack_exists(humilis_vpc_layer.name)

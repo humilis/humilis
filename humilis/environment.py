@@ -88,8 +88,7 @@ class Environment():
 
     @property
     def already_in_cf(self):
-        """
-        Returns true if the environment has been already deployed to CF
+        """Returns true if the environment has been already deployed to CF
         """
         return self.name in {stk.tags.get('humilis-environment')
                              for stk in self.cf.stacks}

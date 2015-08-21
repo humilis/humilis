@@ -32,6 +32,7 @@ class EC2:
             aws_secret_access_key=aws_secret_access_key)
 
     def create_key_pair(self, key_name):
+        """Creates a keypair in AWS EC2, if it doesn't exist already"""
         if not self.key_pair_exists(key_name):
             key = self.connection.create_key_pair(key_name)
             self.save_key_pair(key)
@@ -43,6 +44,7 @@ class EC2:
             return False
 
     def save_key_pair(self, key):
+        """Saves an AWS keypair to a local directory"""
         target_file = os.path.join(config.keys_dir, key.name)
         if os.path.isfile(target_file):
             msg = "File {} already exists: will not be overwritten".format(
@@ -52,6 +54,7 @@ class EC2:
             print(key.material, file=f)
 
     def delete_key_pair(self, key_name):
+        """Deletes a keypair by name"""
         if not self.key_pair_exists(key_name):
             msg = "Key {} does not exist: cannot delete it".format(key_name)
             self.logger.info(msg)
@@ -64,8 +67,23 @@ class EC2:
             return True
 
     def key_pair_exists(self, key_name):
+        """Returns True if a key exists in AWS"""
         return key_name in [k.name for k
                             in self.connection.get_all_key_pairs()]
+
+    def get_ami_by_tag(self, tags):
+        """Gets a list of AMIs that have the specified tags and corresp. values
+        """
+        imgs = self.connection.get_all_images(owners='self')
+        sel_imgs = []
+        for img in imgs:
+            matched = True
+            for k, v in tags.items():
+                if k not in img.tags or v != img.tags[k]:
+                    matched = False
+            if matched:
+                sel_imgs.append(img)
+        return sel_imgs
 
     def __repr__(self):
         return str(self)

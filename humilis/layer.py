@@ -9,17 +9,14 @@ import logging
 import humilis.config as config
 from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
+from humilis.ec2 import EC2
 import json
 import time
 import datetime
 
 
 class Layer(DirTreeBackedObject):
-    """
-    A layer of infrastructure that translates into a single cloudformation (CF)
-    stack.
-    """
-
+    """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, logger=None, loader=None,
                  **user_params):
         self.__environment_repr = repr(environment)
@@ -70,31 +67,36 @@ class Layer(DirTreeBackedObject):
         # populated once the layers this layer depend on have been created.
         self.params = {}
 
+        # An EC2 object, to be lazily initialized
+        self.__ec2 = None
+
     @property
     def basedir(self):
         return os.path.join(self.env_basedir, 'layers', self.relname)
 
     @property
     def already_in_cf(self):
-        """
-        Returns true if the layer has been already deployed to CF
+        """Returns true if the layer has been already deployed to CF
         """
         return self.name in {stk.stack_name for stk in self.cf.stacks}
 
     @property
+    def ec2(self):
+        """Connection to AWS EC2 service"""
+        if self.__ec2 is None:
+            self.__ec2 = EC2()
+        return self.__ec2
+
+    @property
     def children_in_cf(self):
-        """
-        List of (already created) children layers
-        """
+        """List of (already created) children layers"""
         if self.already_in_cf:
             clist = self.cf.get_stack(self.name).tags.get('humilis-children')
             if len(clist) > 0:
                 return clist.split(',')
 
     def add_child(self, child_name):
-        """
-        Adds a child to this layer
-        """
+        """Adds a child to this layer"""
         self.children.add(child_name)
         self.tags['humilis-children'] = ','.join(self.children)
 
@@ -121,8 +123,7 @@ class Layer(DirTreeBackedObject):
 
     @property
     def dependencies_met(self):
-        """
-        Checks whether stacks this layer depends on exist in Cloudformation
+        """Checks whether stacks this layer depends on exist in Cloudformation
         """
         current_cf_stack_names = {stack.stack_name for stack in self.cf.stacks}
         for dep in self.depends_on:
@@ -131,8 +132,7 @@ class Layer(DirTreeBackedObject):
         return True
 
     def populate_params(self):
-        """
-        Populates parameters in a layer by resolving references if necessary
+        """Populates parameters in a layer by resolving references if necessary
         """
         if len(self.yaml_params) < 1:
             return
@@ -143,9 +143,7 @@ class Layer(DirTreeBackedObject):
                 param['value'])
 
     def print_params(self):
-        """
-        Prints the params used during layer creation.
-        """
+        """Prints the params used during layer creation"""
         if len(self.params) < 1:
             print("No parameters. Did you forget to run populate_params()?")
             return
@@ -157,14 +155,13 @@ class Layer(DirTreeBackedObject):
             print("{pname:<15}: {pval:>30}".format(pname=pname, pval=pval))
 
     def _parse_param_value(self, pval):
-        """
-        Parses yaml parameters
-        """
+        """Parses yaml parameters"""
         if isinstance(pval, list):
             # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
         elif isinstance(pval, dict) and 'ref' in pval:
-            # Reference to a physical resource in another layer
+            # Reference to a physical resource in another layer, or to a
+            # resource already deployed to AWS
             return self._resolve_ref(pval['ref'])
         elif isinstance(pval, dict) and 'envvar' in pval:
             # An environment variable
@@ -174,12 +171,49 @@ class Layer(DirTreeBackedObject):
 
     def _resolve_ref(self, ref):
         """
-        Resolves a reference to an existing stack component
+        Resolves a reference to an existing stack component or to a resource
+        that currently lives in AWS but that has been deployed independently.
+        The latter is only possible for EC2 instances at the moment.
         """
         try:
-            layer_name, resource_name = ref.split('/')
+            ref_name, selection = ref.split('/')
         except ValueError:
             raise ReferenceError(ref, ValueError, self.logger)
+
+        if ref_name[0] == ':':
+            # A reference to an existing AWS resource that has been deployed
+            # independently.
+            return self._resolve_boto_ref(ref_name[1:], selection)
+        else:
+            return self._resolve_layer_ref(ref_name, selection)
+
+    def _resolve_boto_ref(self, resource_type, selection):
+        """Resolves a reference to an existing AWS resource that has been
+        deployed independently.
+        """
+        ref = ':' + resource_type + '/' + selection
+        if resource_type == 'ec2:ami':
+            tags = selection.split(';')
+            tag_dict = {}
+            for tag in tags:
+                k, v = tag.split('=')
+                tag_dict[k] = v
+            amis = self.ec2.get_ami_by_tag(tag_dict)
+            if len(amis) == 0:
+                msg = "No AMIs with tags {} were found".format(tag_dict)
+                raise ReferenceError(ref, msg, logger=self.__logger)
+            elif len(amis) > 1:
+                msg = "Ambiguous AMI selection. I found {} AMIs with tags {}".\
+                    format(len(amis), tag_dict)
+                raise ReferenceError(ref, msg, logger=self.__logger)
+            else:
+                return amis[0].id
+        else:
+            msg = "Unsupported resource type: {}".format(resource_type)
+            raise ReferenceError(ref, msg, logger=self._logger)
+
+    def _resolve_layer_ref(self, layer_name, resource_name):
+        """Resolves a reference to an existing stack component"""
         stack_name = "{}-{}".format(self.env_name, layer_name)
         stack = self.cf.get_stack(stack_name)
         resource = [x for x in stack.describe_resources()
@@ -189,7 +223,8 @@ class Layer(DirTreeBackedObject):
                                    in stack.describe_resources()]
             msg = "{} does not exist in stack {} (with resources {})".format(
                 resource_name, stack_name, all_stack_resources)
-            raise ReferenceError(ref, msg, logger=self.logger)
+            raise ReferenceError(stack_name + '/' + resource_name,
+                                 msg, logger=self.logger)
         else:
             resource = resource[0]
 
