@@ -40,7 +40,6 @@ class Layer(DirTreeBackedObject):
         for dep in self.meta.get('dependencies', []):
             self.depends_on.append("{}-{}".format(environment.name, dep))
 
-        self.region = environment.region
         self.sns_topic_arn = environment.sns_topic_arn
         self.tags = {
             'humilis-layer': self.name,
@@ -78,7 +77,7 @@ class Layer(DirTreeBackedObject):
     def already_in_cf(self):
         """Returns true if the layer has been already deployed to CF
         """
-        return self.name in {stk.stack_name for stk in self.cf.stacks}
+        return self.name in {stk['StackName'] for stk in self.cf.stacks}
 
     @property
     def ec2(self):
@@ -125,7 +124,8 @@ class Layer(DirTreeBackedObject):
     def dependencies_met(self):
         """Checks whether stacks this layer depends on exist in Cloudformation
         """
-        current_cf_stack_names = {stack.stack_name for stack in self.cf.stacks}
+        current_cf_stack_names = {stack.get('StackName') for stack
+                                  in self.cf.stacks}
         for dep in self.depends_on:
             if dep not in current_cf_stack_names:
                 return False
@@ -215,12 +215,11 @@ class Layer(DirTreeBackedObject):
     def _resolve_layer_ref(self, layer_name, resource_name):
         """Resolves a reference to an existing stack component"""
         stack_name = "{}-{}".format(self.env_name, layer_name)
-        stack = self.cf.get_stack(stack_name)
-        resource = [x for x in stack.describe_resources()
-                    if x.logical_resource_id == resource_name]
+        resource = self.cf.get_stack_resource(stack_name, resource_name)
+
         if len(resource) != 1:
             all_stack_resources = [x.logical_resource_id for x
-                                   in stack.describe_resources()]
+                                   in self.cf.get_stack_resources(stack_name)]
             msg = "{} does not exist in stack {} (with resources {})".format(
                 resource_name, stack_name, all_stack_resources)
             raise ReferenceError(stack_name + '/' + resource_name,
@@ -258,10 +257,9 @@ class Layer(DirTreeBackedObject):
         try:
             self.cf.create_stack(
                 self.name,
-                template_body=json.dumps(cf_template, indent=4),
-                capabilities=['CAPABILITY_IAM'],
-                notification_arns=self.sns_topic_arn,
-                tags=self.tags)
+                json.dumps(cf_template, indent=4),
+                self.sns_topic_arn,
+                self.tags)
         except Exception as exception:
                 raise CloudformationError(msg, exception, logger=self.logger)
 

@@ -21,7 +21,6 @@ default_wait = 10*60
 
 cf_template_version = datetime.date(2010, 9, 9)
 layer_sections = ['parameters', 'mappings', 'resources']
-region = 'eu-west-1'
 
 # Default logging levels
 botolog = 'info'

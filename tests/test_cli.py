@@ -6,7 +6,6 @@ from click.testing import CliRunner
 import humilis
 import humilis.cli
 import pytest
-import humilis.config as config
 import os
 
 
@@ -71,11 +70,5 @@ def test_valid_botolog_level(runner, humilis_example_environment):
 
 def test_invalid_region(runner):
     result = runner.invoke(humilis.cli.create, ['--region', 'invalid_region',
-                                                '--pretend'])
-    assert result.exit_code > 0
-
-
-def test_default_region_should_be_valid(runner):
-    result = runner.invoke(humilis.cli.create, ['--region', config.region,
                                                 '--pretend'])
     assert result.exit_code > 0

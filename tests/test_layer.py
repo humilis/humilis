@@ -62,6 +62,21 @@ def humilis_named_instance_layer(cf, humilis_environment, humilis_testkey):
     cf.delete_stack(layer.name)
 
 
+def test_create_and_delete_stack(cf, humilis_vpc_layer):
+    """Creates a sample stack in CF"""
+    # Make sure the stack wasn't there already
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+
+    # Create the stack, and make sure it has been pushed to CF
+    cf_template = humilis_vpc_layer.create()
+    assert isinstance(cf_template, dict)
+    assert cf.stack_ok(humilis_vpc_layer.name)
+
+    # Delete the stack
+    humilis_vpc_layer.delete()
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+
+
 def test_create_layer_object(humilis_environment, humilis_vpc_layer):
     layer = humilis_vpc_layer
     assert layer.relname == 'vpc'
@@ -95,21 +110,6 @@ def test_compile_template(humilis_vpc_layer):
            'InternetGateway' in cf_template['Resources'] and \
            'Description' in cf_template and \
            len(cf_template['Description']) > 0
-
-
-def test_create_and_delete_stack(cf, humilis_vpc_layer):
-    """Creates a sample stack in CF"""
-    # Make sure the stack wasn't there already
-    assert not cf.stack_exists(humilis_vpc_layer.name)
-
-    # Create the stack, and make sure it has been pushed to CF
-    cf_template = humilis_vpc_layer.create()
-    assert isinstance(cf_template, dict)
-    assert cf.stack_ok(humilis_vpc_layer.name)
-
-    # Delete the stack
-    humilis_vpc_layer.delete()
-    assert not cf.stack_exists(humilis_vpc_layer.name)
 
 
 def test_create_stack_lacking_dependencies(cf, humilis_instance_layer):

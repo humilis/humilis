@@ -4,7 +4,7 @@
 
 # For Python 2.x compatibility
 from __future__ import print_function
-import boto.ec2
+import boto3
 import os
 import humilis.config as config
 import logging
@@ -15,26 +15,16 @@ class EC2:
     """
     A proxy to AWS EC2 service
     """
-    def __init__(self, region=config.region, aws_access_key_id=None,
-                 aws_secret_access_key=None, logger=None):
-        self.region = region
-        if aws_access_key_id is None:
-            aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
-        if aws_secret_access_key is None:
-            aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
+    def __init__(self, logger=None):
         if logger is None:
             logger = logging.getLogger(__name__)
         self.logger = logger
-
-        self.connection = boto.ec2.connect_to_region(
-            self.region,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
+        self.client = boto3.client('ec2')
 
     def create_key_pair(self, key_name):
         """Creates a keypair in AWS EC2, if it doesn't exist already"""
         if not self.key_pair_exists(key_name):
-            key = self.connection.create_key_pair(key_name)
+            key = self.client.create_key_pair(key_name)
             self.save_key_pair(key)
             return True
         else:
@@ -60,7 +50,7 @@ class EC2:
             self.logger.info(msg)
             return False
         else:
-            success = self.connection.delete_key_pair(key_name)
+            success = self.client.delete_key_pair(key_name)
             if not success:
                 msg = "CF failed to create key {}".format(key_name)
                 raise CloudformationError(msg, logger=self.logger)
@@ -68,13 +58,14 @@ class EC2:
 
     def key_pair_exists(self, key_name):
         """Returns True if a key exists in AWS"""
-        return key_name in [k.name for k
-                            in self.connection.get_all_key_pairs()]
+        return key_name in [
+            k['KeyName'] for k
+            in self.client.describe_key_pairs().get('KeyPairs')]
 
     def get_ami_by_tag(self, tags):
         """Gets a list of AMIs that have the specified tags and corresp. values
         """
-        imgs = self.connection.get_all_images(owners='self')
+        imgs = self.client.get_all_images(owners='self')
         sel_imgs = []
         for img in imgs:
             matched = True
@@ -92,4 +83,4 @@ class EC2:
         return "EC2(region='{}')".format(self.region)
 
     def __getattr__(self, name):
-        return getattr(self.connection, name)
+        return getattr(self.client, name)

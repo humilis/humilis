@@ -2,11 +2,11 @@
 # -*- coding: utf-8 -*-
 
 
-import boto.cloudformation
-import os
+import boto3
 import time
 from humilis.exceptions import TakesTooLongError, CloudformationError
 import humilis.config as config
+import humilis.utils as utils
 import logging
 
 
@@ -14,33 +14,24 @@ class CloudFormation:
     """
     A proxy to AWS CloudFormation service
     """
-    def __init__(self, region=config.region, aws_access_key_id=None,
-                 aws_secret_access_key=None, logger=None):
-        self.region = region
-        if aws_access_key_id is None:
-            aws_access_key_id = os.environ.get('AWS_ACCESS_KEY_ID')
-        if aws_secret_access_key is None:
-            aws_secret_access_key = os.environ.get('AWS_SECRET_ACCESS_KEY')
-
+    def __init__(self, logger=None):
         if logger is None:
             logger = logging.getLogger(__name__)
         self.logger = logger
 
-        self.connection = boto.cloudformation.connect_to_region(
-            self.region,
-            aws_access_key_id=aws_access_key_id,
-            aws_secret_access_key=aws_secret_access_key)
+        self.client = boto3.client('cloudformation')
+        self.resource = boto3.resource('cloudformation')
 
     @property
     def stacks(self):
         """Produces a list of CF stack description objects"""
-        return list(self.connection.describe_stacks())
+        return self.client.describe_stacks().get('Stacks')
 
     @property
     def stack_statuses(self):
         """Returns a dict with the status of every stack in CF"""
-        statuses = {s.stack_name: s.stack_status for s
-                    in self.connection.describe_stacks()}
+        statuses = {s.get('StackName'): s.get('StackStatus') for s
+                    in self.client.describe_stacks().get('Stacks', [])}
         return statuses
 
     def delete_stack(self, stack_name, wait=config.default_wait):
@@ -53,7 +44,7 @@ class CloudFormation:
             self.logger.info(msg)
             return
 
-        self.connection.delete_stack(stack_name)
+        self.client.delete_stack(StackName=stack_name)
         self.wait_for_status_change(stack_name, 'DELETE_IN_PROGRESS',
                                     nb_seconds=wait)
         stack_status = self.stack_statuses.get(stack_name)
@@ -62,7 +53,7 @@ class CloudFormation:
                 stack_name, stack_status)
             raise CloudformationError(msg, logger=self.logger)
 
-    def create_stack(self, stack_name, **kwargs):
+    def create_stack(self, stack_name, template_body, notification_arns, tags):
         """Creates a CF stack, unless it already exists"""
         stack_status = self.stack_statuses.get(stack_name)
         if stack_status in {'CREATE_COMPLETE', 'CREATE_IN_PROGRESS'}:
@@ -72,7 +63,12 @@ class CloudFormation:
             self.wait_for_status_change(stack_name, 'CREATE_IN_PROGRESS')
             return
 
-        self.connection.create_stack(stack_name, **kwargs)
+        self.client.create_stack(
+            StackName=stack_name,
+            TemplateBody=template_body,
+            Capabilities=['CAPABILITY_IAM'],
+            NotificationARNs=notification_arns,
+            Tags=utils.roll_tags(tags))
         self.wait_for_status_change(stack_name, 'CREATE_IN_PROGRESS')
         stack_status = self.stack_statuses.get(stack_name)
         if stack_status.find('FAILED') > -1:
@@ -111,15 +107,25 @@ class CloudFormation:
     def get_stack(self, stack_name):
         """Retrieves a stack object using the stack name"""
         y = [stack for stack in self.stacks
-             if stack.stack_name == stack_name]
+             if stack['StackName'] == stack_name]
         if len(y) > 0:
-            return y[0]
+            return self.resource.Stack(y[0]['StackName'])
+
+    def get_stack_resource(self, stack_name, resource_name):
+        """Retrieves a resource object from a stack"""
+        return [res for res in self.get_stack_resources(stack_name)
+                if res.logical_resource_id == resource_name]
+
+    def get_stack_resources(self, stack_name):
+        """Retrieves all resources for a stack"""
+        stack = self.get_stack(stack_name)
+        return stack.resource_summaries.all()
 
     def __repr__(self):
         return str(self)
 
     def __str__(self):
-        return "CloudFormation(region='{}')".format(self.region)
+        return "CloudFormation()"
 
     def __getattr__(self, name):
-        return getattr(self.connection, name)
+        return getattr(self.client, name)

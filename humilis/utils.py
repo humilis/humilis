@@ -12,6 +12,16 @@ from humilis.exceptions import FileFormatError
 from sys import exit
 
 
+def unroll_tags(tags):
+    """Unrolls the tag list of a resource into a dictionary"""
+    return {tag['Key']: tag['Value'] for tag in tags}
+
+
+def roll_tags(tags):
+    """Rolls a dictionary of tags into a list of tags Key/Value dicts"""
+    return [{'Key': k, 'Value': v} for k, v in tags.items()]
+
+
 class DirTreeBackedObject:
     """Loads data from a directory tree of files in various formats"""
     def __init__(self, basedir, params={}, logger=None):

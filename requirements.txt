@@ -1,5 +1,8 @@
+# Development/testing requirements
 PyYAML
 click
 boto
 jinja2
 pytest
+ipython
+pdbpp
