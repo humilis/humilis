@@ -8,6 +8,7 @@ import boto3
 import os
 import humilis.config as config
 import logging
+import humilis.utils as utils
 from humilis.exceptions import CloudformationError
 
 
