@@ -21,7 +21,7 @@ class CloudFormation:
         self.logger = logger
 
         region = os.environ.get('AWS_REGION')
-        if region is None:
+        if region is not None:
             # If the AWS region is in the environment then override the local
             # AWS CLI config files. This is useful e.g. when running in test
             # environments that don't have those config files.
