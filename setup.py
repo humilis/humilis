@@ -14,7 +14,7 @@ setup(
     install_requires=[
         'PyYAML',
         'Click',
-        'boto',
+        'boto3',
         'jinja2'],
     classifiers=[
         "Programming Language :: Python :: 3"],
