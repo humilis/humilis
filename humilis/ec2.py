@@ -19,7 +19,16 @@ class EC2:
         if logger is None:
             logger = logging.getLogger(__name__)
         self.logger = logger
-        self.client = boto3.client('ec2')
+        region = os.environ.get('AWS_REGION')
+        if region is not None:
+            # If the AWS region is in the environment then override the local
+            # AWS CLI config files. This is useful e.g. when running in test
+            # environments that don't have those config files.
+            session = boto3.session.Session(region_name=region)
+        else:
+            # Otherwise use the CLI AWS config files
+            session = boto3.session.Session()
+        self.client = session.client('ec2')
 
     def create_key_pair(self, key_name):
         """Creates a keypair in AWS EC2, if it doesn't exist already"""
