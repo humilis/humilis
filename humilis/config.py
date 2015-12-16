@@ -20,7 +20,7 @@ keys_dir = os.path.join(os.path.expanduser('~'), '.ssh')
 default_wait = 10*60
 
 cf_template_version = datetime.date(2010, 9, 9)
-layer_sections = ['parameters', 'mappings', 'resources']
+layer_sections = ['parameters', 'mappings', 'resources', 'outputs']
 
 # Default logging levels
 botolog = 'info'
