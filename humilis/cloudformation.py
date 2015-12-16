@@ -8,6 +8,7 @@ from humilis.exceptions import TakesTooLongError, CloudformationError
 import humilis.config as config
 import humilis.utils as utils
 import logging
+import os
 
 
 class CloudFormation:
@@ -19,8 +20,17 @@ class CloudFormation:
             logger = logging.getLogger(__name__)
         self.logger = logger
 
-        self.client = boto3.client('cloudformation')
-        self.resource = boto3.resource('cloudformation')
+        region = os.environ.get('AWS_REGION')
+        if region is None:
+            # If the AWS region is in the environment then override the local
+            # AWS CLI config files. This is useful e.g. when running in test
+            # environments that don't have those config files.
+            session = boto3.session.Session(region_name=region)
+        else:
+            # Otherwise use the CLI AWS config files
+            session = boto3.session.Session()
+        self.client = session.client('cloudformation')
+        self.resource = session.resource('cloudformation')
 
     @property
     def stacks(self):
