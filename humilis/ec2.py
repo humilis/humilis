@@ -44,13 +44,13 @@ class EC2:
 
     def save_key_pair(self, key):
         """Saves an AWS keypair to a local directory"""
-        target_file = os.path.join(config.keys_dir, key.name)
+        target_file = os.path.join(config.keys_dir, key['KeyName'])
         if os.path.isfile(target_file):
-            msg = "File {} already exists: will not be overwritten".format(
+            msg = "File {} already exists: NOT saving key".format(
                 key.name)
             self.logger.info(msg)
         with open(target_file, 'a') as f:
-            print(key.material, file=f)
+            print(key['KeyMaterial'], file=f)
 
     def delete_key_pair(self, key_name):
         """Deletes a keypair by name"""
@@ -89,7 +89,7 @@ class EC2:
         return str(self)
 
     def __str__(self):
-        return "EC2(region='{}')".format(self.region)
+        return "EC2()"
 
     def __getattr__(self, name):
         return getattr(self.client, name)
