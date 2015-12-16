@@ -207,7 +207,7 @@ class Layer(DirTreeBackedObject):
                     format(len(amis), tag_dict)
                 raise ReferenceError(ref, msg, logger=self.logger)
             else:
-                return amis[0].id
+                return amis[0]['ImageId']
         else:
             msg = "Unsupported resource type: {}".format(resource_type)
             raise ReferenceError(ref, msg, logger=self._logger)
