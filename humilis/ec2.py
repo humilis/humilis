@@ -80,9 +80,13 @@ class EC2:
         for img in imgs:
             matched = True
             for k, v in tags.items():
-                img_tags = utils.unroll_tags(img['Tags'])
-                if k not in img_tags or v != img_tags[k]:
+                img_tags = img.get('Tags')
+                if img_tags is None:
                     matched = False
+                else:
+                    img_tags = utils.unroll_tags(img_tags)
+                    if k not in img_tags or v != img_tags[k]:
+                        matched = False
             if matched:
                 sel_imgs.append(img)
         return sel_imgs
