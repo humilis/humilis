@@ -201,11 +201,11 @@ class Layer(DirTreeBackedObject):
             amis = self.ec2.get_ami_by_tag(tag_dict)
             if len(amis) == 0:
                 msg = "No AMIs with tags {} were found".format(tag_dict)
-                raise ReferenceError(ref, msg, logger=self.__logger)
+                raise ReferenceError(ref, msg, logger=self.logger)
             elif len(amis) > 1:
                 msg = "Ambiguous AMI selection. I found {} AMIs with tags {}".\
                     format(len(amis), tag_dict)
-                raise ReferenceError(ref, msg, logger=self.__logger)
+                raise ReferenceError(ref, msg, logger=self.logger)
             else:
                 return amis[0].id
         else:
