@@ -1,10 +1,12 @@
 # humilis
-Helps you deploy AWS infrastructure.
+Helps you deploy AWS infrastructure with [Cloudformation][cf].
+
+[cf]: https://aws.amazon.com/cloudformation/
 
 
 Build status
 ----------------------------------
-[![Circle CI](https://circleci.com/gh/germangh/humilis/tree/master.svg?style=svg)](https://circleci.com/gh/germangh/humilis/tree/master)
+[![Circle CI](https://circleci.com/gh/InnovativeTravel/humilis.svg?style=svg)](https://circleci.com/gh/InnovativeTravel/humilis)
 
 This project is based on the
 [cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py).
