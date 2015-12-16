@@ -33,7 +33,7 @@ class EC2:
     def create_key_pair(self, key_name):
         """Creates a keypair in AWS EC2, if it doesn't exist already"""
         if not self.key_pair_exists(key_name):
-            key = self.client.create_key_pair(key_name)
+            key = self.client.create_key_pair(KeyName=key_name)
             self.save_key_pair(key)
             return True
         else:
