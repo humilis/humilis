@@ -25,7 +25,7 @@ def main(log, botolog):
 
 @main.command()
 @click.argument('environment')
-@click.option('--pretend/--no-pretend', default=True)
+@click.option('--pretend/--no-pretend', default=False)
 def create(environment, pretend):
     env = Environment(environment)
     if not pretend:
@@ -34,7 +34,7 @@ def create(environment, pretend):
 
 @main.command()
 @click.argument('environment')
-@click.option('--pretend/--no-pretend', default=True)
+@click.option('--pretend/--no-pretend', default=False)
 def delete(environment, pretend):
     env = Environment(environment)
     if not pretend:
