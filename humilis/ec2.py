@@ -74,12 +74,13 @@ class EC2:
     def get_ami_by_tag(self, tags):
         """Gets a list of AMIs that have the specified tags and corresp. values
         """
-        imgs = self.client.get_all_images(owners='self')
+        imgs = self.client.describe_images(Owners=['self'])['Images']
         sel_imgs = []
         for img in imgs:
             matched = True
             for k, v in tags.items():
-                if k not in img.tags or v != img.tags[k]:
+                img_tags = utils.unroll_tags(img['Tags'])
+                if k not in img_tags or v != img_tags[k]:
                     matched = False
             if matched:
                 sel_imgs.append(img)
