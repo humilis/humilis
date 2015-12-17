@@ -5,6 +5,7 @@
 import logging
 import os
 import io
+import glob
 import json
 import yaml
 import jinja2
@@ -38,9 +39,14 @@ class DirTreeBackedObject:
         """
         # We read all files within the section dir, and merge them in a dict
         basedir = os.path.join(self.basedir, section)
-        section_files = []
-        for (dirpath, dirnames, filenames) in os.walk(basedir):
-            section_files += [os.path.join(dirpath, fn) for fn in filenames]
+        if os.path.isdir(basedir):
+            # Section file(s) in their own directory
+            section_files = []
+            for (dirpath, dirnames, filenames) in os.walk(basedir):
+                section_files += [os.path.join(dirpath, fn)
+                                  for fn in filenames]
+        else:
+            section_files = list(glob.glob("{}.*".format(section)))
 
         return section_files
 
