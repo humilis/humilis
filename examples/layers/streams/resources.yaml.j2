@@ -1,0 +1,17 @@
+resources:
+    VisitStream:
+        Type: 'AWS::Kinesis::Stream'
+        Properties:
+            ShardCount: {{ shardcount.visit }}
+    SearchStream:
+        Type: 'AWS::Kinesis::Stream'
+        Properties:
+            ShardCount: {{ shardcount.search }}
+    LeadStream:
+        Type: 'AWS::Kinesis::Stream'
+        Properties:
+            ShardCount: {{ shardcount.lead }}
+    BookingStream:
+        Type: 'AWS::Kinesis::Stream'
+        Properties:
+            ShardCount: {{ shardcount.booking }}

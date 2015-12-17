@@ -1,0 +1,14 @@
+---
+meta:
+    description:
+        Creates a separate Kinesis stream for each event type
+    parameters:
+        # Layer meta-parameters. You can use a parameter in your resource 
+        # templates using {{ param_name }}.
+        shardcount:
+            description: The number of shards that each stream uses
+            value:
+                visit: 1
+                search: 1
+                lead: 1
+                booking: 1
