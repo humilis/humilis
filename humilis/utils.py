@@ -46,7 +46,8 @@ class DirTreeBackedObject:
                 section_files += [os.path.join(dirpath, fn)
                                   for fn in filenames]
         else:
-            section_files = list(glob.glob("{}.*".format(section)))
+            section_files = list(glob.glob("{}/{}.*".format(self.basedir,
+                                                            section)))
 
         return section_files
 
