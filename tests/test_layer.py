@@ -48,6 +48,13 @@ def humilis_vpc_layer(cf, humilis_environment):
 
 
 @pytest.yield_fixture(scope="module")
+def humilis_streams_layer(cf, humilis_environment):
+    layer = Layer(humilis_environment, 'streams')
+    yield layer
+    cf.delete_stack(layer.name)
+
+
+@pytest.yield_fixture(scope="module")
 def humilis_instance_layer(cf, humilis_environment, humilis_testkey):
     layer = Layer(humilis_environment, 'instance', keyname=humilis_testkey)
     yield layer
@@ -60,21 +67,6 @@ def humilis_named_instance_layer(cf, humilis_environment, humilis_testkey):
                   keyname=humilis_testkey)
     yield layer
     cf.delete_stack(layer.name)
-
-
-def test_create_and_delete_stack(cf, humilis_vpc_layer):
-    """Creates a sample stack in CF"""
-    # Make sure the stack wasn't there already
-    assert not cf.stack_exists(humilis_vpc_layer.name)
-
-    # Create the stack, and make sure it has been pushed to CF
-    cf_template = humilis_vpc_layer.create()
-    assert isinstance(cf_template, dict)
-    assert cf.stack_ok(humilis_vpc_layer.name)
-
-    # Delete the stack
-    humilis_vpc_layer.delete()
-    assert not cf.stack_exists(humilis_vpc_layer.name)
 
 
 def test_create_layer_object(humilis_environment, humilis_vpc_layer):
@@ -98,6 +90,21 @@ def test_get_section_files(humilis_vpc_layer):
     assert len(humilis_vpc_layer.get_section_files('invalid')) == 0
 
 
+def test_create_and_delete_layer(cf, humilis_vpc_layer):
+    """Creates and deletes a sample layer in CF"""
+    # Make sure the stack wasn't there already
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+
+    # Create the stack, and make sure it has been pushed to CF
+    cf_template = humilis_vpc_layer.create()
+    assert isinstance(cf_template, dict)
+    assert cf.stack_ok(humilis_vpc_layer.name)
+
+    # Delete the stack
+    humilis_vpc_layer.delete()
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+
+
 def test_load_section(humilis_vpc_layer):
     files = humilis_vpc_layer.get_section_files('resources')
     data = humilis_vpc_layer.load_section('resources', files)
@@ -112,7 +119,7 @@ def test_compile_template(humilis_vpc_layer):
            len(cf_template['Description']) > 0
 
 
-def test_create_stack_lacking_dependencies(cf, humilis_instance_layer):
+def test_create_layer_lacking_dependencies(cf, humilis_instance_layer):
     """Attempts to create a stack lacking dependencies: exception"""
     assert not cf.stack_exists(humilis_instance_layer.name)
     # Should simply skip the layer since dependencies are not met
@@ -120,7 +127,15 @@ def test_create_stack_lacking_dependencies(cf, humilis_instance_layer):
     assert not cf.stack_exists(humilis_instance_layer.name)
 
 
-def test_create_dependant_stack(cf, humilis_vpc_layer, humilis_instance_layer):
+def test_create_layer_absent_section_dirs(cf, humilis_streams_layer):
+    """Attempts to create a layer without section directories"""
+    assert not cf.stack_exists(humilis_streams_layer.name)
+    # Should simply skip the layer since dependencies are not met
+    humilis_streams_layer.create()
+    assert cf.stack_exists(humilis_streams_layer.name)
+
+
+def test_create_dependant_layer(cf, humilis_vpc_layer, humilis_instance_layer):
     """Creates two stacks, the second depending on the first"""
     assert not cf.stack_exists(humilis_vpc_layer.name)
     humilis_vpc_layer.create()

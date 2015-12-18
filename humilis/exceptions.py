@@ -30,6 +30,9 @@ class ReferenceError(LoggedException):
 
 
 class CloudformationError(LoggedException):
-    def __init__(self, msg, cf_exception, *args, **kwargs):
-        msg = "{}: {}".format(msg, cf_exception)
-        super().__init__(msg, *args, **kwargs)
+    def __init__(self, msg, cf_exception=None, **kwargs):
+        if cf_exception is None:
+            msg = "{}".format(msg)
+        else:
+            msg = "{}: {}".format(msg, cf_exception)
+        super().__init__(msg, **kwargs)

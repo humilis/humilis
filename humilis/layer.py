@@ -260,8 +260,14 @@ class Layer(DirTreeBackedObject):
                 json.dumps(cf_template, indent=4),
                 self.sns_topic_arn,
                 self.tags)
+            # Try getting the output params of the stack
         except Exception as exception:
                 raise CloudformationError(msg, exception, logger=self.logger)
+
+        status = self.watch_events()
+        if status != 'CREATE_COMPLETE':
+            msg = "Layer could not be created, status is {}".format(status)
+            raise CloudformationError(msg, logger=self.logger)
 
         return cf_template
 
@@ -271,12 +277,11 @@ class Layer(DirTreeBackedObject):
             self.logger.warning("Layer {} has not been deployed to CF: "
                                 "nothing to watch".format(self.name))
             return
-        stack = self.cf.describe_stacks(self.name)[0]
+        stack_status = self.cf.get_stack_status(self.name)
         already_seen = {}
-        cm = self.config.status_color_map
-        while stack.status == progress_status:
-            events = sorted(self.cf.describe_stack_events(self.name),
-                            key=lambda ev: ev.timestamp)
+        cm = config.event_status_color_map
+        while stack_status == progress_status:
+            events = self.cf.get_stack_events(self.name)
             new_events = [ev for ev in events
                           if (ev.timestamp, ev.logical_resource_id)
                           not in already_seen]
@@ -294,9 +299,9 @@ class Layer(DirTreeBackedObject):
                     ))
                 already_seen.add((event.timestamp, event.logical_resource_id))
 
-            stack.update()
+            stack_status = self.cf.get_stack_status(self.name)
             time.sleep(3)
-        return stack.status
+        return stack_status
 
     def __repr__(self):
         return str(self)

@@ -131,6 +131,16 @@ class CloudFormation:
         stack = self.get_stack(stack_name)
         return stack.resource_summaries.all()
 
+    def get_stack_status(self, stack_name):
+        """Gets the current status of a CF stack"""
+        stack = self.get_stack(stack_name)
+        return stack.stack_status
+
+    def get_stack_events(self, stack_name):
+        """Gets a list of stack events sorted by timestamp"""
+        stack = self.get_stack(stack_name)
+        return sorted(stack.events.all(), key=lambda ev: ev.timestamp)
+
     def __repr__(self):
         return str(self)
 
