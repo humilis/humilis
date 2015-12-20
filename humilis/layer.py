@@ -94,6 +94,34 @@ class Layer(DirTreeBackedObject):
             if len(clist) > 0:
                 return clist.split(',')
 
+    @property
+    def ok(self):
+        """Layer is fully deployed in CF and ready for use"""
+        return self.cf.stack_ok(self.name)
+
+    @property
+    def outputs(self):
+        """Layer outputs. Throws an exception if layer is not ok."""
+        if not self.ok:
+            msg = ("Attempting to read outputs from a layer that has not "
+                   "been fully deployed yet")
+            raise CloudformationError(msg, logger=self.logger)
+        ly = self.cf.stack_outputs[self.name]
+        if ly is not None:
+            ly = {o['OutputKey']: o['OutputValue'] for o in ly}
+        return ly
+
+    @property
+    def dependencies_met(self):
+        """Checks whether stacks this layer depends on exist in Cloudformation
+        """
+        current_cf_stack_names = {stack.get('StackName') for stack
+                                  in self.cf.stacks}
+        for dep in self.depends_on:
+            if dep not in current_cf_stack_names:
+                return False
+        return True
+
     def add_child(self, child_name):
         """Adds a child to this layer"""
         self.children.add(child_name)
@@ -119,17 +147,6 @@ class Layer(DirTreeBackedObject):
             'Outputs': self.section.get('outputs', {})
         }
         return cf_template
-
-    @property
-    def dependencies_met(self):
-        """Checks whether stacks this layer depends on exist in Cloudformation
-        """
-        current_cf_stack_names = {stack.get('StackName') for stack
-                                  in self.cf.stacks}
-        for dep in self.depends_on:
-            if dep not in current_cf_stack_names:
-                return False
-        return True
 
     def populate_params(self):
         """Populates parameters in a layer by resolving references if necessary
@@ -284,7 +301,6 @@ class Layer(DirTreeBackedObject):
             events = self.cf.get_stack_events(self.name)
             new_events = [ev for ev in events if ev.id not in already_seen]
             for event in new_events:
-                print("________{}".format(event.resource_status))
                 self.logger.info(
                     "{time} {color}{status}\033[0m {restype} {logid} {physid} "
                     "{reason}".format(

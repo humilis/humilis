@@ -52,36 +52,46 @@ class Environment():
             layer_obj = Layer(self, layer_name, **layer_params)
             self.layers.append(layer_obj)
 
+    @property
+    def outputs(self):
+        """Outputs produced by each environment layer"""
+        outputs = {}
+        for layer in self.layers:
+            ly = layer.outputs
+            if ly is not None:
+                outputs[layer.name] = ly
+        return outputs
+
     def create(self):
-        """
-        Creates all layers in the environment
-        """
+        """Creates all layers in the environment"""
         self.populate_hierarchy()
         for layer in self.layers:
             layer.create()
+        # Write layer outputs to a YAML file
+        self.write_outputs()
+
+    def write_outputs(self):
+        """Writes layer outputs to a YAML file"""
+        with open("{}.outputs.yaml".format(self.name), 'w') as f:
+            f.write(yaml.dump(self.outputs, indent=4,
+                              default_flow_style=False))
 
     def populate_hierarchy(self):
-        """
-        Adds tags to the layers indicating parent-child dependencies
-        """
+        """Adds tags to the layers indicating parent-child dependencies"""
         for layer in self.layers:
             if layer.depends_on and len(layer.depends_on) > 0:
                 for parent_name in layer.depends_on:
                     layer = self.get_layer(parent_name).add_child(layer.name)
 
     def get_layer(self, layer_name):
-        """
-        Gets a layer by name
-        """
+        """Gets a layer by name"""
         sel_layer = [layer for layer in self.layers
                      if layer.name == layer_name]
         if len(sel_layer) > 0:
             return sel_layer[0]
 
     def delete(self):
-        """
-        Deletes all layers in an environment
-        """
+        """Deletes all layers in an environment"""
         for layer in reversed(self.layers):
             layer.delete()
 

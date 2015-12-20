@@ -40,9 +40,17 @@ class CloudFormation:
     @property
     def stack_statuses(self):
         """Returns a dict with the status of every stack in CF"""
-        statuses = {s.get('StackName'): s.get('StackStatus') for s
-                    in self.client.describe_stacks().get('Stacks', [])}
-        return statuses
+        return self._get_stack_property('StackStatus')
+
+    @property
+    def stack_outputs(self):
+        """Returns a dict with the outputs for every stack in CF"""
+        return self._get_stack_property('Outputs')
+
+    def _get_stack_property(self, property_name):
+        """Gets the value of certain stack property for every stack in CF"""
+        return {s.get('StackName'): s.get(property_name) for s
+                in self.client.describe_stacks().get('Stacks', [])}
 
     def delete_stack(self, stack_name, wait=config.default_wait):
         """Deletes a CF stack, if it exists in CF"""

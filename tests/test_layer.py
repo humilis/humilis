@@ -7,6 +7,7 @@ import os
 from humilis.layer import Layer
 from humilis.environment import Environment
 from humilis.cloudformation import CloudFormation
+from humilis.exceptions import CloudformationError
 from humilis.ec2 import EC2
 import humilis.config as config
 
@@ -160,3 +161,25 @@ def test_create_namedinstance_stack(cf, humilis_vpc_layer,
     assert not cf.stack_exists(humilis_named_instance_layer.name)
     humilis_vpc_layer.delete()
     assert not cf.stack_exists(humilis_vpc_layer.name)
+
+
+def test_get_outputs_from_nondeployed_layer(cf, humilis_vpc_layer):
+    """Tries to get outputs from a layer thas has not been deployed: error"""
+    assert not cf.stack_exists(humilis_vpc_layer.name)
+    with pytest.raises(CloudformationError):
+        humilis_vpc_layer.outputs
+
+
+def test_get_outputs_from_layer_without_outputs(cf, humilis_vpc_layer):
+    """Gets outputs from a layer without outputs"""
+    humilis_vpc_layer.create()
+    assert humilis_vpc_layer.outputs is None
+
+
+def test_get_outputs_from_layer(cf, humilis_streams_layer):
+    """Gets outputs from a layer that does produce outputs"""
+    humilis_streams_layer.create()
+    ly = humilis_vpc_layer.outputs
+    assert isinstance(ly, dict)
+    # The names of the 4 Kinesis streams in the layer
+    assert len(ly) == 4
