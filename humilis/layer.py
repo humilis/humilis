@@ -278,14 +278,13 @@ class Layer(DirTreeBackedObject):
                                 "nothing to watch".format(self.name))
             return
         stack_status = self.cf.get_stack_status(self.name)
-        already_seen = {}
+        already_seen = set()
         cm = config.event_status_color_map
         while stack_status == progress_status:
             events = self.cf.get_stack_events(self.name)
-            new_events = [ev for ev in events
-                          if (ev.timestamp, ev.logical_resource_id)
-                          not in already_seen]
+            new_events = [ev for ev in events if ev.id not in already_seen]
             for event in new_events:
+                print("________{}".format(event.resource_status))
                 self.logger.info(
                     "{time} {color}{status}\033[0m {restype} {logid} {physid} "
                     "{reason}".format(
@@ -297,7 +296,7 @@ class Layer(DirTreeBackedObject):
                         physid=event.physical_resource_id,
                         reason=event.resource_status_reason,
                     ))
-                already_seen.add((event.timestamp, event.logical_resource_id))
+                already_seen.add(event.id)
 
             stack_status = self.cf.get_stack_status(self.name)
             time.sleep(3)

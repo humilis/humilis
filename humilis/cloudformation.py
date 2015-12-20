@@ -63,7 +63,8 @@ class CloudFormation:
                 stack_name, stack_status)
             raise CloudformationError(msg, logger=self.logger)
 
-    def create_stack(self, stack_name, template_body, notification_arns, tags):
+    def create_stack(self, stack_name, template_body, notification_arns, tags,
+                     wait=False):
         """Creates a CF stack, unless it already exists"""
         stack_status = self.stack_statuses.get(stack_name)
         if stack_status in {'CREATE_COMPLETE', 'CREATE_IN_PROGRESS'}:
@@ -79,7 +80,8 @@ class CloudFormation:
             Capabilities=['CAPABILITY_IAM'],
             NotificationARNs=notification_arns,
             Tags=utils.roll_tags(tags))
-        self.wait_for_status_change(stack_name, 'CREATE_IN_PROGRESS')
+        if wait:
+            self.wait_for_status_change(stack_name, 'CREATE_IN_PROGRESS')
         stack_status = self.stack_statuses.get(stack_name)
         if stack_status.find('FAILED') > -1:
             msg = "Failed to create stack {}. Stack status is {}.".format(

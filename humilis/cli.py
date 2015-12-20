@@ -3,6 +3,7 @@
 
 
 import click
+import logging
 from humilis.environment import Environment
 
 LOG_LEVELS = ['critical', 'error', 'warning', 'info', 'debug']
@@ -12,6 +13,7 @@ def validate_log_level(ctx, param, value):
     value = value.lower()
     if value not in LOG_LEVELS:
         raise click.BadParameter("Should one of {}".format(LOG_LEVELS))
+    return value.upper()
 
 
 @click.group()
@@ -20,7 +22,7 @@ def validate_log_level(ctx, param, value):
 @click.option('--botolog', default='info', help='Boto log level: CRITICAL, '
               'ERROR, WARNING, INFO or DEBUG', callback=validate_log_level)
 def main(log, botolog):
-    pass
+    logging.basicConfig(level=getattr(logging, log))
 
 
 @main.command()
