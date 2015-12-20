@@ -174,6 +174,7 @@ def test_get_outputs_from_layer_without_outputs(cf, humilis_vpc_layer):
     """Gets outputs from a layer without outputs"""
     humilis_vpc_layer.create()
     assert humilis_vpc_layer.outputs is None
+    humilis_vpc_layer.delete()
 
 
 def test_get_outputs_from_layer(cf, humilis_streams_layer):
