@@ -179,7 +179,7 @@ def test_get_outputs_from_layer_without_outputs(cf, humilis_vpc_layer):
 def test_get_outputs_from_layer(cf, humilis_streams_layer):
     """Gets outputs from a layer that does produce outputs"""
     humilis_streams_layer.create()
-    ly = humilis_vpc_layer.outputs
+    ly = humilis_streams_layer.outputs
     assert isinstance(ly, dict)
     # The names of the 4 Kinesis streams in the layer
     assert len(ly) == 4
