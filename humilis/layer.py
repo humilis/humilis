@@ -183,6 +183,8 @@ class Layer(DirTreeBackedObject):
         elif isinstance(pval, dict) and 'envvar' in pval:
             # An environment variable
             return os.environ(pval['envvar'])
+        elif isinstance(pval, dict):
+            return {k: self._parse_param_value(v) for k, v in pval.items()}
         else:
             return pval
 
