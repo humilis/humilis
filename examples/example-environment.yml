@@ -8,3 +8,4 @@ example-environment:
         - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16}
         - {layer: instance}
         - {layer: streams}
+        - {layer: roles}

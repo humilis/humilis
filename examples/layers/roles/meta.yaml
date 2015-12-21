@@ -1,0 +1,28 @@
+---
+meta:
+    description:
+        Creates the IAM roles necessary for the TAPI to work
+    dependencies:
+        - streams
+    parameters:
+        streams:
+            description: The name of the Kinesis streams for the various event types
+            value:
+                visit: 
+                    ref: streams/VisitStream
+                search:
+                    ref: streams/SearchStream
+                lead:
+                    ref: streams/LeadStream
+        search_stream_name:
+            description: The name of the Kinesis stream for search events
+            value:
+                ref: streams/SearchStream
+        lead_stream_name:
+            description: The name of the Kinesis stream for lead events
+            value:
+                ref: streams/LeadStream
+        booking_stream_name:
+            description: The name of the Kinesis stream for booking events
+            value:
+                ref: streams/BookingStream

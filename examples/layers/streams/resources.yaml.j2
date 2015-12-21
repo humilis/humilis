@@ -1,17 +1,7 @@
 resources:
-    VisitStream:
-        Type: 'AWS::Kinesis::Stream'
-        Properties:
-            ShardCount: {{ shardcount.visit }}
-    SearchStream:
-        Type: 'AWS::Kinesis::Stream'
-        Properties:
-            ShardCount: {{ shardcount.search }}
-    LeadStream:
-        Type: 'AWS::Kinesis::Stream'
-        Properties:
-            ShardCount: {{ shardcount.lead }}
-    BookingStream:
-        Type: 'AWS::Kinesis::Stream'
-        Properties:
-            ShardCount: {{ shardcount.booking }}
+    {% for stream in ['visit', 'search', 'lead', 'booking'] %}
+        {{stream.title()}}Stream:
+            Type: 'AWS::Kinesis::Stream'
+            Properties:
+                ShardCount: {{ shardcount[stream] }}
+    {% endfor %}
