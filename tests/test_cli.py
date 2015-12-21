@@ -53,7 +53,7 @@ def test_valid_log_level(runner, humilis_example_environment):
 
 
 def test_invalid_botolog_level(runner, humilis_example_environment):
-    result = runner.invoke(humilis.cli.main, ['--log', 'invalid', 'create',
+    result = runner.invoke(humilis.cli.main, ['--botolog', 'invalid', 'create',
                                               humilis_example_environment,
                                               '--pretend'])
     assert result.exit_code > 0
@@ -62,13 +62,21 @@ def test_invalid_botolog_level(runner, humilis_example_environment):
 
 def test_valid_botolog_level(runner, humilis_example_environment):
     for level in LOG_LEVELS:
-        result = runner.invoke(humilis.cli.main, ['--log', level, 'create',
+        result = runner.invoke(humilis.cli.main, ['--botolog', level, 'create',
                                                   humilis_example_environment,
                                                   '--pretend'])
         assert result.exit_code == 0
 
 
-def test_invalid_region(runner):
-    result = runner.invoke(humilis.cli.create, ['--region', 'invalid_region',
+def test_output(runner, humilis_example_environment):
+    result = runner.invoke(humilis.cli.create, [humilis_example_environment,
+                                                '--output', 'filename',
+                                                '--pretend'])
+    assert result.exit_code == 0
+
+
+def test_invalid_option(runner, humilis_example_environment):
+    result = runner.invoke(humilis.cli.create, [humilis_example_environment,
+                                                '--invalid_option', 'whatever'
                                                 '--pretend'])
     assert result.exit_code > 0

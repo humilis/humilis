@@ -18,9 +18,11 @@ def validate_log_level(ctx, param, value):
 
 @click.group()
 @click.option('--log', default='info', help='Log level: CRITICAL, ERROR, '
-              'WARNING, INFO or DEBUG', callback=validate_log_level)
-@click.option('--botolog', default='info', help='Boto log level: CRITICAL, '
-              'ERROR, WARNING, INFO or DEBUG', callback=validate_log_level)
+              'WARNING, INFO or DEBUG', callback=validate_log_level,
+              metavar='LEVEL')
+@click.option('--botolog', default='warning', help='Boto log level: CRITICAL, '
+              'ERROR, WARNING, INFO or DEBUG', callback=validate_log_level,
+              metavar='LEVEL')
 def main(log, botolog):
     logging.basicConfig(level=getattr(logging, log))
 
@@ -28,10 +30,12 @@ def main(log, botolog):
 @main.command()
 @click.argument('environment')
 @click.option('--pretend/--no-pretend', default=False)
-def create(environment, pretend):
+@click.option('--output', help="Store environment outputs in a yaml file",
+              default=None, metavar='FILE')
+def create(environment, pretend, output):
     env = Environment(environment)
     if not pretend:
-        env.create()
+        env.create(output_file=output)
 
 
 @main.command()

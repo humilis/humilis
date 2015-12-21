@@ -62,13 +62,13 @@ class Environment():
                 outputs[layer.name] = ly
         return outputs
 
-    def create(self):
+    def create(self, output_file=None):
         """Creates all layers in the environment"""
         self.populate_hierarchy()
         for layer in self.layers:
             layer.create()
-        # Write layer outputs to a YAML file
-        self.write_outputs()
+        if output_file is not None:
+            self.write_outputs(output_file)
 
     def write_outputs(self):
         """Writes layer outputs to a YAML file"""
