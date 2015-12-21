@@ -1,0 +1,8 @@
+outputs:
+    {% for event in ['visit', 'search', 'lead', 'booking'] %}
+        {{event.title()}}Stream:
+            Description:
+                The ID of the Kinesis stream for {{event}} events
+            Value:
+                Ref: {{event.title()}}Stream
+    {% endfor %}

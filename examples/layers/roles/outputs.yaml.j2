@@ -1,0 +1,9 @@
+outputs:
+    {% for event in ['visit', 'search', 'lead', 'booking'] %}
+        {{event.title()}}ApiResourceExecutionRole:
+            Description: >
+                The ID of the execution role associated to the 
+                {{event.title()}} API resource integration with Kinesis
+            Value:
+                Ref: {{event.title()}}ApiResourceExecutionRole
+    {% endfor %}

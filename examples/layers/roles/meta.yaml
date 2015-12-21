@@ -14,15 +14,5 @@ meta:
                     ref: streams/SearchStream
                 lead:
                     ref: streams/LeadStream
-        search_stream_name:
-            description: The name of the Kinesis stream for search events
-            value:
-                ref: streams/SearchStream
-        lead_stream_name:
-            description: The name of the Kinesis stream for lead events
-            value:
-                ref: streams/LeadStream
-        booking_stream_name:
-            description: The name of the Kinesis stream for booking events
-            value:
-                ref: streams/BookingStream
+                booking:
+                    ref: streams/BookingStream

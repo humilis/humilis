@@ -1,6 +1,6 @@
 resources:
     {% for stream, stream_name in streams.items() %}
-        {{stream.title()}}ExecutionRole:
+        {{stream.title()}}ApiResourceExecutionRole:
             Type: 'AWS::IAM::Role'
             Properties:
                 AssumeRolePolicyDocument:
