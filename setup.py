@@ -3,7 +3,7 @@ from setuptools import setup, find_packages
 
 setup(
     name="humilis",
-    version="0.3a0",
+    version="0.3",
     author="German Gomez-Herrero",
     author_email='g@germangh.com',
     url='http://github.com/germangh/humilis',
