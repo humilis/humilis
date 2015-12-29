@@ -16,6 +16,11 @@ test_key = 'humilis-testkey'
 # The local directory where SSH key pairs should be saved to
 keys_dir = os.path.join(os.path.expanduser('~'), '.ssh')
 
+# The S3 bucket where layer artifacts will be stored (e.g. lambda functions)
+s3bucket = 'innovativetravel-code'
+# Artifacts will be stored under [s3prefix]/[layer_name]
+s3prefix = 'humilis/'
+
 # Default amount of time to wait for CF to carry out an operation
 default_wait = 10*60
 
