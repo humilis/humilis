@@ -1,32 +1,45 @@
 resources:
     {% for stream, stream_name in streams.items() %}
-        {{stream.title()}}ApiResourceExecutionRole:
-            Type: 'AWS::IAM::Role'
-            Properties:
-                AssumeRolePolicyDocument:
-                    Version: '2012-10-17'
-                    Statement:
-                        - Effect: Allow
-                          Principal:
-                              Service: 'apigateway.amazonaws.com'
-                          Action: 'sts:AssumeRole'
-                Path: '/tapi/'
-                Policies:
-                    - PolicyName: "{{stream.title()}}StreamWriteAccess"
-                      PolicyDocument:
-                          Version: '2012-10-17'
-                          Statement:
-                              - Effect: Allow
-                                Action:
-                                    - 'kinesis:*'
-                                Resource: 
-                                    "Fn::Join": 
-                                        - ''
-                                        -
-                                            - "arn:aws:kinesis:"
-                                            - Ref: "AWS::Region"
-                                            - ':'
-                                            - Ref: "AWS::AccountId"
-                                            - ':'
-                                            - "stream/{{stream_name}}"
+    {{stream.title()}}ApiResourceExecutionRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service: 'apigateway.amazonaws.com'
+                      Action: 'sts:AssumeRole'
+            Path: '/humilis/'
+            Policies:
+                - PolicyName: "{{stream.title()}}StreamWriteAccess"
+                  PolicyDocument:
+                      Version: '2012-10-17'
+                      Statement:
+                          - Effect: Allow
+                            Action:
+                                - 'kinesis:*'
+                            Resource: 
+                                "Fn::Join": 
+                                    - ''
+                                    -
+                                        - "arn:aws:kinesis:"
+                                        - Ref: "AWS::Region"
+                                        - ':'
+                                        - Ref: "AWS::AccountId"
+                                        - ':'
+                                        - "stream/{{stream_name}}"
     {% endfor %}
+    {# A dummy role that does not give permission to do anything #}
+    DummyRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service: 'lambda.amazonaws.com'
+                      Action: 'sts:AssumeRole'
+            Path: '/humilis/'
+            Policies: []
