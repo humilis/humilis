@@ -15,7 +15,7 @@ import time
 import datetime
 
 
-class Layer(DirTreeBackedObject):
+class Layer():
     """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, logger=None, loader=None,
                  **user_params):
@@ -200,11 +200,24 @@ class Layer(DirTreeBackedObject):
             raise ReferenceError(ref, ValueError, self.logger)
 
         if ref_name[0] == ':':
-            # A reference to an existing AWS resource that has been deployed
-            # independently.
-            return self._resolve_boto_ref(ref_name[1:], selection)
+            # Custom references to AWS or local resources
+            _, ref_type, *ref_name = ref_name.split(':')  # noqa
+            ref_name = ':'.join(ref_name)
+            if ref_type == 'aws':
+                return self._resolve_boto_ref(ref_name, selection)
+            elif ref_type == 'file':
+                return self._resolve_file_ref(selection)
+            else:
+                msg = "Unknown reference type {}".format(ref_type)
+                raise ReferenceError(ref, msg, self.logger)
         else:
             return self._resolve_layer_ref(ref_name, selection)
+
+    def _resolve_file_ref(self, selection):
+        """Resolves a reference to a local file"""
+        file_path = os.path.join(self.basedir, selection)
+        with open(file_path, 'r') as f:
+            return f.read()
 
     def _resolve_boto_ref(self, resource_type, selection):
         """Resolves a reference to an existing AWS resource that has been
