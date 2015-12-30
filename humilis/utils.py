@@ -9,8 +9,49 @@ import glob
 import json
 import yaml
 import jinja2
+import boto3
+import humilis.config as config
 from humilis.exceptions import FileFormatError
 from sys import exit
+
+
+class AwsProxy:
+    """Parent class for proxy classes to AWS services"""
+    def __init__(self, service, logger=None):
+        self.__logger = logger
+        self.__service = service
+        region = config.aws_region
+        if region is not None:
+            self.session = boto3.session.Session(region_name=region)
+        else:
+            # Otherwise use the CLI AWS config files
+            self.session = boto3.session.Session()
+        self.client = self.session.client(self.__service)
+        self.__resource = None
+
+    @property
+    def logger(self):
+        """A logger object to log status messages"""
+        if self.__logger is None:
+            logger_name = "humilis.{}".format(self.__service)
+            self.__logger = logging.getLogger(logger_name)
+        return self.__logger
+
+    @property
+    def resource(self):
+        """A boto3 service resource object"""
+        if self.__resource is None:
+            self.__resource = self.session.resource(self.__service)
+        return self.__resource
+
+    def __str__(self):
+        return "{}()".format(type(self).__name__)
+
+    def __repr__(self):
+        return str(self)
+
+    def __getattr__(self, name):
+        return getattr(self.client, name)
 
 
 def unroll_tags(tags):

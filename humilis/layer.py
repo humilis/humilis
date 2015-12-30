@@ -10,6 +10,7 @@ import humilis.config as config
 from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
 from humilis.ec2 import EC2
+from boto3.session import Session
 import json
 import time
 import datetime
@@ -66,7 +67,6 @@ class Layer():
         # populated once the layers this layer depend on have been created.
         self.params = {}
 
-        # An EC2 object, to be lazily initialized
         self.__ec2 = None
 
     @property
@@ -159,6 +159,11 @@ class Layer():
             self.params[pname]['value'] = self._parse_param_value(
                 param['value'])
 
+        # The humilis param contains humilis-specific info such as config
+        # options and the name of the current layer
+        humilis = {'layer_name': self.name, 'config': config}
+        self.params['humilis'] = {'value': humilis}
+
     def print_params(self):
         """Prints the params used during layer creation"""
         if len(self.params) < 1:
@@ -216,6 +221,8 @@ class Layer():
     def _resolve_file_ref(self, selection):
         """Resolves a reference to a local file"""
         file_path = os.path.join(self.basedir, selection)
+        # Upload the file to S3
+
         with open(file_path, 'r') as f:
             return f.read()
 

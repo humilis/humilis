@@ -2,35 +2,18 @@
 # -*- coding: utf-8 -*-
 
 
-import boto3
 import time
 from humilis.exceptions import TakesTooLongError, CloudformationError
 import humilis.config as config
 import humilis.utils as utils
-import logging
-import os
 
 
-class CloudFormation:
+class CloudFormation(utils.AwsProxy):
     """
     A proxy to AWS CloudFormation service
     """
-    def __init__(self, logger=None):
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
-
-        region = os.environ.get('AWS_REGION')
-        if region is not None:
-            # If the AWS region is in the environment then override the local
-            # AWS CLI config files. This is useful e.g. when running in test
-            # environments that don't have those config files.
-            session = boto3.session.Session(region_name=region)
-        else:
-            # Otherwise use the CLI AWS config files
-            session = boto3.session.Session()
-        self.client = session.client('cloudformation')
-        self.resource = session.resource('cloudformation')
+    def __init__(self, *args, **kwargs):
+        super().__init__('cloudformation', *args, **kwargs)
 
     @property
     def stacks(self):
@@ -150,12 +133,3 @@ class CloudFormation:
         """Gets a list of stack events sorted by timestamp"""
         stack = self.get_stack(stack_name)
         return sorted(stack.events.all(), key=lambda ev: ev.timestamp)
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "CloudFormation()"
-
-    def __getattr__(self, name):
-        return getattr(self.client, name)

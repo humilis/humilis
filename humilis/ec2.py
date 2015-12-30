@@ -4,32 +4,16 @@
 
 # For Python 2.x compatibility
 from __future__ import print_function
-import boto3
 import os
 import humilis.config as config
-import logging
 import humilis.utils as utils
 from humilis.exceptions import CloudformationError
 
 
-class EC2:
-    """
-    A proxy to AWS EC2 service
-    """
-    def __init__(self, logger=None):
-        if logger is None:
-            logger = logging.getLogger(__name__)
-        self.logger = logger
-        region = os.environ.get('AWS_REGION')
-        if region is not None:
-            # If the AWS region is in the environment then override the local
-            # AWS CLI config files. This is useful e.g. when running in test
-            # environments that don't have those config files.
-            session = boto3.session.Session(region_name=region)
-        else:
-            # Otherwise use the CLI AWS config files
-            session = boto3.session.Session()
-        self.client = session.client('ec2')
+class EC2(utils.AwsProxy):
+    """A proxy to AWS EC2 service"""
+    def __init__(self, *args, **kwargs):
+        super().__init__('ec2', *args, **kwargs)
 
     def create_key_pair(self, key_name):
         """Creates a keypair in AWS EC2, if it doesn't exist already"""
@@ -90,12 +74,3 @@ class EC2:
             if matched:
                 sel_imgs.append(img)
         return sel_imgs
-
-    def __repr__(self):
-        return str(self)
-
-    def __str__(self):
-        return "EC2()"
-
-    def __getattr__(self, name):
-        return getattr(self.client, name)

@@ -21,6 +21,10 @@ s3bucket = 'innovativetravel-code'
 # Artifacts will be stored under [s3prefix]/[layer_name]
 s3prefix = 'humilis/'
 
+# If envar AWS_REGION is not set then humilis will use whatever the default
+# region in the local system AWS config files.
+aws_region = os.environ.get('AWS_REGION')
+
 # Default amount of time to wait for CF to carry out an operation
 default_wait = 10*60
 
