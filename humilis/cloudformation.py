@@ -124,6 +124,16 @@ class CloudFormation(utils.AwsProxy):
         stack = self.get_stack(stack_name)
         return stack.resource_summaries.all()
 
+    def get_stack_outputs(self, stack_name):
+        """Retrieves the outputs produced by a Stack"""
+        stack = self.get_stack(stack_name)
+        return {o['OutputKey']: o['OutputValue'] for o in stack.outputs}
+
+    def get_stack_output(self, stack_name, output_name):
+        """Retrieves one stack output"""
+        return [v for k, v in self.get_stack_outputs(stack_name).items()
+                if k == output_name]
+
     def get_stack_status(self, stack_name):
         """Gets the current status of a CF stack"""
         stack = self.get_stack(stack_name)

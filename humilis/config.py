@@ -17,9 +17,9 @@ test_key = 'humilis-testkey'
 keys_dir = os.path.join(os.path.expanduser('~'), '.ssh')
 
 # The S3 bucket where layer artifacts will be stored (e.g. lambda functions)
-s3bucket = 'innovativetravel-code'
-# Artifacts will be stored under [s3prefix]/[layer_name]
-s3prefix = 'humilis/'
+s3bucket = 'innovativetravel-humilis'
+# Artifacts will be stored under [s3prefix]/[environment_name]/[layer_name]
+s3prefix = ''
 
 # If envar AWS_REGION is not set then humilis will use whatever the default
 # region in the local system AWS config files.

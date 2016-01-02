@@ -1,0 +1,4 @@
+---
+meta:
+    description:
+        Creates the execution role necessary for the lambda layer

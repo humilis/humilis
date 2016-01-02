@@ -22,7 +22,7 @@ meta:
         ami:
             description: The AMI to use when launching the EC2 instance
             value:
-                ref: :ec2:ami/Name=test-ami
+                ref: :aws:ec2:ami/Name=test-ami
         subnet:
             description: The physical ID of the subnet where the instance will be 
                 launched

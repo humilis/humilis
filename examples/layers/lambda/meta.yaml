@@ -1,0 +1,15 @@
+---
+meta:
+    description:
+        Dummy Lambda function that does nothing
+    dependencies:
+        - lambda-role
+    parameters:
+        dummy_function:
+            description: The code of the dummy Lambda function
+            value:
+                ref: :file/dummy_function.zip
+        role:
+            description: The role to associate to the dummy Lambda function
+            value:
+                ref: :output:lambda-role/DummyRoleArn

@@ -10,6 +10,7 @@ import humilis.config as config
 from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
 from humilis.ec2 import EC2
+from humilis.s3 import S3
 from boto3.session import Session
 import json
 import time
@@ -68,6 +69,7 @@ class Layer():
         self.params = {}
 
         self.__ec2 = None
+        self.__s3 = None
 
     @property
     def basedir(self):
@@ -85,6 +87,13 @@ class Layer():
         if self.__ec2 is None:
             self.__ec2 = EC2()
         return self.__ec2
+
+    @property
+    def s3(self):
+        """Connection to AWS S3"""
+        if self.__s3 is None:
+            self.__s3 = S3()
+        return self.__s3
 
     @property
     def children_in_cf(self):
@@ -212,19 +221,30 @@ class Layer():
                 return self._resolve_boto_ref(ref_name, selection)
             elif ref_type == 'file':
                 return self._resolve_file_ref(selection)
+            elif ref_type == 'output':
+                # A layer output
+                return self._resolve_output_ref(ref_name, selection)
+            elif ref_type == 'layer':
+                return self._resolve_layer_ref(ref_name, selection)
             else:
                 msg = "Unknown reference type {}".format(ref_type)
                 raise ReferenceError(ref, msg, self.logger)
         else:
+            # For backwards compatibility
             return self._resolve_layer_ref(ref_name, selection)
 
     def _resolve_file_ref(self, selection):
         """Resolves a reference to a local file"""
         file_path = os.path.join(self.basedir, selection)
         # Upload the file to S3
-
-        with open(file_path, 'r') as f:
-            return f.read()
+        file_name = os.path.basename(file_path)
+        s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
+            base_prefix=config.s3prefix,
+            env_name=self.env_name,
+            layer_name=self.relname,
+            file_name=file_name)
+        self.s3.cp(file_path, config.s3bucket, s3key)
+        return {'s3bucket': config.s3bucket, 's3key': s3key}
 
     def _resolve_boto_ref(self, resource_type, selection):
         """Resolves a reference to an existing AWS resource that has been
@@ -256,17 +276,25 @@ class Layer():
         stack_name = "{}-{}".format(self.env_name, layer_name)
         resource = self.cf.get_stack_resource(stack_name, resource_name)
 
-        if len(resource) != 1:
+        if len(resource) < 1:
             all_stack_resources = [x.logical_resource_id for x
                                    in self.cf.get_stack_resources(stack_name)]
-            msg = "{} does not exist in stack {} (with resources {})".format(
+            msg = "{} does not exist in stack {} (with resources {}).".format(
                 resource_name, stack_name, all_stack_resources)
-            raise ReferenceError(stack_name + '/' + resource_name,
-                                 msg, logger=self.logger)
-        else:
-            resource = resource[0]
+            raise ReferenceError(resource_name, msg, logger=self.logger)
 
-        return resource.physical_resource_id
+        return resource[0].physical_resource_id
+
+    def _resolve_output_ref(self, layer_name, output_name):
+        """Resolves a reference to a layer output"""
+        stack_name = "{}-{}".format(self.env_name, layer_name)
+        output = self.cf.get_stack_output(stack_name, output_name)
+        if len(output) < 1:
+            all_stack_outputs = list(self.cf.stack_outputs(layer_name).keys())
+            msg = ("{} output does not exist for stack {} "
+                   "(with outputs {}).").format(output_name, stack_name)
+            raise ReferenceError(output_name, msg, logger=self.logger)
+        return output[0]
 
     def delete(self):
         """Deletes a stack in CF"""

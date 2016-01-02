@@ -1,7 +1,9 @@
 ---
 meta:
     description:
-        Creates a separate Kinesis stream for each event type
+        Kinesis streams for each event type
+    dependencies:
+        - streams-roles
     parameters:
         # Layer meta-parameters. You can use a parameter in your resource 
         # templates using {{ param_name }}.

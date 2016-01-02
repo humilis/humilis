@@ -7,12 +7,11 @@ from __future__ import print_function
 import boto3
 import humilis.config as config
 import logging
+from botocore.exceptions import ClientError
 
 
 class S3:
-    """
-    A proxy to the AWS S3 service
-    """
+    """A proxy to the AWS S3 service"""
     def __init__(self, logger=None):
         if logger is None:
             logger = logging.getLogger(__name__)
@@ -28,9 +27,15 @@ class S3:
             session = boto3.session.Session()
         self.client = session.client('s3')
 
-    def cp(self, local_path, s3_path):
+    def cp(self, local_path, s3_bucket, s3_key):
         """Uploads a local file to a S3 bucket"""
-        pass
+        try:
+            return self.client.upload_file(local_path, s3_bucket, s3_key)
+        except ClientError:
+            msg = "Error uploading {} to {}/{}".format(
+                local_path, s3_bucket, s3_key)
+            self.logger.error(msg)
+            raise
 
     def __repr__(self):
         return str(self)

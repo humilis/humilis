@@ -1,0 +1,7 @@
+outputs:
+    DummyRoleArn:
+        Description: The ARN of the dummy role
+        Value:
+            "Fn::GetAtt": 
+                - DummyRole
+                - Arn
