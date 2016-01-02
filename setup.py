@@ -1,14 +1,16 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from setuptools import setup, find_packages
 
 setup(
     name="humilis",
-    version="0.3",
-    author="German Gomez-Herrero",
-    author_email='g@germangh.com',
+    version="0.4",
+    author="Innovative Travel Ltd.",
+    author_email='german@innovativetravel.eu',
     url='http://github.com/germangh/humilis',
     license='Apache Software License 2.0',
-    description='Manages AWS Cloudformation stacks',
+    description='Helps you deploy AWS CloudFormation stacks',
     packages=find_packages(),
     include_package_data=True,
     install_requires=[
