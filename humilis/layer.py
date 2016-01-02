@@ -11,7 +11,6 @@ from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
 from humilis.ec2 import EC2
 from humilis.s3 import S3
-from boto3.session import Session
 import json
 import time
 import datetime
@@ -292,7 +291,9 @@ class Layer():
         if len(output) < 1:
             all_stack_outputs = list(self.cf.stack_outputs(layer_name).keys())
             msg = ("{} output does not exist for stack {} "
-                   "(with outputs {}).").format(output_name, stack_name)
+                   "(with outputs {}).").format(output_name,
+                                                stack_name,
+                                                all_stack_outputs)
             raise ReferenceError(output_name, msg, logger=self.logger)
         return output[0]
 
