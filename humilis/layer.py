@@ -6,11 +6,12 @@ import os
 import os.path
 import re
 import logging
+import humilis
 import humilis.config as config
 from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
-from humilis.ec2 import EC2
-from humilis.s3 import S3
+from boto3facade.s3 import S3
+from boto3facade.ec2 import Ec2
 import json
 import time
 import datetime
@@ -84,14 +85,14 @@ class Layer():
     def ec2(self):
         """Connection to AWS EC2 service"""
         if self.__ec2 is None:
-            self.__ec2 = EC2()
+            self.__ec2 = EC2(humilis.CONFIG)
         return self.__ec2
 
     @property
     def s3(self):
         """Connection to AWS S3"""
         if self.__s3 is None:
-            self.__s3 = S3()
+            self.__s3 = S3(humilis.CONFIG)
         return self.__s3
 
     @property
