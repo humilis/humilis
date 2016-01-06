@@ -17,7 +17,7 @@ import time
 import datetime
 
 
-class Layer():
+class Layer(DirTreeBackedObject):
     """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, logger=None, loader=None,
                  **user_params):
@@ -85,7 +85,7 @@ class Layer():
     def ec2(self):
         """Connection to AWS EC2 service"""
         if self.__ec2 is None:
-            self.__ec2 = EC2(humilis.CONFIG)
+            self.__ec2 = Ec2(humilis.CONFIG)
         return self.__ec2
 
     @property
