@@ -6,7 +6,7 @@ import pytest
 import os
 from humilis.environment import Environment
 from humilis.cloudformation import CloudFormation
-from humilis.ec2 import EC2
+from boto3facade.ec2 import Ec2
 import humilis.config as config
 
 
@@ -17,7 +17,7 @@ def cf():
 
 @pytest.yield_fixture(scope="module")
 def ec2():
-    yield EC2()
+    yield Ec2()
 
 
 @pytest.yield_fixture(scope="module")
