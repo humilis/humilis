@@ -5,7 +5,8 @@
 import logging
 import os
 from humilis.layer import Layer
-from humilis.cloudformation import CloudFormation
+from boto3facade.cloudformation import Cloudformation
+from humilis.config import config
 from humilis.exceptions import FileFormatError
 import humilis.utils as utils
 import yaml
@@ -27,7 +28,7 @@ class Environment():
         if len(self.meta) == 0:
             raise FileFormatError(yml_path, logger=self.logger)
 
-        self.cf = CloudFormation()
+        self.cf = Cloudformation(config.boto_config)
         self.sns_topic_arn = self.meta.get('sns-topic-arn', [])
         self.tags = self.meta.get('tags', {})
         self.tags['humilis-environment'] = self.name

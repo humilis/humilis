@@ -7,7 +7,7 @@ import os.path
 import re
 import logging
 import humilis
-import humilis.config as config
+from humilis.config import config
 from humilis.utils import DirTreeBackedObject
 from humilis.exceptions import ReferenceError, CloudformationError
 from boto3facade.s3 import S3
@@ -85,14 +85,14 @@ class Layer(DirTreeBackedObject):
     def ec2(self):
         """Connection to AWS EC2 service"""
         if self.__ec2 is None:
-            self.__ec2 = Ec2(humilis.CONFIG)
+            self.__ec2 = Ec2(config.boto_config)
         return self.__ec2
 
     @property
     def s3(self):
         """Connection to AWS S3"""
         if self.__s3 is None:
-            self.__s3 = S3(humilis.CONFIG)
+            self.__s3 = S3(config.boto_config)
         return self.__s3
 
     @property
@@ -143,12 +143,12 @@ class Layer(DirTreeBackedObject):
         self.loader.params = self.params
 
         # Load all files with layer contents
-        for section in config.layer_sections:
+        for section in config.LAYER_SECTIONS:
             self.section[section] = self.loader.load_section(section)
 
         # Package the layer as a CF template
         cf_template = {
-            'AWSTemplateFormatVersion': str(config.cf_template_version),
+            'AWSTemplateFormatVersion': str(config.CF_TEMPLATE_VERSION),
             'Description': self.meta.get('description', ''),
             'Mappings': self.section.get('mappings', {}),
             'Parameters': self.section.get('parameters', {}),
@@ -167,11 +167,6 @@ class Layer(DirTreeBackedObject):
             self.params[pname]['description'] = param.get('description', None)
             self.params[pname]['value'] = self._parse_param_value(
                 param['value'])
-
-        # The humilis param contains humilis-specific info such as config
-        # options and the name of the current layer
-        humilis = {'layer_name': self.name, 'config': config}
-        self.params['humilis'] = {'value': humilis}
 
     def print_params(self):
         """Prints the params used during layer creation"""
@@ -213,7 +208,7 @@ class Layer(DirTreeBackedObject):
         except ValueError:
             raise ReferenceError(ref, ValueError, self.logger)
 
-        if ref_name[0] == ':':
+        if ref_name[0] in {':', '$'}:
             # Custom references to AWS or local resources
             _, ref_type, *ref_name = ref_name.split(':')  # noqa
             ref_name = ':'.join(ref_name)
@@ -239,12 +234,13 @@ class Layer(DirTreeBackedObject):
         # Upload the file to S3
         file_name = os.path.basename(file_path)
         s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
-            base_prefix=config.s3prefix,
+            base_prefix=config.boto_config.profile.get('s3prefix'),
             env_name=self.env_name,
             layer_name=self.relname,
             file_name=file_name)
-        self.s3.cp(file_path, config.s3bucket, s3key)
-        return {'s3bucket': config.s3bucket, 's3key': s3key}
+        s3bucket = config.boto_config.profile.get('bucket')
+        self.s3.cp(file_path, s3bucket, s3key)
+        return {'s3bucket': s3bucket, 's3key': s3key}
 
     def _resolve_boto_ref(self, resource_type, selection):
         """Resolves a reference to an existing AWS resource that has been
@@ -323,15 +319,11 @@ class Layer(DirTreeBackedObject):
         cf_template = self.compile()
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
-        try:
-            self.cf.create_stack(
-                self.name,
-                json.dumps(cf_template, indent=4),
-                self.sns_topic_arn,
-                self.tags)
-            # Try getting the output params of the stack
-        except Exception as exception:
-                raise CloudformationError(msg, exception, logger=self.logger)
+        self.cf.create_stack(
+            self.name,
+            json.dumps(cf_template, indent=4),
+            self.sns_topic_arn,
+            self.tags)
 
         status = self.watch_events()
         if status != 'CREATE_COMPLETE':
@@ -348,7 +340,7 @@ class Layer(DirTreeBackedObject):
             return
         stack_status = self.cf.get_stack_status(self.name)
         already_seen = set()
-        cm = config.event_status_color_map
+        cm = config.EVENT_STATUS_COLOR_MAP
         while stack_status == progress_status:
             events = self.cf.get_stack_events(self.name)
             new_events = [ev for ev in events if ev.id not in already_seen]

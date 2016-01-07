@@ -24,7 +24,7 @@ setup(
         'PyYAML',
         'Click',
         'boto3',
-        'boto3facade==0.0.4',
+        'boto3facade==0.0.6',
         'jinja2'],
     classifiers=[
         "Programming Language :: Python :: 3"],

@@ -17,13 +17,9 @@ def validate_log_level(ctx, param, value):
 
 
 @click.group()
-@click.option('--log', default='info', help='Log level: CRITICAL, ERROR, '
-              'WARNING, INFO or DEBUG', callback=validate_log_level,
-              metavar='LEVEL')
-@click.option('--botolog', default='warning', help='Boto log level: CRITICAL, '
-              'ERROR, WARNING, INFO or DEBUG', callback=validate_log_level,
-              metavar='LEVEL')
-def main(log, botolog):
+@click.option('--log', default='info', help="Log level :{}".format(LOG_LEVELS),
+              callback=validate_log_level, metavar='LEVEL')
+def main(log):
     logging.basicConfig(level=getattr(logging, log))
 
 
