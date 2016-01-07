@@ -56,6 +56,14 @@ def test_vpc_layer(cf, test_environment):
 @pytest.yield_fixture(scope="module")
 def test_streams_layer(cf, test_environment):
     """The Streams layer from the sample environment"""
+    layer = Layer(test_environment, 'streams-roles')
+    yield layer
+    cf.delete_stack(layer.name)
+
+
+@pytest.yield_fixture(scope="module")
+def test_streams_roles_layer(cf, test_environment):
+    """The streams-roles layer from the sample environment"""
     layer = Layer(test_environment, 'streams')
     yield layer
     cf.delete_stack(layer.name)
