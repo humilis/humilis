@@ -1,9 +1,6 @@
 # Development/testing requirements
-PyYAML
-click
-boto3
-jinja2
 pytest
 ipython
 pdbpp
 tox
+pypandoc
