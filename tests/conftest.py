@@ -6,7 +6,7 @@
 import pytest
 import humilis.config as config
 import os
-from humilis.cloudformation import CloudFormation
+from boto3facade.cloudformation import Cloudformation
 from boto3facade.ec2 import Ec2
 from humilis.environment import Environment
 from humilis.layer import Layer
@@ -15,7 +15,7 @@ from humilis.layer import Layer
 @pytest.yield_fixture(scope="session")
 def cf():
     """Create a Cloudformation facade object"""
-    yield CloudFormation()
+    yield Cloudformation()
 
 
 @pytest.yield_fixture(scope="session")
