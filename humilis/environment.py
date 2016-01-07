@@ -12,10 +12,7 @@ import yaml
 
 
 class Environment():
-    """
-    An environment represents a collection of infrastructure layers serving
-    a common purpose.
-    """
+    """Manages the deployment of a collection of humilis layers."""
     def __init__(self, yml_path, logger=None):
         if logger is None:
             self.logger = logging.getLogger(__name__)

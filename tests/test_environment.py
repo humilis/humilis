@@ -2,19 +2,20 @@
 # -*- coding: utf-8 -*-
 
 
-def test_create_environment_object(humilis_environment):
+def test_create_environment_object(test_environment):
     """Creates an Environment objects and queries its properties"""
-    env = humilis_environment
+    env = test_environment
     assert env.name == 'example-environment'
     assert env.tags.get('humilis-environment') == env.name
 
 
-def test_environment_not_already_in_aws(humilis_environment):
+def test_environment_not_already_in_aws(test_environment):
     """Ensures tha the test environment is not already in CF"""
-    assert not humilis_environment.already_in_cf
+    test_environment.delete()
+    assert not test_environment.already_in_cf
 
 
-def test_create_environment(humilis_environment):
+def test_create_environment(test_environment):
     """Creates a test environment in CF"""
-    humilis_environment.create()
-    assert humilis_environment.already_in_cf
+    test_environment.create()
+    assert test_environment.already_in_cf
