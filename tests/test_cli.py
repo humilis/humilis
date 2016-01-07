@@ -52,22 +52,6 @@ def test_valid_log_level(runner, humilis_example_environment):
         assert result.exit_code == 0
 
 
-def test_invalid_botolog_level(runner, humilis_example_environment):
-    result = runner.invoke(humilis.cli.main, ['--botolog', 'invalid', 'create',
-                                              humilis_example_environment,
-                                              '--pretend'])
-    assert result.exit_code > 0
-    assert isinstance(result.exception, SystemExit)
-
-
-def test_valid_botolog_level(runner, humilis_example_environment):
-    for level in LOG_LEVELS:
-        result = runner.invoke(humilis.cli.main, ['--botolog', level, 'create',
-                                                  humilis_example_environment,
-                                                  '--pretend'])
-        assert result.exit_code == 0
-
-
 def test_output(runner, humilis_example_environment):
     result = runner.invoke(humilis.cli.create, [humilis_example_environment,
                                                 '--output', 'filename',
