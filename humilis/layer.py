@@ -121,8 +121,7 @@ class Layer(DirTreeBackedObject):
 
     @property
     def dependencies_met(self):
-        """Checks whether stacks this layer depends on exist in Cloudformation
-        """
+        """Checks whether all stack dependencies have been deployed."""
         current_cf_stack_names = {stack.get('StackName') for stack
                                   in self.cf.stacks}
         for dep in self.depends_on:
@@ -131,12 +130,12 @@ class Layer(DirTreeBackedObject):
         return True
 
     def add_child(self, child_name):
-        """Adds a child to this layer"""
+        """Adds a child to this layer."""
         self.children.add(child_name)
         self.tags['humilis-children'] = ','.join(self.children)
 
     def compile(self):
-        """Loads all files associated to a layer"""
+        """Loads all files associated to a layer."""
         # Some templates may refer to params, so populate them first
         self.populate_params()
         self.loader.params = self.params
@@ -157,8 +156,7 @@ class Layer(DirTreeBackedObject):
         return cf_template
 
     def populate_params(self):
-        """Populates parameters in a layer by resolving references if necessary
-        """
+        """Populates parameters in a layer by resolving references."""
         if len(self.yaml_params) < 1:
             return
         for pname, param in self.yaml_params.items():
@@ -168,7 +166,7 @@ class Layer(DirTreeBackedObject):
                 param['value'])
 
     def print_params(self):
-        """Prints the params used during layer creation"""
+        """Prints the params used during layer creation."""
         if len(self.params) < 1:
             print("No parameters. Did you forget to run populate_params()?")
             return
@@ -180,13 +178,12 @@ class Layer(DirTreeBackedObject):
             print("{pname:<15}: {pval:>30}".format(pname=pname, pval=pval))
 
     def _parse_param_value(self, pval):
-        """Parses yaml parameters"""
+        """Parses layer parameter values."""
         if isinstance(pval, list):
             # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
         elif isinstance(pval, dict) and 'ref' in pval:
-            # Reference to a physical resource in another layer, or to a
-            # resource already deployed to AWS
+	    # A reference
             return self._resolve_ref(pval['ref'])
         elif isinstance(pval, dict) and 'envvar' in pval:
             # An environment variable
