@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 
 from setuptools import setup, find_packages
-import boto3facade.metadata as metadata
+import humilis.metadata as metadata
 
 try:
     import pypandoc
