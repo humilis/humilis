@@ -18,7 +18,13 @@ project. See [CUMULUS_LICENSE][cumulus_license] for license information.
 
 # Installation
 
-Run this in a terminal:
+To install the latest "stable" version:
+
+```
+pip install humilis
+```
+
+To install the development version:
 
 ````
 pip install git+https://github.com/germangh/humilis
@@ -45,7 +51,7 @@ You will need to first [set up your system][aws-setup] to access AWS resources.
 [aws-setup]: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 
 ```
-py.test
+py.test tests
 ```
 
 
