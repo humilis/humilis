@@ -111,7 +111,7 @@ list of layers that form your enviroment. It looks like this:
 
 [yaml]: https://en.wikipedia.org/wiki/YAML
 
-```
+```yaml
 ---
 my_-app-environment:
     description:
