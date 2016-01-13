@@ -120,12 +120,9 @@ my_-app-environment:
         # The layers that you environment requires. They will be deployed in the
         # same order as you list them. Note that you can also pass parameters 
         # to a layer (more on that later).
-        - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16}
-        - {layer: instance}
-        - {layer: streams-roles}
-        - {layer: streams}
-        - {layer: lambda-role}
-        - {layer: lambda}
+        - {layer: name__of_first_layer, layer_param: layer_value}
+        - {layer: name_of_second_layer}
+        - {layer: name_of_third_layer}
 ```
 
 
