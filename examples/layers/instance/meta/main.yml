@@ -11,16 +11,16 @@ meta:
             value: 0.0.0.0/0
         instance_type:
             description: The EC2 instance type to be created
-            value: m1.small
+            value: t2.nano
         keyname:
             description: The name of the key granting SSH access to the instance
             value: humilis-testkey
         vpc:
             description: The physical ID of the VPC where the image will be created
             value:
-                ref: vpc/VPC
+                ref: $layer[vpc/VPC]
         subnet:
             description: The physical ID of the subnet where the instance will be 
                 launched
             value: 
-                ref: vpc/Subnet
+                ref: $layer[vpc/Subnet]

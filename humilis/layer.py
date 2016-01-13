@@ -183,22 +183,15 @@ class Layer(DirTreeBackedObject):
             # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
         elif isinstance(pval, dict) and 'ref' in pval:
-	    # A reference
+            # A reference
             return self._resolve_ref(pval['ref'])
-        elif isinstance(pval, dict) and 'envvar' in pval:
-            # An environment variable
-            return os.environ(pval['envvar'])
         elif isinstance(pval, dict):
             return {k: self._parse_param_value(v) for k, v in pval.items()}
         else:
             return pval
 
     def _resolve_ref(self, ref):
-        """
-        Resolves a reference to an existing stack component or to a resource
-        that currently lives in AWS but that has been deployed independently.
-        The latter is only possible for EC2 instances at the moment.
-        """
+        """Resolves a references."""
         try:
             ref_name, selection = ref.split('/')
         except ValueError:

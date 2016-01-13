@@ -104,7 +104,7 @@ two obvious advantages:
 [cf-resource]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html
 
 
-# Environment anatomy
+## Environment anatomy
 
 An environment _definition file_ is a [yaml][yaml] document that specifies the
 list of layers that form your enviroment. It looks like this:
