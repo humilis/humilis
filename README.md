@@ -107,7 +107,10 @@ two obvious advantages:
 ## Environment anatomy
 
 An environment _definition file_ is a [yaml][yaml] document that specifies the
-list of layers that form your enviroment. It looks like this:
+list of layers that form your enviroment. The file should be named as your 
+environment. That is, for environment `my-app-environment` the environment 
+description file should be called `my-app-environment.yaml`. The contents of 
+the environment definition should be organized as follows:
 
 [yaml]: https://en.wikipedia.org/wiki/YAML
 
@@ -127,16 +130,91 @@ my-app-environment:
 
 ## Layer anatomy
 
-All files for a given layer must be stored in a directory with the same name as
-the layer, within the same directory where the environment _definition file_ is
-located. If we consider the dummy environment we used above then your directory
-tree should look like this:
+Anything associated to a given layer must be stored in a directory with the
+same name as the layer, within the same directory where the environment
+_definition file_ is located. If we consider the `my-app-environment` 
+environment we used above then your directory tree should look like this:
 
 ![Environment tree structure](tree.png)
+
+A layer must contain at least two files: 
+
+* `meta.yaml`: Meta information about the layer such as a description,
+  dependencies with other layers, and layer parameters.
+* `resources.yaml`: Basically a CF template with the resources that the layer
+   contains.
+
+Those two files can also be in `.json` format (`meta.json` and 
+'resources.json`). Or you can add the extension `.j2` if you want the files to
+be pre-processed with the [Jinja2][jinja] template compiler.
+
+[jinja2]: http://jinja.pocoo.org/
+
+Below an example of how a layer `meta.yaml` may look like:
+
+```
+---
+meta:
+    description:
+        Creates a VPC, that's it
+    parameters:
+        vpc_cidr:
+            description: The CIDR block of the VPC
+            value: 10.0.0.0/16
+```
+
+Above we declare only one layer parameter: `vpc_cidr`. `humilis` will make pass
+that parameter to Jinja2 when compiling any template contained in the layer. So
+the `resources.yaml.j2` for that same layer may look like this:
+
+```yaml
+---
+resources:
+    VPC:
+        Type: "AWS::EC2::VPC"
+        Properties:
+            CidrBlock: {{ vpc_cidr }}
+```
 
 
 # References
 
-Contrary to vanilla CF templates, `humilis` supports logical references to
-things that are not defined within the same CF template (i.e. within the 
-same `humilis` layer).
+You can use references in your `meta.yaml` files to refer to thing other than
+resources within the same layer (to refer to resources within a layer you can
+simply use Cloudformation's [Ref][cf-ref] or [GetAtt][cf-getatt] functions).
+Humilis references are used by setting the value of a layer parameter to a dict
+that has a `ref` key. Below an a `meta.yaml` that refers to a resource (with
+a logical name `VPC`) that is contained in another layer (called `vpc_layer`):
+
+```yaml
+---
+meta:
+    description:
+        Creates an EC2 instance in the vpc created by the vpc layer
+    dependencies:
+        - vpc
+    parameters:
+        vpc:
+            description: Physical ID of the VPC where the instance will be created
+            value:
+                ref: 
+                    parser: layer
+                    parameters:
+                        layer: vpc_layer
+                        resource: VPC
+```
+
+Every reference must have a `parser` key that identifies the parser that
+should be used to parse the reference. The optional key `parameters` allows
+you to pass parameters to the reference parser. You can pass either named
+parameters (as a dict) or positional arguments (as a list). More information
+on reference parsers below.
+
+
+[cf-ref]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html
+[cf-getatt]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
+
+
+## Built-in reference parsers
+
+TBD
