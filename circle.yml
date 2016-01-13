@@ -1,3 +1,7 @@
+general:
+  branches:
+    ignore:
+      - references
 test:
   override:
     - pip install flake8
