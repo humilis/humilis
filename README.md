@@ -137,6 +137,20 @@ environment we used above then your directory tree should look like this:
 
 ![Environment tree structure](tree.png)
 
+```bash
+.
+├── my-app-environment.yaml
+├── name_of_first_layer
+│   ├── meta.yaml
+│   └── resources.yaml
+├── name_of_second_layer
+│   ├── meta.json
+│   └── meta.yaml
+└── name_of_third_layer
+    ├── resources.json.j2
+    └── resources.yaml.j2
+```
+
 A layer must contain at least two files: 
 
 * `meta.yaml`: Meta information about the layer such as a description,
