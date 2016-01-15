@@ -131,7 +131,9 @@ class Layer(DirTreeBackedObject):
     def add_child(self, child_name):
         """Adds a child to this layer."""
         self.children.add(child_name)
-        self.tags['humilis-children'] = ','.join(self.children)
+        # Don't use a comma as a separator. For whatever reason CF seems to
+        # occasionally break when tag values contain commas.
+        self.tags['humilis-children'] = ':'.join(self.children)
 
     def compile(self):
         """Loads all files associated to a layer."""

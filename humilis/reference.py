@@ -5,6 +5,9 @@
 
 import os
 import importlib
+import tempfile
+import shutil
+from zipfile import ZipFile
 
 import boto3facade
 from boto3facade.s3 import S3
@@ -14,7 +17,18 @@ from humilis.exceptions import ReferenceError
 from humilis.utils import reference_parser
 
 
-@reference_parser
+def _get_s3path(layer, config, full_path):
+    """Returns the parameters needed to copy a local file to S3."""
+    s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
+        base_prefix=config.profile.get('s3prefix', ''),
+        env_name=layer.env_name,
+        layer_name=layer.relname,
+        file_name=os.path.basename(full_path))
+    s3bucket = config.profile.get('bucket')
+    return (s3bucket, s3key)
+
+
+@reference_parser()
 def file(layer, config, path=None):
     """Uploads a local file to S3 and returns the corresponding S3 path.
 
@@ -23,18 +37,44 @@ def file(layer, config, path=None):
     :param path: Path to the file, relative to the location of meta.yaml.
     """
     full_path = os.path.join(layer.basedir, path)
-    s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
-        base_prefix=config.profile.get('s3prefix', ''),
-        env_name=layer.env_name,
-        layer_name=layer.relname,
-        file_name=os.path.basename(full_path))
-    s3bucket = config.profile.get('bucket')
+    s3bucket, s3key = _get_s3path(layer, config, full_path)
     s3 = S3(config)
     s3.cp(full_path, s3bucket, s3key)
     return {'s3bucket': s3bucket, 's3key': s3key}
 
 
-@reference_parser
+@reference_parser(name='lambda')
+def lambda_ref(layer, config, path=None):
+    """Zips a lambda function and uploads it to S3. Returns the S3 path.
+
+    :param layer: The Layer object for the layer declaring the reference.
+    :param config: An object holding humilis configuration options.
+    :param path: Path to the file, relative to the location of meta.yaml.
+    """
+
+    tmpdir = tempfile.mkdtemp()
+    full_path = os.path.join(layer.basedir, path)
+    path_no_ext, ext = os.path.splitext(full_path)
+    basename = os.path.basename(path_no_ext)
+    s3 = S3(config)
+    if ext != '.zip':
+        # Zip and upload to S3
+        try:
+            zipfile = os.path.join(tmpdir, basename + '.zip')
+            with ZipFile(zipfile, 'w') as myzip:
+                myzip.write(full_path)
+            bucket, key = _get_s3path(layer, config, zipfile)
+            s3.cp(zipfile, bucket, key)
+        finally:
+            shutil.rmtree(tmpdir)
+    else:
+        # Just upload
+        bucket, key = _get_s3path(layer, config, full_path)
+        s3.cp(path, bucket, key)
+    return {'s3bucket': bucket, 's3key': key}
+
+
+@reference_parser()
 def layer(layer, config, layer_name=None, resource_name=None):
     """Gets the logical ID of a resource in an already deployed layer.
 
@@ -57,7 +97,7 @@ def layer(layer, config, layer_name=None, resource_name=None):
     return resource[0].physical_resource_id
 
 
-@reference_parser
+@reference_parser()
 def output(layer, config, layer_name=None, output_name=None):
     """Gets the value of an output produced by an already deployed layer.
 
@@ -80,7 +120,7 @@ def output(layer, config, layer_name=None, output_name=None):
     return output[0]
 
 
-@reference_parser
+@reference_parser()
 def boto3(layer, config, service=None, call=None, output_attribute=None,
           output_key=None):
     """Calls a boto3facade method.

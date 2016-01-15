@@ -23,10 +23,13 @@ def roll_tags(tags):
     return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
 
-def reference_parser(func):
-    """Declares a function as a reference parser."""
-    setattr(func, '__is_humilis_reference_parser__', True)
-    return func
+def reference_parser(name=None):
+    def decorator(func):
+        """Declares a function as a reference parser."""
+        setattr(func, '__is_humilis_reference_parser__', True)
+        setattr(func, '__humilis_reference_parser_name__', name)
+        return func
+    return decorator
 
 
 class DirTreeBackedObject:

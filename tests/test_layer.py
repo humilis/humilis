@@ -50,9 +50,12 @@ def test_compile_template(test_vpc_layer):
            len(cf_template['Description']) > 0
 
 
-def test_create_layer_lacking_dependencies(cf, test_streams_roles_layer):
+def test_create_layer_lacking_dependencies(cf, test_streams_roles_layer,
+                                           test_streams_layer):
     """Attempts to create a stack lacking dependencies: exception"""
+    test_streams_layer.delete()
     assert not cf.stack_exists(test_streams_roles_layer.name)
+    assert not cf.stack_exists(test_streams_layer.name)
     # Should simply skip the layer since dependencies are not met
     test_streams_roles_layer.create()
     assert not cf.stack_exists(test_streams_roles_layer.name)

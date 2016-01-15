@@ -94,7 +94,10 @@ class Config():
         for attr_name in dir(humilis.reference):
             attr = getattr(humilis.reference, attr_name)
             if hasattr(attr, '__is_humilis_reference_parser__'):
-                reference_parsers[attr_name] = attr
+                name = getattr(attr, '__humilis_reference_parser_name__')
+                if name is None:
+                    name = attr_name
+                reference_parsers[name] = attr
         return reference_parsers
 
     def from_ini_file(self, section_name):
