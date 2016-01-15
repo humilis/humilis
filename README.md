@@ -135,8 +135,6 @@ same name as the layer, within the same directory where the environment
 _definition file_ is located. If we consider the `my-app-environment` 
 environment we used above then your directory tree should look like this:
 
-![Environment tree structure](tree.png)
-
 ```bash
 .
 ├── my-app-environment.yaml
@@ -214,8 +212,8 @@ meta:
                 ref: 
                     parser: layer
                     parameters:
-                        layer: vpc_layer
-                        resource: VPC
+                        layer_name: vpc_layer
+                        resource_name: VPC
 ```
 
 Every reference must have a `parser` key that identifies the parser that
@@ -229,6 +227,6 @@ on reference parsers below.
 [cf-getatt]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
 
 
-## Built-in reference parsers
+## Available reference parsers
 
 TBD
