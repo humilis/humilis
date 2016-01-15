@@ -145,14 +145,14 @@ A layer must contain at least two files:
    contains.
 
 Those two files can also be in `.json` format (`meta.json` and 
-'resources.json`). Or you can add the extension `.j2` if you want the files to
-be pre-processed with the [Jinja2][jinja] template compiler.
+`resources.json`). Or you can add the extension `.j2` if you want the files to
+be pre-processed with the [Jinja2][jinja2] template compiler.
 
 [jinja2]: http://jinja.pocoo.org/
 
 Below an example of how a layer `meta.yaml` may look like:
 
-```
+```yaml
 ---
 meta:
     description:

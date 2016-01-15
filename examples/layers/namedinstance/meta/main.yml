@@ -18,13 +18,29 @@ meta:
         vpc:
             description: The physical ID of the VPC where the image will be created
             value:
-                ref: vpc/VPC
+                ref:
+                    parser: layer
+                    parameters:
+                        layer_name: vpc
+                        resource_name: VPC
         ami:
             description: The AMI to use when launching the EC2 instance
             value:
-                ref: :aws:ec2:ami/Name=test-ami
+                ref:
+                    parser: boto3
+                    parameters:
+                        service: ec2
+                        call:
+                            method: get_ami_by_name
+                            args:
+                                - test-ami
+                        output_attribute: id
         subnet:
             description: The physical ID of the subnet where the instance will be 
                 launched
             value:
-                ref: vpc/Subnet
+                ref:
+                    parser: layer
+                    parameters:
+                        layer_name: vpc
+                        resource_name: Subnet

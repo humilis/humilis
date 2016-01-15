@@ -76,27 +76,26 @@ class Layer(DirTreeBackedObject):
 
     @property
     def already_in_cf(self):
-        """Returns true if the layer has been already deployed to CF
-        """
+        """Returns true if the layer has been already deployed to CF."""
         return self.name in {stk['StackName'] for stk in self.cf.stacks}
 
     @property
     def ec2(self):
-        """Connection to AWS EC2 service"""
+        """Connection to AWS EC2 service."""
         if self.__ec2 is None:
             self.__ec2 = Ec2(config.boto_config)
         return self.__ec2
 
     @property
     def s3(self):
-        """Connection to AWS S3"""
+        """Connection to AWS S3."""
         if self.__s3 is None:
             self.__s3 = S3(config.boto_config)
         return self.__s3
 
     @property
     def children_in_cf(self):
-        """List of (already created) children layers"""
+        """List of (already created) children layers."""
         if self.already_in_cf:
             clist = self.cf.get_stack(self.name).tags.get('humilis-children')
             if len(clist) > 0:
@@ -191,100 +190,17 @@ class Layer(DirTreeBackedObject):
             return pval
 
     def _resolve_ref(self, ref):
-        """Resolves a references."""
-        try:
-            ref_name, selection = ref.split('/')
-        except ValueError:
-            raise ReferenceError(ref, ValueError, self.logger)
-
-        if ref_name[0] in {':', '$'}:
-            # Custom references to AWS or local resources
-            _, ref_type, *ref_name = ref_name.split(':')  # noqa
-            ref_name = ':'.join(ref_name)
-            if ref_type == 'aws':
-                return self._resolve_boto_ref(ref_name, selection)
-            elif ref_type == 'file':
-                return self._resolve_file_ref(selection)
-            elif ref_type == 'output':
-                # A layer output
-                return self._resolve_output_ref(ref_name, selection)
-            elif ref_type == 'layer':
-                return self._resolve_layer_ref(ref_name, selection)
-            else:
-                msg = "Unknown reference type {}".format(ref_type)
-                raise ReferenceError(ref, msg, self.logger)
-        else:
-            # For backwards compatibility
-            return self._resolve_layer_ref(ref_name, selection)
-
-    def _resolve_file_ref(self, selection):
-        """Resolves a reference to a local file"""
-        file_path = os.path.join(self.basedir, selection)
-        # Upload the file to S3
-        file_name = os.path.basename(file_path)
-        s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
-            base_prefix=config.boto_config.profile.get('s3prefix'),
-            env_name=self.env_name,
-            layer_name=self.relname,
-            file_name=file_name)
-        s3bucket = config.boto_config.profile.get('bucket')
-        self.s3.cp(file_path, s3bucket, s3key)
-        return {'s3bucket': s3bucket, 's3key': s3key}
-
-    def _resolve_boto_ref(self, resource_type, selection):
-        """Resolves a reference to an existing AWS resource that has been
-        deployed independently.
-        """
-        ref = ':' + resource_type + '/' + selection
-        if resource_type == 'ec2:ami':
-            tags = selection.split(';')
-            tag_dict = {}
-            for tag in tags:
-                k, v = tag.split('=')
-                tag_dict[k] = v
-            amis = self.ec2.get_ami_by_tag(tag_dict)
-            if len(amis) == 0:
-                msg = "No AMIs with tags {} were found".format(tag_dict)
-                raise ReferenceError(ref, msg, logger=self.logger)
-            elif len(amis) > 1:
-                msg = "Ambiguous AMI selection. I found {} AMIs with tags {}".\
-                    format(len(amis), tag_dict)
-                raise ReferenceError(ref, msg, logger=self.logger)
-            else:
-                return amis[0]['ImageId']
-        else:
-            msg = "Unsupported resource type: {}".format(resource_type)
-            raise ReferenceError(ref, msg, logger=self._logger)
-
-    def _resolve_layer_ref(self, layer_name, resource_name):
-        """Resolves a reference to an existing stack component"""
-        stack_name = "{}-{}".format(self.env_name, layer_name)
-        resource = self.cf.get_stack_resource(stack_name, resource_name)
-
-        if len(resource) < 1:
-            all_stack_resources = [x.logical_resource_id for x
-                                   in self.cf.get_stack_resources(stack_name)]
-            msg = "{} does not exist in stack {} (with resources {}).".format(
-                resource_name, stack_name, all_stack_resources)
-            raise ReferenceError(resource_name, msg, logger=self.logger)
-
-        return resource[0].physical_resource_id
-
-    def _resolve_output_ref(self, layer_name, output_name):
-        """Resolves a reference to a layer output"""
-        stack_name = "{}-{}".format(self.env_name, layer_name)
-        output = self.cf.get_stack_output(stack_name, output_name)
-        if len(output) < 1:
-            all_stack_outputs = list(self.cf.stack_outputs(layer_name).keys())
-            msg = ("{} output does not exist for stack {} "
-                   "(with outputs {}).").format(output_name,
-                                                stack_name,
-                                                all_stack_outputs)
-            raise ReferenceError(output_name, msg, logger=self.logger)
-        return output[0]
+        """Resolves references."""
+        parser = config.reference_parsers.get(ref.get('parser'))
+        if parser is None:
+            msg = "Invalid reference in layer {}".format(self.name)
+            raise ReferenceError(ref, msg, logger=self.logger)
+        parameters = ref.get('parameters', {})
+        result = parser(self, config.boto_config, **parameters)
+        return result
 
     def delete(self):
-        """Deletes a stack in CF"""
+        """Deletes a stack in CF."""
         msg = "Deleting stack {} from CF".format(self.name)
         self.logger.info(msg)
         if self.children:
@@ -295,7 +211,7 @@ class Layer(DirTreeBackedObject):
             self.cf.delete_stack(self.name)
 
     def create(self):
-        """Creates a stack in CF"""
+        """Creates a stack in CF."""
         msg = "Starting checks for creation of layer {}".format(self.name)
         self.logger.info(msg)
 
@@ -322,7 +238,7 @@ class Layer(DirTreeBackedObject):
         return cf_template
 
     def watch_events(self, progress_status='CREATE_IN_PROGRESS'):
-        """Watches CF events during stack creation"""
+        """Watches CF events during stack creation."""
         if not self.already_in_cf:
             self.logger.warning("Layer {} has not been deployed to CF: "
                                 "nothing to watch".format(self.name))

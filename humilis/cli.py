@@ -23,7 +23,7 @@ def validate_log_level(ctx, param, value):
 @click.option('--profile', default='default', metavar='NAME')
 def main(log, profile):
     logging.basicConfig(level=getattr(logging, log))
-    config.boto_config.active_profile = profile
+    config.boto_config.activate_profile(profile)
 
 
 @main.command()

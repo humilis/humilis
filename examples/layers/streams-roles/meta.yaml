@@ -8,11 +8,27 @@ meta:
         streams:
             description: The name of the Kinesis streams for the various event types
             value:
-                visit: 
-                    ref: $layer[streams/VisitStream]
+                visit:
+                    ref:
+                        parser: layer
+                        parameters:
+                            layer_name: streams
+                            resource_name: VisitStream
                 search:
-                    ref: $layer[streams/SearchStream]
+                    ref:
+                        parser: layer
+                        parameters:
+                            layer_name: streams
+                            resource_name: SearchStream
                 lead:
-                    ref: $layer[streams/LeadStream]
+                    ref:
+                        parser: layer
+                        parameters:
+                            layer_name: streams
+                            resource_name: LeadStream
                 booking:
-                    ref: $layer[streams/BookingStream]
+                    ref:
+                        parser: layer
+                        parameters:
+                            layer_name: streams
+                            resource_name: BookingStream

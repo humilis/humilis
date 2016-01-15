@@ -14,17 +14,23 @@ from sys import exit
 
 
 def unroll_tags(tags):
-    """Unrolls the tag list of a resource into a dictionary"""
+    """Unrolls the tag list of a resource into a dictionary."""
     return {tag['Key']: tag['Value'] for tag in tags}
 
 
 def roll_tags(tags):
-    """Rolls a dictionary of tags into a list of tags Key/Value dicts"""
+    """Rolls a dictionary of tags into a list of tags Key/Value dicts."""
     return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
 
+def reference_parser(func):
+    """Declares a function as a reference parser."""
+    setattr(func, '__is_humilis_reference_parser__', True)
+    return func
+
+
 class DirTreeBackedObject:
-    """Loads data from a directory tree of files in various formats"""
+    """Loads data from a directory tree of files in various formats."""
     def __init__(self, basedir, params={}, logger=None):
         self.basedir = basedir
         self.params = {}

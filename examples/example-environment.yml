@@ -7,7 +7,8 @@ example-environment:
         # Layers will be created in the order given here
         - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16}
         - {layer: instance}
-        - {layer: streams-roles}
+        - {layer: namedinstance}
         - {layer: streams}
+        - {layer: streams-roles}
         - {layer: lambda-role}
         - {layer: lambda}

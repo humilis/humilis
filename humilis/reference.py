@@ -81,7 +81,8 @@ def output(layer, config, layer_name=None, output_name=None):
 
 
 @reference_parser
-def boto3(layer, config, service=None, call=None):
+def boto3(layer, config, service=None, call=None, output_attribute=None,
+          output_key=None):
     """Calls a boto3facade method.
 
     :param layer: The Layer object for the layer declaring the reference.
@@ -98,13 +99,19 @@ def boto3(layer, config, service=None, call=None):
         raise ReferenceError(ref, msg, logger=layer.logger)
 
     module = importlib.import_module("boto3facade.{}".format(service))
-    facade_cls = getattr(module, service)
+    facade_cls = getattr(module, facade_name)
     facade = facade_cls(config)
     method = getattr(facade, call['method'])
-    parameters = call.get('parameters', [])
-    if isinstance(parameters, list):
-        # A list of positional arguments
-        return method(*parameters)
+    args = call.get('args', [])
+    kwargs = call.get('kwargs', {})
+    result = method(*args, **kwargs)
+    # If the result is a sequence, we return just the first item
+    if hasattr(result, '__iter__'):
+        result = list(result)[0]
+
+    if output_attribute is not None:
+        return getattr(result, output_attribute)
+    elif output_key is not None:
+        return result.get(output_key)
     else:
-        # Keyword arguments
-        return method(**parameters)
+        return result

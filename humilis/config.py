@@ -7,7 +7,9 @@ import datetime
 import os
 import logging
 from configparser import ConfigParser
+
 import boto3facade.config
+import humilis.reference
 
 
 def _get_config_file():
@@ -70,7 +72,10 @@ class Config():
     def __init__(self, section_name):
         self.from_ini_file(section_name)
 
-        # Configure the boto3facade
+        # Configuration keys that will go to the .ini file and that the user
+        # can easily customize:
+        #
+        # s3prefix: A base prefix for any file that humilis uploads to S3
         keys = boto3facade.config.DEFAULT_KEYS + ['s3prefix']
         required_keys = boto3facade.config.DEFAULT_REQUIRED_KEYS
         self.boto_config = boto3facade.config.Config(
@@ -79,11 +84,22 @@ class Config():
             active_profile=self.DEFAULT_BOTO_PROFILE,
             keys=keys,
             required_keys=required_keys,
-            logger=logging.getLogger(self.LOGGER_NAME))
+            logger=logging.getLogger(self.LOGGER_NAME),
+            fallback={'s3prefix': 'humilis'})
+        self.reference_parsers = self.search_reference_parsers()
+
+    def search_reference_parsers(self):
+        """Registers all plugin reference parsers."""
+        reference_parsers = {}
+        for attr_name in dir(humilis.reference):
+            attr = getattr(humilis.reference, attr_name)
+            if hasattr(attr, '__is_humilis_reference_parser__'):
+                reference_parsers[attr_name] = attr
+        return reference_parsers
 
     def from_ini_file(self, section_name):
-        """
-        Load configuration overrides from :data:`GLOBAL_CONFIG_FILE`.
+        """Load configuration overrides from :data:`GLOBAL_CONFIG_FILE`.
+
         :param section_name: Name of the section in the ``*.ini`` file to load.
         """
         if not CONFIG_FILE:
