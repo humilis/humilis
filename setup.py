@@ -19,9 +19,6 @@ setup(
     license=metadata.license,
     description=metadata.description,
     packages=find_packages(),
-    package_data={'humilis': ['*.yaml', '*.ini', '*.yml', '*.zip',
-                              '*.json']},
-    include_package_data=True,
     install_requires=[
         'PyYAML',
         'Click',
