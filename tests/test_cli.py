@@ -18,10 +18,14 @@ def runner():
 
 
 @pytest.mark.parametrize("action", ENV_ACTIONS)
-def test_actions(action, runner, environment_definition_path):
-    result = runner.invoke(humilis.cli.main, [action,
-                                              '--pretend',
+def test_env_actions(action, runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.main, [action, '--pretend',
                                               environment_definition_path])
+    assert result.exit_code == 0
+
+
+def test_configure_action(runner):
+    result = runner.invoke(humilis.cli.main, ['configure', '--no-ask'])
     assert result.exit_code == 0
 
 
