@@ -234,7 +234,8 @@ class Layer(DirTreeBackedObject):
 
         status = self.watch_events()
         if status != 'CREATE_COMPLETE':
-            msg = "Layer could not be created, status is {}".format(status)
+            msg = "Layer {} could not be created, status is {}".format(
+                self.name, status)
             raise CloudformationError(msg, logger=self.logger)
 
         return cf_template
