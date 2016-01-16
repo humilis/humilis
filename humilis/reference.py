@@ -14,7 +14,7 @@ from boto3facade.s3 import S3
 from boto3facade.cloudformation import Cloudformation
 
 from humilis.exceptions import ReferenceError
-from humilis.utils import reference_parser
+from humilis.utils import reference_parser, get_cf_name
 
 
 def _get_s3path(layer, config, full_path):
@@ -22,7 +22,7 @@ def _get_s3path(layer, config, full_path):
     s3key = "{base_prefix}{env_name}/{layer_name}/{file_name}".format(
         base_prefix=config.profile.get('s3prefix', ''),
         env_name=layer.env_name,
-        layer_name=layer.relname,
+        layer_name=layer.name,
         file_name=os.path.basename(full_path))
     s3bucket = config.profile.get('bucket')
     return (s3bucket, s3key)
@@ -83,7 +83,7 @@ def layer(layer, config, layer_name=None, resource_name=None):
     :param layer_name: The name of the layer that contains the target resource.
     :param resource_name: The logical name of the target resource.
     """
-    stack_name = "{}-{}".format(layer.env_name, layer_name)
+    stack_name = get_cf_name(layer.env_name, layer_name, stage=layer.env_stage)
     cf = Cloudformation(config)
     resource = cf.get_stack_resource(stack_name, resource_name)
 
@@ -106,7 +106,7 @@ def output(layer, config, layer_name=None, output_name=None):
     :param layer_name: The logical name of the layer that produced the output.
     :param output_name: The logical name of the output parameter.
     """
-    stack_name = "{}-{}".format(layer.env_name, layer_name)
+    stack_name = get_cf_name(layer.env_name, layer_name, stage=layer.env_stage)
     cf = Cloudformation(config)
     output = cf.get_stack_output(stack_name, output_name)
     if len(output) < 1:

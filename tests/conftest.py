@@ -15,7 +15,9 @@ from humilis.environment import Environment
 from humilis.layer import Layer
 
 
-config.boto_config.activate_profile("test")
+@pytest.fixture(scope="session")
+def test_config():
+    config.boto_config.activate_profile("test")
 
 
 @pytest.fixture(scope="session")
@@ -52,8 +54,8 @@ def environment_definition_path():
     yield os.path.join('examples', 'example-environment.yml')
 
 
-@pytest.yield_fixture(scope="session")
-def test_environment(environment_definition_path):
+@pytest.yield_fixture(scope="module")
+def test_environment(environment_definition_path, test_config):
     """A humilis environment based on the sample environment definition."""
     env = Environment(environment_definition_path)
     yield env
@@ -73,7 +75,7 @@ def test_streams_layer(cf, test_environment):
     """The Streams layer from the sample environment"""
     layer = Layer(test_environment, 'streams')
     yield layer
-    cf.delete_stack(layer.name)
+    cf.delete_stack(layer.cf_name)
 
 
 @pytest.yield_fixture(scope="module")
@@ -81,14 +83,14 @@ def test_streams_roles_layer(cf, test_environment):
     """The streams-roles layer from the sample environment"""
     layer = Layer(test_environment, 'streams-roles')
     yield layer
-    cf.delete_stack(layer.name)
+    cf.delete_stack(layer.cf_name)
 
 
 @pytest.yield_fixture(scope="module")
 def test_instance_layer(cf, test_environment, test_keypair):
     layer = Layer(test_environment, 'instance', keyname=test_keypair)
     yield layer
-    cf.delete_stack(layer.name)
+    cf.delete_stack(layer.cf_name)
 
 
 @pytest.yield_fixture(scope="module")
@@ -96,11 +98,11 @@ def test_named_instance_layer(cf, test_environment, test_keypair):
     layer = Layer(test_environment, 'namedinstance',
                   keyname=test_keypair)
     yield layer
-    cf.delete_stack(layer.name)
+    cf.delete_stack(layer.cf_name)
 
 
 @pytest.yield_fixture(scope='function')
 def test_roles_layer(cf, test_environment):
     layer = Layer(test_environment, 'lambda-role')
     yield layer
-    cf.delete_stack(layer.name)
+    cf.delete_stack(layer.cf_name)

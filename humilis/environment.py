@@ -14,13 +14,14 @@ import yaml
 
 class Environment():
     """Manages the deployment of a collection of humilis layers."""
-    def __init__(self, yml_path, logger=None):
+    def __init__(self, yml_path, logger=None, stage=None):
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:
             self.logger = logger
         self.__yml_path = yml_path
         self.name = os.path.splitext(os.path.split(yml_path)[1])[0]
+        self.stage = stage and stage.upper()
         self.basedir = os.path.split(yml_path)[0]
         with open(yml_path, 'r') as f:
             self.meta = yaml.load(f).get(self.name)
@@ -84,7 +85,7 @@ class Environment():
     def get_layer(self, layer_name):
         """Gets a layer by name"""
         sel_layer = [layer for layer in self.layers
-                     if layer.name == layer_name]
+                     if layer.cf_name == layer_name]
         if len(sel_layer) > 0:
             return sel_layer[0]
 

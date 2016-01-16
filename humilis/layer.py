@@ -7,7 +7,7 @@ import os.path
 import re
 import logging
 from humilis.config import config
-from humilis.utils import DirTreeBackedObject
+from humilis.utils import DirTreeBackedObject, get_cf_name
 from humilis.exceptions import ReferenceError, CloudformationError
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
@@ -16,7 +16,7 @@ import time
 import datetime
 
 
-class Layer(DirTreeBackedObject):
+class Layer:
     """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, logger=None, loader=None,
                  **user_params):
@@ -26,9 +26,9 @@ class Layer(DirTreeBackedObject):
             self.logger = logging.getLogger(__name__)
         else:
             self.logger = logger
-        self.name = "{}-{}".format(environment.name, name)
-        self.relname = name
+        self.name = name
         self.env_name = environment.name
+        self.env_stage = environment.stage
         self.env_basedir = environment.basedir
         self.depends_on = []
         self.section = {}
@@ -37,9 +37,14 @@ class Layer(DirTreeBackedObject):
         self.loader = loader
         self.children = set()
 
-        self.meta = self.loader.load_section('meta')
+        # These param set will be sent to the template compiler and will be
+        # populated once the layers this layer depend on have been created.
+        self.params = {}
+
+        self.meta = self.loader.load_section('meta', params=self.loader_params)
         for dep in self.meta.get('dependencies', []):
-            self.depends_on.append("{}-{}".format(environment.name, dep))
+            dep_cf_name = get_cf_name(self.env_name, dep, stage=self.env_stage)
+            self.depends_on.append(dep_cf_name)
 
         self.sns_topic_arn = environment.sns_topic_arn
         self.tags = {
@@ -58,26 +63,36 @@ class Layer(DirTreeBackedObject):
         for pname, pvalue in user_params.items():
             if pname not in self.yaml_params:
                 msg = "Unknown parameter {pname} for layer {layer}: ignored"\
-                    .format(pname=pname, layer=self.relname)
+                    .format(pname=pname, layer=self.name)
                 self.logger.warning(msg)
             else:
                 self.yaml_params[pname]['value'] = pvalue
-
-        # These param set will be sent to the template compiler and will be
-        # populated once the layers this layer depend on have been created.
-        self.params = {}
-
         self.__ec2 = None
         self.__s3 = None
 
     @property
+    def cf_name(self):
+        """The name of the CF stack associated to this layer."""
+        return get_cf_name(self.env_name, self.name, stage=self.env_stage)
+
+    @property
+    def loader_params(self):
+        """Produces a dictionary of parameters to pass to a section loader."""
+        # User parameters in the layer meta.yaml
+        params = {k: v['value'] for k, v in self.params.items()}
+        params['_env'] = {'stage': self.env_stage, 'name': self.env_name}
+        params['_os_env'] = os.environ
+        params['_layer'] = {'name': self.name}
+        return params
+
+    @property
     def basedir(self):
-        return os.path.join(self.env_basedir, 'layers', self.relname)
+        return os.path.join(self.env_basedir, 'layers', self.name)
 
     @property
     def already_in_cf(self):
         """Returns true if the layer has been already deployed to CF."""
-        return self.name in {stk['StackName'] for stk in self.cf.stacks}
+        return self.cf_name in {stk['StackName'] for stk in self.cf.stacks}
 
     @property
     def ec2(self):
@@ -97,14 +112,15 @@ class Layer(DirTreeBackedObject):
     def children_in_cf(self):
         """List of (already created) children layers."""
         if self.already_in_cf:
-            clist = self.cf.get_stack(self.name).tags.get('humilis-children')
+            clist = self.cf.get_stack(self.cf_name).tags.get(
+                'humilis-children')
             if len(clist) > 0:
                 return clist.split(',')
 
     @property
     def ok(self):
         """Layer is fully deployed in CF and ready for use"""
-        return self.cf.stack_ok(self.name)
+        return self.cf.stack_ok(self.cf_name)
 
     @property
     def outputs(self):
@@ -113,7 +129,7 @@ class Layer(DirTreeBackedObject):
             msg = ("Attempting to read outputs from a layer that has not "
                    "been fully deployed yet")
             raise CloudformationError(msg, logger=self.logger)
-        ly = self.cf.stack_outputs[self.name]
+        ly = self.cf.stack_outputs[self.cf_name]
         if ly is not None:
             ly = {o['OutputKey']: o['OutputValue'] for o in ly}
         return ly
@@ -139,11 +155,11 @@ class Layer(DirTreeBackedObject):
         """Loads all files associated to a layer."""
         # Some templates may refer to params, so populate them first
         self.populate_params()
-        self.loader.params = self.params
 
         # Load all files with layer contents
         for section in config.LAYER_SECTIONS:
-            self.section[section] = self.loader.load_section(section)
+            self.section[section] = self.loader.load_section(
+                section, params=self.loader_params)
 
         # Package the layer as a CF template
         cf_template = {
@@ -171,7 +187,7 @@ class Layer(DirTreeBackedObject):
         if len(self.params) < 1:
             print("No parameters. Did you forget to run populate_params()?")
             return
-        print("Parameters for layer {}:".format(self.name))
+        print("Parameters for layer {}:".format(self.cf_name))
         for pname, param in self.params.items():
             pval = param.get('value', None)
             if len(pval) > 30:
@@ -195,7 +211,7 @@ class Layer(DirTreeBackedObject):
         """Resolves references."""
         parser = config.reference_parsers.get(ref.get('parser'))
         if parser is None:
-            msg = "Invalid reference in layer {}".format(self.name)
+            msg = "Invalid reference in layer {}".format(self.cf_name)
             raise ReferenceError(ref, msg, logger=self.logger)
         parameters = ref.get('parameters', {})
         result = parser(self, config.boto_config, **parameters)
@@ -203,14 +219,14 @@ class Layer(DirTreeBackedObject):
 
     def delete(self):
         """Deletes a stack in CF."""
-        msg = "Deleting stack {} from CF".format(self.name)
+        msg = "Deleting stack {} from CF".format(self.cf_name)
         self.logger.info(msg)
         if self.children:
             msg = "Layer {} has dependencies ({}) : will not be deleted".\
                 format(self.name, self.children)
             self.logger.info(msg)
         else:
-            self.cf.delete_stack(self.name)
+            self.cf.delete_stack(self.cf_name)
 
     def create(self):
         """Creates a stack in CF."""
@@ -227,7 +243,7 @@ class Layer(DirTreeBackedObject):
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
         self.cf.create_stack(
-            self.name,
+            self.cf_name,
             json.dumps(cf_template, indent=4),
             self.sns_topic_arn,
             self.tags)
@@ -238,7 +254,7 @@ class Layer(DirTreeBackedObject):
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
 
-        return cf_template
+        return self.outputs
 
     def watch_events(self, progress_status='CREATE_IN_PROGRESS'):
         """Watches CF events during stack creation."""
@@ -246,11 +262,11 @@ class Layer(DirTreeBackedObject):
             self.logger.warning("Layer {} has not been deployed to CF: "
                                 "nothing to watch".format(self.name))
             return
-        stack_status = self.cf.get_stack_status(self.name)
+        stack_status = self.cf.get_stack_status(self.cf_name)
         already_seen = set()
         cm = config.EVENT_STATUS_COLOR_MAP
         while stack_status == progress_status:
-            events = self.cf.get_stack_events(self.name)
+            events = self.cf.get_stack_events(self.cf_name)
             new_events = [ev for ev in events if ev.id not in already_seen]
             for event in new_events:
                 self.logger.info(
@@ -266,7 +282,7 @@ class Layer(DirTreeBackedObject):
                     ))
                 already_seen.add(event.id)
 
-            stack_status = self.cf.get_stack_status(self.name)
+            stack_status = self.cf.get_stack_status(self.cf_name)
             time.sleep(3)
         return stack_status
 
@@ -280,4 +296,4 @@ class Layer(DirTreeBackedObject):
         else:
             basestr = "Layer({env}, '{name}')"
         return basestr.format(
-            env=self.__environment_repr, name=self.relname, args=args)
+            env=self.__environment_repr, name=self.name, args=args)

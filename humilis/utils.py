@@ -2,15 +2,18 @@
 # -*- coding: utf-8 -*-
 
 
+import abc
 import logging
 import os
 import io
 import glob
 import json
+from sys import exit
+
 import yaml
 import jinja2
+
 from humilis.exceptions import FileFormatError
-from sys import exit
 
 
 def unroll_tags(tags):
@@ -23,6 +26,14 @@ def roll_tags(tags):
     return [{'Key': k, 'Value': v} for k, v in tags.items()]
 
 
+def get_cf_name(env_name, layer_name, stage=None):
+    """Produces the CF stack name for layer."""
+    cf_name = "{}-{}".format(env_name, layer_name)
+    if stage is not None:
+        cf_name = "{}-{}".format(cf_name, stage)
+    return cf_name
+
+
 def reference_parser(name=None):
     def decorator(func):
         """Declares a function as a reference parser."""
@@ -32,15 +43,24 @@ def reference_parser(name=None):
     return decorator
 
 
-class DirTreeBackedObject:
+class TemplateLoader:
+    @abc.abstractmethod
+    def load_section(self, *args, **kwargs):
+        pass
+
+
+class DirTreeBackedObject(TemplateLoader):
     """Loads data from a directory tree of files in various formats."""
-    def __init__(self, basedir, params={}, logger=None):
+    def __init__(self, basedir, logger=None):
         self.basedir = basedir
-        self.params = {}
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:
             self.logger = logger
+
+    @abc.abstractproperty
+    def params(self):
+        pass
 
     def get_section_files(self, section):
         """
@@ -60,7 +80,7 @@ class DirTreeBackedObject:
 
         return section_files
 
-    def load_section(self, section, files=None):
+    def load_section(self, section, files=None, params={}):
         """
         Reads all files associated with a layer section (parameters, resources,
         mappings, etc)
@@ -73,7 +93,7 @@ class DirTreeBackedObject:
         for filename in files:
             self.logger.info("Loading {}".format(filename))
             with open(filename, 'r') as f:
-                this_data = self.load_file(filename, f)
+                this_data = self.load_file(filename, f, params=params)
             if this_data is None:
                 continue
 
@@ -91,7 +111,7 @@ class DirTreeBackedObject:
 
         return data
 
-    def load_file(self, filename, f):
+    def load_file(self, filename, f, params={}):
         filename, file_ext = os.path.splitext(filename)
         if file_ext in {'.yml', '.yaml'}:
             data = yaml.load(f)
@@ -99,7 +119,6 @@ class DirTreeBackedObject:
             data = json.load(f)
         elif file_ext == '.j2':
             template = jinja2.Template(f.read())
-            params = {pname: p['value'] for pname, p in self.params.items()}
             data = template.render(**params)
             data = self.load_file(filename, io.StringIO(data))
         else:
