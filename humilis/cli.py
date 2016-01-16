@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+import logging
 
 import click
-import logging
-from humilis.environment import Environment
+
 from humilis.config import config
+from humilis.environment import Environment
 
 LOG_LEVELS = ['critical', 'error', 'warning', 'info', 'debug']
 
@@ -28,10 +29,11 @@ def main(log, profile):
 
 @main.command()
 @click.argument('environment')
-@click.option('--pretend/--no-pretend', default=False)
+@click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV")
 @click.option('--output', help="Store environment outputs in a yaml file",
               default=None, metavar='FILE')
-def create(environment, pretend, output):
+@click.option('--pretend/--no-pretend', default=False)
+def create(environment, stage, output, pretend):
     """Creates an environment."""
     env = Environment(environment)
     if not pretend:
@@ -40,8 +42,10 @@ def create(environment, pretend, output):
 
 @main.command()
 @click.argument('environment')
+@click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
+              default='')
 @click.option('--pretend/--no-pretend', default=False)
-def delete(environment, pretend):
+def delete(environment, stage, pretend):
     """Deletes an environment that has been deployed to CF."""
     env = Environment(environment)
     if not pretend:

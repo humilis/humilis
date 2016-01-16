@@ -62,3 +62,10 @@ def test_invalid_option(runner, environment_definition_path):
                                                 '--invalid_option', 'whatever'
                                                 '--pretend'])
     assert result.exit_code > 0
+
+
+def test_stage(runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.create, [environment_definition_path,
+                                                '--stage', 'production',
+                                                '--pretend'])
+    assert result.exit_code == 0
