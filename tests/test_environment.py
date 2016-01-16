@@ -19,3 +19,5 @@ def test_create_environment(test_environment):
     """Creates a test environment in CF"""
     test_environment.create()
     assert test_environment.already_in_cf
+    test_environment.delete()
+    assert not test_environment.already_in_cf
