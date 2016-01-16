@@ -1,1 +1,1 @@
-recursive-include examples *.json *.j2 *.yml
+recursive-include examples *.json *.j2 *.yml *.zip
