@@ -6,7 +6,6 @@ from click.testing import CliRunner
 import humilis
 import humilis.cli
 import pytest
-import os
 
 
 ENV_ACTIONS = ['create', 'delete']
@@ -18,17 +17,12 @@ def runner():
     yield CliRunner()
 
 
-@pytest.yield_fixture(scope="module")
-def humilis_example_environment():
-    yield os.path.join('examples', 'example-environment.yml')
-
-
-def test_actions(runner, humilis_example_environment):
-    for action in ENV_ACTIONS:
-        result = runner.invoke(humilis.cli.main, [action,
-                                                  '--pretend',
-                                                  humilis_example_environment])
-        assert result.exit_code == 0
+@pytest.mark.parametrize("action", ENV_ACTIONS)
+def test_actions(action, runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.main, [action,
+                                              '--pretend',
+                                              environment_definition_path])
+    assert result.exit_code == 0
 
 
 def test_actions_with_missing_environment(runner):
@@ -44,23 +38,23 @@ def test_invalid_log_level(runner):
     assert isinstance(result.exception, SystemExit)
 
 
-def test_valid_log_level(runner, humilis_example_environment):
-    for level in ['critical', 'error', 'warning', 'info', 'debug']:
-        result = runner.invoke(humilis.cli.main, ['--log', level, 'create',
-                                                  humilis_example_environment,
-                                                  '--pretend'])
-        assert result.exit_code == 0
+@pytest.mark.parametrize('level', LOG_LEVELS)
+def test_valid_log_level(level, runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.main, ['--log', level, 'create',
+                                              environment_definition_path,
+                                              '--pretend'])
+    assert result.exit_code == 0
 
 
-def test_output(runner, humilis_example_environment):
-    result = runner.invoke(humilis.cli.create, [humilis_example_environment,
+def test_output(runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.create, [environment_definition_path,
                                                 '--output', 'filename',
                                                 '--pretend'])
     assert result.exit_code == 0
 
 
-def test_invalid_option(runner, humilis_example_environment):
-    result = runner.invoke(humilis.cli.create, [humilis_example_environment,
+def test_invalid_option(runner, environment_definition_path):
+    result = runner.invoke(humilis.cli.create, [environment_definition_path,
                                                 '--invalid_option', 'whatever'
                                                 '--pretend'])
     assert result.exit_code > 0
