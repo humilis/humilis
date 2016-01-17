@@ -7,7 +7,7 @@ test:
     - pip install flake8
     - flake8 . humilis
     - pip install -r requirements.txt
-    - py.test tests/
+    - py.test tests/test_cli.py
 machine:
     python:
         version: 3.5.0
