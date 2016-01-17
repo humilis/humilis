@@ -52,7 +52,7 @@ def update(environment, stage, output, pretend):
     """Updates (or creates) an environment."""
     env = Environment(environment, stage=stage)
     if not pretend:
-        env.create(update=True)
+        env.create(output_file=output, update=True)
 
 
 @main.command()
