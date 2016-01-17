@@ -3,12 +3,16 @@
 
 from setuptools import setup, find_packages
 import humilis.metadata as metadata
+import os
 
 try:
     import pypandoc
     long_description = pypandoc.convert('README.md', 'rst')
 except(IOError, ImportError):
-    long_description = open('README.md').read()
+    if os.path.isfile('README.md'):
+        long_description = open('README.md').read()
+    else:
+        long_description = metadata.description
 
 setup(
     name=metadata.project,
