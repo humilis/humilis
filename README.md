@@ -46,7 +46,9 @@ make develop
 
 # Testing
 
-You will need to first [set up your system][aws-setup] to access AWS resources.
+At the moment, most tests are integration tests with the AWS SDK. This means
+that you will need to [set up your system][aws-setup] to access AWS resources
+if you want to run the test suite.
 
 [aws-setup]: http://docs.aws.amazon.com/cli/latest/userguide/cli-chap-getting-started.html
 
