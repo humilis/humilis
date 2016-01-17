@@ -8,7 +8,7 @@ import humilis.cli
 import pytest
 
 
-ENV_ACTIONS = ['create', 'delete']
+ENV_ACTIONS = ['create', 'delete', 'update']
 LOG_LEVELS = ['critical', 'error', 'warning', 'info', 'debug']
 
 

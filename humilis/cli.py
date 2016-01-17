@@ -54,6 +54,18 @@ def delete(environment, stage, pretend):
 
 
 @main.command()
+@click.argument('environment')
+@click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
+              default=None, metavar='STAGE')
+@click.option('--pretend/--no-pretend', default=False)
+def update(environment, stage, pretend):
+    """Updates (or creates) an environment."""
+    env = Environment(environment, stage=stage)
+    if not pretend:
+        env.update()
+
+
+@main.command()
 @click.option('--ask/--no-ask', default=True)
 def configure(ask):
     """Configure humilis."""
