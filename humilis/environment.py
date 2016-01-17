@@ -4,12 +4,14 @@
 
 import logging
 import os
-from humilis.layer import Layer
+
 from boto3facade.cloudformation import Cloudformation
-from humilis.config import config
-from humilis.exceptions import FileFormatError
-import humilis.utils as utils
 import yaml
+
+from humilis.config import config
+from humilis.exceptions import FileFormatError, AlreadyInCfError
+from humilis.layer import Layer
+import humilis.utils as utils
 
 
 class Environment():
@@ -62,7 +64,11 @@ class Environment():
         return outputs
 
     def create(self, output_file=None):
-        """Creates all layers in the environment"""
+        """Creates an environment from scratch."""
+        if self.in_cf:
+            msg = ("Environment {} has been already deployed to CF. Did you "
+                   "mean to run an 'update' action?")
+            raise AlreadyInCfError(msg, logger=self.logger)
         self.populate_hierarchy()
         for layer in self.layers:
             layer.create()
@@ -70,13 +76,13 @@ class Environment():
             self.write_outputs(output_file)
 
     def write_outputs(self):
-        """Writes layer outputs to a YAML file"""
+        """Writes layer outputs to a YAML file."""
         with open("{}.outputs.yaml".format(self.name), 'w') as f:
             f.write(yaml.dump(self.outputs, indent=4,
                               default_flow_style=False))
 
     def populate_hierarchy(self):
-        """Adds tags to the layers indicating parent-child dependencies"""
+        """Adds tags to env layers indicating parent-child dependencies."""
         for layer in self.layers:
             if layer.depends_on and len(layer.depends_on) > 0:
                 for parent_name in layer.depends_on:
@@ -90,14 +96,13 @@ class Environment():
             return sel_layer[0]
 
     def delete(self):
-        """Deletes all layers in an environment"""
+        """Deletes the complete environment from CF."""
         for layer in reversed(self.layers):
             layer.delete()
 
     @property
-    def already_in_cf(self):
-        """Returns true if the environment has been already deployed to CF
-        """
+    def in_cf(self):
+        """Returns true if the environment has been deployed to CF."""
         return self.name in {
             utils.unroll_tags(stk['Tags']).get('humilis-environment')
             for stk in self.cf.stacks}
