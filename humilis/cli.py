@@ -38,7 +38,21 @@ def create(environment, stage, output, pretend):
     """Creates an environment."""
     env = Environment(environment, stage=stage)
     if not pretend:
-        env.create(output_file=output)
+        env.create(output_file=output, update=False)
+
+
+@main.command()
+@click.argument('environment')
+@click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
+              default=None, metavar='STAGE')
+@click.option('--output', help="Store environment outputs in a yaml file",
+              default=None, metavar='FILE')
+@click.option('--pretend/--no-pretend', default=False)
+def update(environment, stage, output, pretend):
+    """Updates (or creates) an environment."""
+    env = Environment(environment, stage=stage)
+    if not pretend:
+        env.create(update=True)
 
 
 @main.command()
@@ -51,18 +65,6 @@ def delete(environment, stage, pretend):
     env = Environment(environment, stage=stage)
     if not pretend:
         env.delete()
-
-
-@main.command()
-@click.argument('environment')
-@click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
-              default=None, metavar='STAGE')
-@click.option('--pretend/--no-pretend', default=False)
-def update(environment, stage, pretend):
-    """Updates (or creates) an environment."""
-    env = Environment(environment, stage=stage)
-    if not pretend:
-        env.update()
 
 
 @main.command()

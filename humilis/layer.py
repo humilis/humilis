@@ -11,6 +11,7 @@ from humilis.utils import DirTreeBackedObject, get_cf_name
 from humilis.exceptions import ReferenceError, CloudformationError
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
+from boto3facade.exceptions import NoUpdatesError
 import json
 import time
 import datetime
@@ -225,9 +226,9 @@ class Layer:
         else:
             self.cf.delete_stack(self.cf_name)
 
-    def create(self):
-        """Creates a stack in CF."""
-        msg = "Starting checks for creation of layer {}".format(self.name)
+    def create(self, update=False):
+        """Deploys a layer as a CF stack."""
+        msg = "Starting checks for layer {}".format(self.name)
         self.logger.info(msg)
 
         if not self.dependencies_met:
@@ -239,21 +240,40 @@ class Layer:
         cf_template = self.compile()
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
-        self.cf.create_stack(
-            self.cf_name,
-            json.dumps(cf_template, indent=4),
-            self.sns_topic_arn,
-            self.tags)
+        if not self.in_cf:
+            self.logger.info("Creating layer '{}' (CF stack '{}')".format(
+                self.name, self.cf_name))
+
+            self.cf.create_stack(
+                self.cf_name,
+                json.dumps(cf_template, indent=4),
+                self.sns_topic_arn,
+                self.tags)
+        elif update:
+            self.logger.info("Updating layer '{}'".format(self.name))
+            try:
+                self.cf.update_stack(
+                    self.cf_name,
+                    json.dumps(cf_template, indent=4),
+                    self.sns_topic_arn)
+            except NoUpdatesError:
+                msg = "No updates on layer '{}'".format(self.name)
+                self.logger.warning(msg)
+        else:
+            msg = "Layer '{}' already in CF: not creating".format(self.name)
+            self.logger.info(msg)
 
         status = self.watch_events()
-        if status != 'CREATE_COMPLETE':
-            msg = "Layer {} could not be created, status is {}".format(
+        if status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE',
+                          'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'}:
+            msg = "Unable to deploy layer {}: status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
 
         return self.outputs
 
-    def watch_events(self, progress_status='CREATE_IN_PROGRESS'):
+    def watch_events(self, progress_status={'CREATE_IN_PROGRESS',
+                                            'UPDATE_IN_PROGRESS'}):
         """Watches CF events during stack creation."""
         if not self.in_cf:
             self.logger.warning("Layer {} has not been deployed to CF: "
@@ -262,7 +282,7 @@ class Layer:
         stack_status = self.cf.get_stack_status(self.cf_name)
         already_seen = set()
         cm = config.EVENT_STATUS_COLOR_MAP
-        while stack_status == progress_status:
+        while stack_status in progress_status:
             events = self.cf.get_stack_events(self.cf_name)
             new_events = [ev for ev in events if ev.id not in already_seen]
             for event in new_events:

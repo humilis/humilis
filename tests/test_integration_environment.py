@@ -2,10 +2,6 @@
 # -*- coding: utf-8 -*-
 
 
-import pytest
-from humilis.exceptions import AlreadyInCfError
-
-
 def test_create_environment_object(test_environment):
     """Creates an Environment objects and queries its properties."""
     env = test_environment
@@ -25,11 +21,3 @@ def test_create_environment(test_environment):
     assert test_environment.in_cf
     test_environment.delete()
     assert not test_environment.in_cf
-
-
-def test_create_existing_environment(test_environment):
-    """Tries to create an existing environment: should raise."""
-    if not test_environment.in_cf:
-        test_environment.create()
-    with pytest.raises(AlreadyInCfError):
-        test_environment.create()

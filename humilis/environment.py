@@ -9,7 +9,7 @@ from boto3facade.cloudformation import Cloudformation
 import yaml
 
 from humilis.config import config
-from humilis.exceptions import FileFormatError, AlreadyInCfError
+from humilis.exceptions import FileFormatError
 from humilis.layer import Layer
 import humilis.utils as utils
 
@@ -63,15 +63,12 @@ class Environment():
                 outputs[layer.name] = ly
         return outputs
 
-    def create(self, output_file=None):
-        """Creates an environment from scratch."""
-        if self.in_cf:
-            msg = ("Environment {} has been already deployed to CF. Did you "
-                   "mean to run an 'update' action?")
-            raise AlreadyInCfError(msg, logger=self.logger)
+    def create(self, output_file=None, update=False):
+        """Creates or updates an environment."""
         self.populate_hierarchy()
         for layer in self.layers:
-            layer.create()
+            layer.create(update=update)
+        self.logger.info({"outputs": self.outputs})
         if output_file is not None:
             self.write_outputs(output_file)
 
