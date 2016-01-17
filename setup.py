@@ -18,6 +18,7 @@ setup(
     url=metadata.url,
     license=metadata.license,
     description=metadata.description,
+    long_description=long_description,
     packages=find_packages(),
     install_requires=[
         'PyYAML',
