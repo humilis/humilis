@@ -80,7 +80,7 @@ class Environment():
         for layer in self.layers:
             if layer.depends_on and len(layer.depends_on) > 0:
                 for parent_name in layer.depends_on:
-                    layer = self.get_layer(parent_name).add_child(layer.name)
+                    layer = self.get_layer(parent_name).add_child(layer)
 
     def get_layer(self, layer_name):
         """Gets a layer by name"""

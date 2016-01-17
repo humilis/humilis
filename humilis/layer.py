@@ -35,7 +35,7 @@ class Layer:
         if loader is None:
             loader = DirTreeBackedObject(self.basedir, self.logger)
         self.loader = loader
-        self.children = set()
+        self.children = []
 
         # These param set will be sent to the template compiler and will be
         # populated once the layers this layer depend on have been created.
@@ -90,7 +90,7 @@ class Layer:
         return os.path.join(self.env_basedir, 'layers', self.name)
 
     @property
-    def already_in_cf(self):
+    def in_cf(self):
         """Returns true if the layer has been already deployed to CF."""
         return self.cf_name in {stk['StackName'] for stk in self.cf.stacks}
 
@@ -111,11 +111,7 @@ class Layer:
     @property
     def children_in_cf(self):
         """List of (already created) children layers."""
-        if self.already_in_cf:
-            clist = self.cf.get_stack(self.cf_name).tags.get(
-                'humilis-children')
-            if len(clist) > 0:
-                return clist.split(',')
+        return [x for x in self.children if x.in_cf]
 
     @property
     def ok(self):
@@ -144,12 +140,13 @@ class Layer:
                 return False
         return True
 
-    def add_child(self, child_name):
-        """Adds a child to this layer."""
-        self.children.add(child_name)
+    def add_child(self, child):
+        """Adds a child layer to this layer."""
+        self.children.append(child)
         # Don't use a comma as a separator. For whatever reason CF seems to
         # occasionally break when tag values contain commas.
-        self.tags['humilis-children'] = ':'.join(self.children)
+        self.tags['humilis-children'] = ':'.join((x.name for x
+                                                  in self.children))
 
     def compile(self):
         """Loads all files associated to a layer."""
@@ -221,9 +218,9 @@ class Layer:
         """Deletes a stack in CF."""
         msg = "Deleting stack {} from CF".format(self.cf_name)
         self.logger.info(msg)
-        if self.children:
-            msg = "Layer {} has dependencies ({}) : will not be deleted".\
-                format(self.name, self.children)
+        if len(self.children_in_cf) > 0:
+            msg = "Layer {} has dependencies ({}): will not be deleted".\
+                format(self.name, [x.name for x in self.children_in_cf])
             self.logger.info(msg)
         else:
             self.cf.delete_stack(self.cf_name)
@@ -258,7 +255,7 @@ class Layer:
 
     def watch_events(self, progress_status='CREATE_IN_PROGRESS'):
         """Watches CF events during stack creation."""
-        if not self.already_in_cf:
+        if not self.in_cf:
             self.logger.warning("Layer {} has not been deployed to CF: "
                                 "nothing to watch".format(self.name))
             return
