@@ -13,3 +13,4 @@ example-environment:
         - {layer: lambda-role}
         - {layer: lambda}
         - {layer: lambda2}
+        - {layer: lambda3}

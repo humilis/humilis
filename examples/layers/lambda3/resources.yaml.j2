@@ -1,0 +1,12 @@
+resources:
+    DummyLambdaFunction:
+        Type: 'AWS::Lambda::Function'
+        Properties:
+            Code: 
+                S3Bucket: {{dummy_function.s3bucket}}
+                S3Key: {{dummy_function.s3key}}
+            Runtime: "python2.7"
+            Description: "A dummy function that does nothing"
+            Timeout: 5
+            Handler: dummy_function.lambda_handler
+            Role: {{role}}

@@ -16,6 +16,15 @@ import jinja2
 from humilis.exceptions import FileFormatError
 
 
+def zipdir(path, ziph):
+    """Adds all files under a path to a zip file."""
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            relroot = os.path.relpath(root, path)
+            arcname = os.path.join(relroot, file)
+            ziph.write(os.path.join(root, file), arcname=arcname)
+
+
 def unroll_tags(tags):
     """Unrolls the tag list of a resource into a dictionary."""
     return {tag['Key']: tag['Value'] for tag in tags}
