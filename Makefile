@@ -9,3 +9,6 @@ develop: .env
 # clean the development envrironment
 clean:
 	-rm -rf .env
+
+pypi:
+	.env/bin/python setup.py sdist upload
