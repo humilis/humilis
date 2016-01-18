@@ -7,6 +7,8 @@ import contextlib
 import os
 import importlib
 import pip
+import subprocess
+from subprocess import CalledProcessError
 import tempfile
 import shutil
 from zipfile import ZipFile
@@ -33,6 +35,22 @@ def _get_s3path(layer, config, full_path):
         file_name=os.path.basename(full_path))
     s3bucket = config.profile.get('bucket')
     return (s3bucket, s3key)
+
+
+def _add_git_commit(basename):
+    """Adds the git commit hash to a filename."""
+    try:
+        c = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode()
+        c = c.rstrip()
+    except CalledProcessError as err:
+        if err.find('Not a git repository') > -1:
+            # Lambda not under version control, very bad!
+            c = None
+        raise
+
+    if c:
+        basename = "{}-{}".format(basename, c)
+    return basename
 
 
 @utils.reference_parser()
@@ -91,6 +109,10 @@ def _make_deploy_package(full_path, logger):
         # Install all depedendencies in the same dir
         pip.main(['install', targetdir, '-t', targetdir])
 
+    # Adding the commit hash to the file name will force different commits to
+    # be associated to different s3 paths. This way CF update will detect that
+    # the template has changed.
+    basename = _add_git_commit(basename)
     zipfile = os.path.join(tmpdir, basename + '.zip')
     with ZipFile(zipfile, 'w') as myzip:
         utils.zipdir(targetdir, myzip)
@@ -105,6 +127,7 @@ def _make_simple_deploy_package(full_path, logger):
     tmpdir = tempfile.mkdtemp()
     path_no_ext, ext = os.path.splitext(full_path)
     basename = os.path.basename(path_no_ext)
+    basename = _add_git_commit(basename)
     zipfile = os.path.join(tmpdir, basename + '.zip')
     with ZipFile(zipfile, 'w') as myzip:
         myzip.write(full_path)
