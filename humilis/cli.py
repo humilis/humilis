@@ -69,9 +69,10 @@ def delete(environment, stage, pretend):
 
 @main.command()
 @click.option('--ask/--no-ask', default=True)
-def configure(ask):
+@click.option('--local/--no-local', default=False)
+def configure(ask, local):
     """Configure humilis."""
-    config.boto_config.configure(ask=ask)
+    config.boto_config.configure(ask=ask, local=local)
 
 
 if __name__ == '__main__':
