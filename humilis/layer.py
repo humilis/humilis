@@ -251,7 +251,6 @@ class Layer:
         elif update:
             self.logger.info("Updating layer '{}'".format(self.name))
             try:
-                import ipdb; ipdb.set_trace()
                 self.cf.update_stack(
                     self.cf_name,
                     json.dumps(self.compile(), indent=4),
