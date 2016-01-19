@@ -283,7 +283,7 @@ ref:
 with the physical ID you need (something like `subnet-bafa90cd`). You can then
 use this physical ID in the `resources.yaml.j2` section of the `nat` layer:
 
-```yaml
+```jinja2
 {# Pseudo-content of layers/nat/resources.yaml.j2 #}
 resources:
     {# An Elastic IP reservation that will be associated to the NAT #}
@@ -341,7 +341,7 @@ __Parameters__:
 
 Below an example of a layer that uses a `boto3` reference:
 
-```
+```yaml
 ---
 meta:
     description:
