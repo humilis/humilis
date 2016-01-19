@@ -237,7 +237,6 @@ class Layer:
             self.logger.critical(msg)
             return
 
-        cf_template = self.compile()
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
         if not self.in_cf:
@@ -246,15 +245,16 @@ class Layer:
 
             self.cf.create_stack(
                 self.cf_name,
-                json.dumps(cf_template, indent=4),
+                json.dumps(self.compile(), indent=4),
                 self.sns_topic_arn,
                 self.tags)
         elif update:
             self.logger.info("Updating layer '{}'".format(self.name))
             try:
+                import ipdb; ipdb.set_trace()
                 self.cf.update_stack(
                     self.cf_name,
-                    json.dumps(cf_template, indent=4),
+                    json.dumps(self.compile(), indent=4),
                     self.sns_topic_arn)
             except NoUpdatesError:
                 msg = "No updates on layer '{}'".format(self.name)

@@ -434,6 +434,12 @@ ref:
         path: dummy_function
 ```
 
+which will evaluate to a S3 path such as:
+
+```
+s3://[bucket_name]/[environment_name]/[stage_name]/[func_name]-[commithash].zip
+```
+
 
 __Code conventions__:
 
