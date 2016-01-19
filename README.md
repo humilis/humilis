@@ -231,13 +231,13 @@ on reference parsers below.
 
 ## Available reference parsers
 
-### `layer`
+### `layer` references
 
 `layer` references allow you to refer to the physical ID of a resource that is 
 part of another layer. For instance, consider the following environment
 definition:
 
-```
+```yaml
 ---
 my-environment:
     description:
@@ -247,11 +247,11 @@ my-environment:
         - {layer: nat}
 ```
 
-Obviously the `nat` layer that care of deploying the NAT in the public subnet 
-will need to know the physical ID of that subnet. You achieve this by declaring
-a `layer` reference in the `meta.yaml` for the  `nat` layer:
+Obviously the `nat` layer that takes care of deploying the NAT in the public
+subnet will need to know the physical ID of that subnet. You achieve this by
+declaring a `layer` reference in the `meta.yaml` for the  `nat` layer:
 
-```
+```yaml
 ---
 meta:
     description:
@@ -271,7 +271,7 @@ meta:
 
 When parsing `meta.yaml` humilis will replace this:
 
-```
+```yaml
 ref:
     parser: layer
     parameters:
@@ -283,7 +283,7 @@ ref:
 with the physical ID you need (something like `subnet-bafa90cd`). You can then
 use this physical ID in the `resources.yaml.j2` section of the `nat` layer:
 
-```
+```yaml
 {# Pseudo-content of layers/nat/resources.yaml.j2 #}
 resources:
     {# An Elastic IP reservation that will be associated to the NAT #}
@@ -301,3 +301,85 @@ resources:
         AllocationId:
             Ref: NatEip
 ```
+
+
+### `output` references
+
+`output` references allow you to refer to outputs produced by another layer. 
+
+__Parameters__:
+
+* `layer_name`: The name of the layer you are referring to
+* `output_name`: The logical name of the output parameter
+
+In general you should prefer using `output` references over `layer` references.
+The output parameters produced by a layer define an informal _layer interface_
+that is more likely to remain constant than the logical names of resources
+within a layer.
+
+### `boto3` references
+
+`boto3` references define arbitrary calls to [boto3facade][boto3facade]. The 
+latter is just a simpler facade interface on top of [boto3][boto3].
+
+[boto3]: https://github.com/boto/boto3
+[boto3facade]: https://github.com/InnovativeTravel/boto3facade
+
+
+__Parameters__:
+
+* `service`: The AWS service, e.g. `ec2` or `cloudformation`. Note that only
+  only AWS services that have a facade in [boto3facade][boto3facade] are 
+  supported.
+* `call`: The corresponding facade method, e.g. `get_ami_by_name`. The value of
+  this parameter must be a dictionary with a `method` key (the name of the
+  facade method to invoke) and an optional `args` key (the parameters to pass to
+  the facade method). Best to look at the example below to understand how this
+  works.
+* `output_attribute`: Optional. If provided the reference parser will return the
+  value of this attribute from the object returned by the facade method.
+
+Below an example of a layer that uses a `boto3` reference:
+
+```
+---
+meta:
+    description:
+        Creates an EC2 instance using a named AMI
+    # More stuff omitted for brevity
+    ami:
+        description: The AMI to use when launching the EC2 instance
+        value:
+            ref:
+                parser: boto3
+                parameters:
+                    service: ec2
+                    call:
+                        method: get_ami_by_name
+                        args:
+                            - test-ami
+                    output_attribute: id
+```
+
+`humilis` will parse the reference using this code:
+
+```python
+# Import the Ec2 facade
+from boto3facade.ec2 import Ec2
+
+# Create a facade object
+ec2_facade = Ec2()
+
+# Make the call
+ami = ec2_facade.get_ami_by_name('test-ami')
+
+# Extract the requested attribute
+ref_value = ami.id
+```
+
+
+### `lambda` reference
+
+TBD
+
+
