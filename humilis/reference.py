@@ -103,7 +103,7 @@ def _make_deploy_package(full_path, logger):
     tmpdir = tempfile.mkdtemp()
     basename = os.path.basename(full_path)
     targetdir = os.path.join(tmpdir, basename)
-    shutil.copytree(full_path, targetdir)
+    shutil.copytree(full_path, targetdir, symlinks=True)
     setup_file = os.path.join(targetdir, 'setup.py')
     if os.path.isfile(setup_file):
         # Install all depedendencies in the same dir
