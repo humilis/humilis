@@ -30,6 +30,25 @@ To install the development version:
 pip install git+https://github.com/germangh/humilis
 ````
 
+After installation you need to configure humilis. To configure globally for 
+your system:
+
+```
+humilis configure
+```
+
+The command above will store and read the configuration options from
+`~/.humilis.ini`. You can also store the configuration in a `.humilis.ini` file
+stored in your current working directory by using:
+
+```
+humilis configure --local
+```
+
+`humilis` will always read the configuration first from a `.humilis.ini` file
+under your current work directory. If it is not found then it will read it from
+your system global config file `~/.humilis`.
+
 
 # Development environment
 
@@ -378,8 +397,59 @@ ref_value = ami.id
 ```
 
 
-### `lambda` reference
+## `file` references
 
-TBD
+`file` references allow you to refer to a local file. The file will be uploaded
+to S3 and the reference will evaluate to the corresponding S3 path.
+
+__Parameters__:
+
+* `path`: The path to the file, relative to the layer root directory.
 
 
+### `lambda` references
+
+`lambda` references allow you to refer to some Python code in your local 
+machine. If your code follows some simple conventions `humilis` will take care
+of building a [deployment package][aws-lambda-deploy] for you, uploading it
+to S3, and the reference will evaluate to the S3 path of the deployment 
+package.
+
+[aws-lambda-deploy]: http://docs.aws.amazon.com/lambda/latest/dg/lambda-python-how-to-create-deployment-package.html
+
+__Parameters__:
+
+* `path`: Path to either a completely self-contained `.py` file, or to the root
+  directory of your lambda code. In the latter case your code needs to follow
+  some simple conventions for this to work. More information below.
+
+
+__Example__:
+
+```yaml
+ref: 
+    parser: lambda
+    parameters:
+        # Path to the root directory containing your lambda code
+        path: dummy_function
+```
+
+
+__Code conventions__:
+
+Following the example above, the contents of the layer responsible of deploying
+the `dummy_function` lambda may look like this:
+
+```
+.
+├── dummy_function
+│   ├── dummy_function.py
+│   └── setup.py
+├── meta.yaml
+├── outputs.yaml.j2
+└── resources.yaml.j2
+```
+
+Basically all your code needs to be included under directory `dummy_function`.
+In this case there is only one file: `dummy_function.py`. External dependencies
+need to be specified in your `setup.py`.
