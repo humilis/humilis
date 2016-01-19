@@ -231,4 +231,73 @@ on reference parsers below.
 
 ## Available reference parsers
 
-TBD
+### `layer`
+
+`layer` references allow you to refer to the physical ID of a resource that is 
+part of another layer. For instance, consider the following environment
+definition:
+
+```
+---
+my-environment:
+    description:
+        Creates a VPC with a NAT in the public subnet
+    layers:
+        - {layer: vpc}
+        - {layer: nat}
+```
+
+Obviously the `nat` layer that care of deploying the NAT in the public subnet 
+will need to know the physical ID of that subnet. You achieve this by declaring
+a `layer` reference in the `meta.yaml` for the  `nat` layer:
+
+```
+---
+meta:
+    description:
+        Creates a managed NAT in the public subnet of the NAT layer
+    parameters:
+        subnet_id:
+            description:
+                The physical ID of the subnet where the NAT will be placed
+            value:
+                ref:
+                    parser: layer
+                    parameters:
+                        layer_name: vpc
+                        # The logical name of the subnet in the vpc layer
+                        resource_name: PublicSubnet
+```
+
+When parsing `meta.yaml` humilis will replace this:
+
+```
+ref:
+    parser: layer
+    parameters:
+        layer_name: vpc
+        # The logical name of the subnet in the vpc layer
+        resource_name: PublicSubnet
+```
+
+with the physical ID you need (something like `subnet-bafa90cd`). You can then
+use this physical ID in the `resources.yaml.j2` section of the `nat` layer:
+
+```
+{# Pseudo-content of layers/nat/resources.yaml.j2 #}
+resources:
+    {# An Elastic IP reservation that will be associated to the NAT #}
+    NatEip:
+      Type: 'AWS::EC2::EIP'
+      Properties: {}
+    {# Custom resource deploying the NAT #}
+    NatGateway:
+      Type: 'Custom::NatGateway',
+      Properties:
+        {# The ARN of the Lambda function backing the custom resource #}
+        ServiceToken: 'arn:aws:lambda:eu-west-1:XXXX:function:CreateNatGateway'
+        {# Here we use the subnet_id reference defined in meta.yaml #}
+        SubnetId: {{subnet_id}}
+        AllocationId:
+            Ref: NatEip
+```
