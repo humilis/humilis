@@ -135,7 +135,7 @@ the environment definition should be organized as follows:
 
 [yaml]: https://en.wikipedia.org/wiki/YAML
 
-```yaml
+```
 ---
 my-app-environment:
     description:
@@ -156,7 +156,7 @@ same name as the layer, within the same directory where the environment
 _definition file_ is located. If we consider the `my-app-environment` 
 environment we used above then your directory tree should look like this:
 
-```bash
+```
 .
 ├── my-app-environment.yaml
 ├── name_of_first_layer
@@ -185,7 +185,7 @@ be pre-processed with the [Jinja2][jinja2] template compiler.
 
 Below an example of how a layer `meta.yaml` may look like:
 
-```yaml
+```
 ---
 meta:
     description:
@@ -200,7 +200,7 @@ Above we declare only one layer parameter: `vpc_cidr`. `humilis` will make pass
 that parameter to Jinja2 when compiling any template contained in the layer. So
 the `resources.yaml.j2` for that same layer may look like this:
 
-```yaml
+```
 ---
 resources:
     VPC:
@@ -219,7 +219,7 @@ Humilis references are used by setting the value of a layer parameter to a dict
 that has a `ref` key. Below an a `meta.yaml` that refers to a resource (with
 a logical name `VPC`) that is contained in another layer (called `vpc_layer`):
 
-```yaml
+```
 ---
 meta:
     description:
@@ -256,7 +256,7 @@ on reference parsers below.
 part of another layer. For instance, consider the following environment
 definition:
 
-```yaml
+```
 ---
 my-environment:
     description:
@@ -270,7 +270,7 @@ Obviously the `nat` layer that takes care of deploying the NAT in the public
 subnet will need to know the physical ID of that subnet. You achieve this by
 declaring a `layer` reference in the `meta.yaml` for the  `nat` layer:
 
-```yaml
+```
 ---
 meta:
     description:
@@ -290,7 +290,7 @@ meta:
 
 When parsing `meta.yaml` humilis will replace this:
 
-```yaml
+```
 ref:
     parser: layer
     parameters:
@@ -302,7 +302,7 @@ ref:
 with the physical ID you need (something like `subnet-bafa90cd`). You can then
 use this physical ID in the `resources.yaml.j2` section of the `nat` layer:
 
-```jinja2
+```
 {# Pseudo-content of layers/nat/resources.yaml.j2 #}
 resources:
     {# An Elastic IP reservation that will be associated to the NAT #}
@@ -360,7 +360,7 @@ __Parameters__:
 
 Below an example of a layer that uses a `boto3` reference:
 
-```yaml
+```
 ---
 meta:
     description:
@@ -382,7 +382,7 @@ meta:
 
 `humilis` will parse the reference using this code:
 
-```python
+```
 # Import the Ec2 facade
 from boto3facade.ec2 import Ec2
 
@@ -426,7 +426,7 @@ __Parameters__:
 
 __Example__:
 
-```yaml
+```
 ref: 
     parser: lambda
     parameters:
