@@ -5,6 +5,11 @@
 # install all needed for development
 develop: .env
 	.env/bin/pip install -r requirements.txt
+	.env/bin/pip install -e .
+
+# run tests
+test: develop
+	.env/bin/py.test tests/test_cli.py
 
 # clean the development envrironment
 clean:
