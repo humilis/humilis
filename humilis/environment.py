@@ -34,7 +34,7 @@ class Environment():
         self.cf = Cloudformation(config.boto_config)
         self.sns_topic_arn = self.meta.get('sns-topic-arn', [])
         self.tags = self.meta.get('tags', {})
-        self.tags['humilis-environment'] = self.name
+        self.tags['humilis:environment'] = self.name
 
         self.layers = []
         for layer in self.meta.get('layers', []):
@@ -101,7 +101,7 @@ class Environment():
     def in_cf(self):
         """Returns true if the environment has been deployed to CF."""
         return self.name in {
-            utils.unroll_tags(stk['Tags']).get('humilis-environment')
+            utils.unroll_tags(stk['Tags']).get('humilis:environment')
             for stk in self.cf.stacks}
 
     def __repr__(self):

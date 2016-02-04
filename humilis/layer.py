@@ -49,8 +49,8 @@ class Layer:
 
         self.sns_topic_arn = environment.sns_topic_arn
         self.tags = {
-            'humilis-layer': self.name,
-            'humilis-created-on': str(datetime.datetime.now())}
+            'humilis:layer': self.name,
+            'humilis:created': str(datetime.datetime.now())}
         for tagname, tagvalue in environment.tags.items():
             self.tags[tagname] = tagvalue
 
@@ -146,7 +146,7 @@ class Layer:
         self.children.append(child)
         # Don't use a comma as a separator. For whatever reason CF seems to
         # occasionally break when tag values contain commas.
-        self.tags['humilis-children'] = ':'.join((x.name for x
+        self.tags['humilis:children'] = ':'.join((x.name for x
                                                   in self.children))
 
     def compile(self):
