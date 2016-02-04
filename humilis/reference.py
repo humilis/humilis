@@ -104,9 +104,6 @@ def _make_deploy_package(full_path, logger):
     basename = os.path.basename(full_path)
     targetdir = os.path.join(tmpdir, basename)
     shutil.copytree(full_path, targetdir, symlinks=True)
-    tests_dir = os.path.join(targetdir, 'tests')
-    if os.path.isdir(tests_dir):
-        shutil.rmtree(tests_dir)
     setup_file = os.path.join(targetdir, 'setup.py')
     if os.path.isfile(setup_file):
         # Install all depedendencies in the same dir
