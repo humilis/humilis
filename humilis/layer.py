@@ -58,6 +58,9 @@ class Layer:
             self.tags[tagname] = tagvalue
 
         self.yaml_params = self.meta.get('parameters', {})
+        for k, v in self.yaml_params.items():
+            # Set 1 as default priority for all parameters
+            v['priority'] = v.get('priority', 1)
 
         # User params override what is in the layer definition file
         self.user_params = user_params
@@ -80,7 +83,11 @@ class Layer:
     def loader_params(self):
         """Produces a dictionary of parameters to pass to a section loader."""
         # User parameters in the layer meta.yaml
-        params = {k: v['value'] for k, v in self.params.items()}
+        # Not that some param values may not have been populated when this
+        # property is accessed since that may happen during the parsing of
+        # some references in the parameter list: thus the if 'value' in v
+        params = {k: v['value'] for k, v in self.params.items()
+                  if 'value' in v}
         params['_env'] = {'stage': self.env_stage, 'name': self.env_name}
         params['_os_env'] = os.environ
         params['_layer'] = {'name': self.name}

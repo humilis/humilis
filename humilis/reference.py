@@ -16,6 +16,7 @@ from zipfile import ZipFile
 import boto3facade
 from boto3facade.s3 import S3
 from boto3facade.cloudformation import Cloudformation
+import jinja2
 
 from humilis.exceptions import ReferenceError
 import humilis.utils as utils
@@ -81,24 +82,24 @@ def lambda_ref(layer, config, path=None):
 
     :returns: S3 path where the deployment package has been uploaded.
     """
-    full_path = os.path.abspath(os.path.join(layer.basedir, path))
+    fpath = os.path.abspath(os.path.join(layer.basedir, path))
     logger = layer.logger
-    if os.path.isdir(full_path):
-        with _make_deploy_package(full_path, logger) as full_path:
-            s3path = file(layer, config, full_path)
+    if os.path.isdir(fpath):
+        with _deploy_package(fpath, layer, logger) as fpath:
+            s3path = file(layer, config, fpath)
     else:
-        path_no_ext, ext = os.path.splitext(full_path)
+        path_no_ext, ext = os.path.splitext(fpath)
         if ext == '.zip':
-            s3path = file(layer, config, full_path)
+            s3path = file(layer, config, fpath)
         else:
-            with _make_simple_deploy_package(full_path, logger) as full_path:
-                s3path = file(layer, config, full_path)
+            with _simple_deploy_package(fpath, layer, logger) as fpath:
+                s3path = file(layer, config, fpath)
 
     return s3path
 
 
 @contextlib.contextmanager
-def _make_deploy_package(full_path, logger):
+def _deploy_package(full_path, layer, logger):
     """Creates a deployment package for multi-file lambda with deps."""
     tmpdir = tempfile.mkdtemp()
     basename = os.path.basename(full_path)
@@ -121,18 +122,31 @@ def _make_deploy_package(full_path, logger):
 
 
 @contextlib.contextmanager
-def _make_simple_deploy_package(full_path, logger):
+def _simple_deploy_package(full_path, layer, logger):
     """Creates a deployment package for a one-file no-deps lambda."""
     logger.info("Creating deployment package for '{}'".format(full_path))
-    tmpdir = tempfile.mkdtemp()
     path_no_ext, ext = os.path.splitext(full_path)
+    if ext == '.j2':
+        # A Jinja2 template, render it
+        with open(full_path, 'r') as f:
+            template = jinja2.Template(f.read())
+        # Then write it to a temp location
+        tmpdir = tempfile.mktemp()
+        os.makedirs(tmpdir)
+        tmpfile = os.path.join(tmpdir, os.path.basename(path_no_ext))
+        with open(tmpfile, 'w') as f:
+            f.write(template.render(layer.loader_params))
+        path_no_ext, ext = os.path.splitext(tmpfile)
+        full_path = tmpfile
     basename = os.path.basename(path_no_ext)
     basename = _add_git_commit(basename)
-    zipfile = os.path.join(tmpdir, basename + '.zip')
+    tmpdir2 = tempfile.mkdtemp()
+    zipfile = os.path.join(tmpdir2, basename + '.zip')
     with ZipFile(zipfile, 'w') as myzip:
-        myzip.write(full_path)
+        myzip.write(full_path, arcname=basename + ext)
     yield zipfile
     shutil.rmtree(tmpdir)
+    shutil.rmtree(tmpdir2)
 
 
 @utils.reference_parser()

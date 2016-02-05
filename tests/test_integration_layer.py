@@ -8,6 +8,11 @@ import humilis.utils as utils
 from humilis.exceptions import CloudformationError
 
 
+def test_lambda_template_layer(cf, test_lambda_template_layer):
+    """Tests the deployment of a templated lambda layer."""
+    test_lambda_template_layer.create()
+
+
 def test_create_layer_object(test_environment, test_vpc_layer):
     layer = test_vpc_layer
     assert layer.name == 'vpc'
@@ -17,8 +22,8 @@ def test_create_layer_object(test_environment, test_vpc_layer):
         stage=layer.env_stage)
     assert len(layer.yaml_params) == 2
     assert layer.yaml_params['vpc_cidr']['value'] == '10.0.0.0/16'
-    assert layer.tags.get('humilis-layer') == layer.name
-    assert layer.tags.get('humilis-environment') == test_environment.name
+    assert layer.tags.get('humilis:layer') == layer.name
+    assert layer.tags.get('humilis:environment') == test_environment.name
 
 
 def test_get_section_files(test_vpc_layer):
@@ -84,7 +89,7 @@ def test_create_dependant_layer(cf, test_vpc_layer, test_instance_layer):
     assert not cf.stack_exists(test_vpc_layer.cf_name)
 
 
-def test_create_namedinstance_stack(cf, test_vpc_layer,
+def test_create_namedinstance_layer(cf, test_vpc_layer,
                                     test_named_instance_layer):
     """Referring to AMIs using their tags"""
     test_vpc_layer.create()

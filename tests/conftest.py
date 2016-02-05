@@ -106,3 +106,10 @@ def test_roles_layer(cf, test_environment):
     layer = Layer(test_environment, 'lambda-role')
     yield layer
     cf.delete_stack(layer.cf_name)
+
+
+@pytest.yield_fixture(scope='function')
+def test_lambda_template_layer(cf, test_environment):
+    layer = Layer(test_environment, 'lambda-template')
+    yield layer
+    cf.delete_stack(layer.cf_name)
