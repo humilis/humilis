@@ -181,7 +181,8 @@ class Layer:
         """Populates parameters in a layer by resolving references."""
         if len(self.yaml_params) < 1:
             return
-        for pname, param in self.yaml_params.items():
+        for pname, param in sorted(self.yaml_params.items(),
+                                   key=lambda t: t[1].get('priority', '1')):
             self.params[pname] = {}
             self.params[pname]['description'] = param.get('description', None)
             self.params[pname]['value'] = self._parse_param_value(
