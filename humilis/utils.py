@@ -3,12 +3,15 @@
 
 
 import abc
+import contextlib
 import logging
 import os
 import io
 import glob
 import json
+import shutil
 from sys import exit
+import tempfile
 
 import yaml
 import jinja2
@@ -33,6 +36,21 @@ def unroll_tags(tags):
 def roll_tags(tags):
     """Rolls a dictionary of tags into a list of tags Key/Value dicts."""
     return [{'Key': k, 'Value': v} for k, v in tags.items()]
+
+
+@contextlib.contextmanager
+def move_aside(path):
+    """Moves a file or directory aside so that it can be processed in place."""
+    tmpdir = tempfile.mktemp()
+    if os.path.isfile(path):
+        os.makedirs(tmpdir)
+        tmpfile = os.path.join(tmpdir, os.path.basename(path))
+        shutil.copy(path, tmpfile)
+        yield tmpfile
+    elif os.path.isdir(path):
+        shutil.copytree(path, tmpdir)
+        yield tmpdir
+    shutil.rmtree(tmpdir)
 
 
 def get_cf_name(env_name, layer_name, stage=None):

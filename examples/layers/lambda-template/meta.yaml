@@ -9,4 +9,4 @@ meta:
                 ref: 
                     parser: lambda
                     parameters:
-                        path: dummy_function.py.j2
+                        path: dummy_function.py

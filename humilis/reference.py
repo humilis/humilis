@@ -38,20 +38,14 @@ def _get_s3path(layer, config, full_path):
     return (s3bucket, s3key)
 
 
-def _add_git_commit(basename):
-    """Adds the git commit hash to a filename."""
+def _git_head():
+    """Adds the git HEAD hash to a filename."""
     try:
         c = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode()
-        c = c.rstrip()
+        return c.rstrip()
     except CalledProcessError as err:
-        if err.find('Not a git repository') > -1:
-            # Lambda not under version control, very bad!
-            c = None
-        raise
-
-    if c:
-        basename = "{}-{}".format(basename, c)
-    return basename
+        if err.find('Not a git repository') == -1:
+            raise
 
 
 @utils.reference_parser()
@@ -113,8 +107,9 @@ def _deploy_package(full_path, layer, logger):
     # Adding the commit hash to the file name will force different commits to
     # be associated to different s3 paths. This way CF update will detect that
     # the template has changed.
-    basename = _add_git_commit(basename)
-    zipfile = os.path.join(tmpdir, basename + '.zip')
+    gc = _git_head()
+    suffix = ('-' + gc, '')[gc is None]
+    zipfile = os.path.join(tmpdir, "{}{}{}".format(basename, suffix, '.zip'))
     with ZipFile(zipfile, 'w') as myzip:
         utils.zipdir(targetdir, myzip)
     yield zipfile
@@ -122,31 +117,43 @@ def _deploy_package(full_path, layer, logger):
 
 
 @contextlib.contextmanager
-def _simple_deploy_package(full_path, layer, logger):
+def _simple_deploy_package(path, layer, logger):
     """Creates a deployment package for a one-file no-deps lambda."""
-    logger.info("Creating deployment package for '{}'".format(full_path))
-    path_no_ext, ext = os.path.splitext(full_path)
-    if ext == '.j2':
-        # A Jinja2 template, render it
-        with open(full_path, 'r') as f:
-            template = jinja2.Template(f.read())
-        # Then write it to a temp location
-        tmpdir = tempfile.mktemp()
-        os.makedirs(tmpdir)
-        tmpfile = os.path.join(tmpdir, os.path.basename(path_no_ext))
-        with open(tmpfile, 'w') as f:
-            f.write(template.render(layer.loader_params))
-        path_no_ext, ext = os.path.splitext(tmpfile)
-        full_path = tmpfile
-    basename = os.path.basename(path_no_ext)
-    basename = _add_git_commit(basename)
-    tmpdir2 = tempfile.mkdtemp()
-    zipfile = os.path.join(tmpdir2, basename + '.zip')
-    with ZipFile(zipfile, 'w') as myzip:
-        myzip.write(full_path, arcname=basename + ext)
-    yield zipfile
-    shutil.rmtree(tmpdir)
-    shutil.rmtree(tmpdir2)
+    logger.info("Creating deployment package for '{}'".format(path))
+    with utils.move_aside(path) as tmppath:
+        if _is_jinja2_template(tmppath):
+            _preprocess_jinja2(tmppath, layer.loader_params)
+        path_no_ext, ext = os.path.splitext(tmppath)
+        basename = os.path.basename(path_no_ext)
+        gc = _git_head()
+        suffix = ('-' + gc, '')[gc is None]
+        tmpdir = tempfile.mkdtemp()
+        zipfile = os.path.join(tmpdir,
+                               "{}{}{}".format(basename, suffix, '.zip'))
+        with ZipFile(zipfile, 'w') as myzip:
+            myzip.write(tmppath, arcname=basename + ext)
+        yield zipfile
+        shutil.rmtree(tmpdir)
+
+
+def _is_jinja2_template(path):
+    """Returns true if a file contains a jinja2 template."""
+    result = False
+    with open(path, 'r') as f:
+        for line in f:
+            if line.startswith('#') and line.find('preprocessor:jinja2'):
+                result = True
+                break
+    return result
+
+
+def _preprocess_jinja2(path, params):
+    """Renders in place a jinja2 template."""
+    with open(path, 'a+') as f:
+        f.seek(0)
+        result = jinja2.Template(f.read()).render(params)
+        f.seek(0)
+        f.write(result)
 
 
 @utils.reference_parser()
