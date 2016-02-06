@@ -6,7 +6,7 @@ def test_create_environment_object(test_environment):
     """Creates an Environment objects and queries its properties."""
     env = test_environment
     assert env.name == 'example-environment'
-    assert env.tags.get('humilis-environment') == env.name
+    assert env.tags.get('humilis:environment') == env.name
 
 
 def test_environment_not_already_in_aws(test_environment):

@@ -8,8 +8,13 @@ import humilis.utils as utils
 from humilis.exceptions import CloudformationError
 
 
+def test_lambda_template_2_layer(cf, test_lambda_template_2_layer):
+    """Tests the deployment of a templated lambda with install reqs."""
+    test_lambda_template_2_layer.create()
+
+
 def test_lambda_template_layer(cf, test_lambda_template_layer):
-    """Tests the deployment of a templated lambda layer."""
+    """Tests the deployment of a templated lambda function."""
     test_lambda_template_layer.create()
 
 

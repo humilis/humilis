@@ -93,27 +93,26 @@ def lambda_ref(layer, config, path=None):
 
 
 @contextlib.contextmanager
-def _deploy_package(full_path, layer, logger):
+def _deploy_package(path, layer, logger):
     """Creates a deployment package for multi-file lambda with deps."""
-    tmpdir = tempfile.mkdtemp()
-    basename = os.path.basename(full_path)
-    targetdir = os.path.join(tmpdir, basename)
-    shutil.copytree(full_path, targetdir, symlinks=True)
-    setup_file = os.path.join(targetdir, 'setup.py')
-    if os.path.isfile(setup_file):
-        # Install all depedendencies in the same dir
-        pip.main(['install', targetdir, '-t', targetdir])
+    with utils.move_aside(path) as tmppath:
+        setup_file = os.path.join(tmppath, 'setup.py')
+        if os.path.isfile(setup_file):
+            # Install all depedendencies in the same dir
+            pip.main(['install', tmppath, '-t', tmppath])
 
-    # Adding the commit hash to the file name will force different commits to
-    # be associated to different s3 paths. This way CF update will detect that
-    # the template has changed.
-    gc = _git_head()
-    suffix = ('-' + gc, '')[gc is None]
-    zipfile = os.path.join(tmpdir, "{}{}{}".format(basename, suffix, '.zip'))
-    with ZipFile(zipfile, 'w') as myzip:
-        utils.zipdir(targetdir, myzip)
-    yield zipfile
-    shutil.rmtree(tmpdir)
+        # Adding the HEAD hash is needed for CF to detect that the contents of
+        # of the .zip file have changed when requesting a stack update.
+        gc = _git_head()
+        suffix = ('-' + gc, '')[gc is None]
+        tmpdir = tempfile.mkdtemp()
+        basename = os.path.basename(path)
+        zipfile = os.path.join(tmpdir, "{}{}{}".format(basename, suffix,
+                                                       '.zip'))
+        with ZipFile(zipfile, 'w') as myzip:
+            utils.zipdir(tmppath, myzip)
+        yield zipfile
+        shutil.rmtree(tmpdir)
 
 
 @contextlib.contextmanager

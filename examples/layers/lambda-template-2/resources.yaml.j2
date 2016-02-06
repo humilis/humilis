@@ -1,0 +1,28 @@
+resources:
+    {# A dummy role that does not give permission to do anything #}
+    DummyRole:
+        Type: 'AWS::IAM::Role'
+        Properties:
+            AssumeRolePolicyDocument:
+                Version: '2012-10-17'
+                Statement:
+                    - Effect: Allow
+                      Principal:
+                          Service: 'lambda.amazonaws.com'
+                      Action: 'sts:AssumeRole'
+            Path: '/humilis/'
+            Policies: []
+    DummyLambdaFunction:
+        Type: 'AWS::Lambda::Function'
+        Properties:
+            Code: 
+                S3Bucket: {{dummy_function.s3bucket}}
+                S3Key: {{dummy_function.s3key}}
+            Runtime: "python2.7"
+            Description: "A dummy function that does nothing"
+            Timeout: 5
+            Handler: dummy_function.lambda_handler
+            Role:
+                "Fn::GetAtt": 
+                    - DummyRole
+                    - Arn
