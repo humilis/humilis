@@ -96,6 +96,7 @@ def lambda_ref(layer, config, path=None):
 def _deploy_package(path, layer, logger):
     """Creates a deployment package for multi-file lambda with deps."""
     with utils.move_aside(path) as tmppath:
+        _preprocess_dir(tmppath, layer.loader_params)
         setup_file = os.path.join(tmppath, 'setup.py')
         if os.path.isfile(setup_file):
             # Install all depedendencies in the same dir
@@ -120,8 +121,7 @@ def _simple_deploy_package(path, layer, logger):
     """Creates a deployment package for a one-file no-deps lambda."""
     logger.info("Creating deployment package for '{}'".format(path))
     with utils.move_aside(path) as tmppath:
-        if _is_jinja2_template(tmppath):
-            _preprocess_jinja2(tmppath, layer.loader_params)
+        _preprocess_file(tmppath, layer.loader_params)
         path_no_ext, ext = os.path.splitext(tmppath)
         basename = os.path.basename(path_no_ext)
         gc = _git_head()
@@ -146,13 +146,23 @@ def _is_jinja2_template(path):
     return result
 
 
-def _preprocess_jinja2(path, params):
+def _preprocess_file(path, params):
     """Renders in place a jinja2 template."""
+    if not _is_jinja2_template(path):
+        return
     with open(path, 'a+') as f:
         f.seek(0)
         result = jinja2.Template(f.read()).render(params)
         f.seek(0)
         f.write(result)
+
+
+def _preprocess_dir(path, params):
+    """Preprocesses all files in a directory using Jinja2."""
+    for root, dirs, files in os.walk(path):
+        for file in files:
+            filepath = os.path.join(root, file)
+            _preprocess_file(filepath, params)
 
 
 @utils.reference_parser()
