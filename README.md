@@ -238,11 +238,19 @@ meta:
 ```
 
 Every reference must have a `parser` key that identifies the parser that
-should be used to parse the reference. The optional key `parameters` allows
-you to pass parameters to the reference parser. You can pass either named
-parameters (as a dict) or positional arguments (as a list). More information
-on reference parsers below.
+should be used to parse the reference. There are also two option keys:
 
+* `parameters`: allows you to pass parameters to the reference parser. You can
+   pass either named parameters (as a dict) or positional arguments (as a 
+   list). 
+
+* `priority`: the parsing priority. Parameters with a lower value in `priority`
+  will be parsed before parameters with a higher value. This allows some
+  reference parsers to refer internally to other parameters within the same
+  layer. For example, the `lambda` parser, when parsing templated  lambda code,
+  it uses previously parsed layer parameters as template parameters.
+
+More information on reference parsers below.
 
 [cf-ref]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html
 [cf-getatt]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
