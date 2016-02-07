@@ -72,9 +72,11 @@ class Environment():
         if output_file is not None:
             self.write_outputs(output_file)
 
-    def write_outputs(self):
+    def write_outputs(self, output_file=None):
         """Writes layer outputs to a YAML file."""
-        with open("{}.outputs.yaml".format(self.name), 'w') as f:
+        if output_file is None:
+            output_file = "{}.outputs.yaml".format(self.name)
+        with open(output_file, 'w') as f:
             f.write(yaml.dump(self.outputs, indent=4,
                               default_flow_style=False))
 
