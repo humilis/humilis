@@ -150,10 +150,9 @@ def _preprocess_file(path, params):
     """Renders in place a jinja2 template."""
     if not _is_jinja2_template(path):
         return
-    with open(path, 'a+') as f:
-        f.seek(0)
+    with open(path, 'r') as f:
         result = jinja2.Template(f.read()).render(params)
-        f.seek(0)
+    with open(path, 'w') as f:
         f.write(result)
 
 
