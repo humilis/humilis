@@ -96,6 +96,8 @@ def lambda_ref(layer, config, path=None):
 def _deploy_package(path, layer, logger):
     """Creates a deployment package for multi-file lambda with deps."""
     with utils.move_aside(path) as tmppath:
+        # removes __* and .* dirs
+        _cleanup_dir(tmppath)
         _preprocess_dir(tmppath, layer.loader_params)
         setup_file = os.path.join(tmppath, 'setup.py')
         if os.path.isfile(setup_file):
@@ -114,6 +116,17 @@ def _deploy_package(path, layer, logger):
             utils.zipdir(tmppath, myzip)
         yield zipfile
         shutil.rmtree(tmpdir)
+
+
+def _cleanup_dir(path):
+    """Removes __* and .* dirs."""
+    to_remove = []
+    for root, dirs, files in os.walk(path):
+        for dirpath in dirs:
+            if dirpath.startswith('__') or dirpath.startswith('.'):
+                to_remove.append(os.path.join(root, dirpath))
+    for dirpath in to_remove:
+        shutil.rmtree(dirpath, ignore_errors=True)
 
 
 @contextlib.contextmanager
