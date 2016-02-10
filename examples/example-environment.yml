@@ -5,7 +5,7 @@ example-environment:
     region: eu-west-1
     layers:
         # Layers will be created in the order given here
-        - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16}
+        - {layer: vpc, some_meta_parameter: 1, vpc_cidr: 10.0.0.4/16, template_parameter: "Hello World!"}
         - {layer: instance}
         - {layer: namedinstance}
         - {layer: streams}

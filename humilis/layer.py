@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+import itertools
 import os
 import os.path
 import re
@@ -42,7 +43,11 @@ class Layer:
         # populated once the layers this layer depend on have been created.
         self.params = {}
 
-        self.meta = self.loader.load_section('meta', params=self.loader_params)
+        # the parameters that will be used to compile meta.yaml
+        meta_params = {p[0]: p[1] for p
+                       in itertools.chain(self.loader_params.items(),
+                                          user_params.items())}
+        self.meta = self.loader.load_section('meta', params=meta_params)
         for dep in self.meta.get('dependencies', []):
             dep_cf_name = get_cf_name(self.env_name, dep, stage=self.env_stage)
             self.depends_on.append(dep_cf_name)

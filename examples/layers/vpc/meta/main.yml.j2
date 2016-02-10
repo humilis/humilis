@@ -6,6 +6,9 @@ meta:
         # Meta-parameters. These parameters are sent to jinja2 when compiling 
         # jinja2 templates. You must give defaults to ALL parameters that 
         # appear in your layer templates.
+        dummy_parameter: 
+            description: The value of this param comes from the env definition file
+            value: {{template_parameter}}
         vpc_cidr:
             description: The CIDR block of the generated VPC
             value: 10.0.0.0/16
