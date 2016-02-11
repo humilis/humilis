@@ -217,7 +217,8 @@ def output(layer, config, layer_name=None, output_name=None):
     cf = Cloudformation(config)
     output = cf.get_stack_output(stack_name, output_name)
     if len(output) < 1:
-        all_stack_outputs = list(cf.stack_outputs(layer_name).keys())
+        all_stack_outputs = [x['OutputKey'] for x
+                             in cf.stack_outputs[stack_name]]
         msg = ("{} output does not exist for stack {} "
                "(with outputs {}).").format(output_name,
                                             stack_name,
