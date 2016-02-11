@@ -1,3 +1,4 @@
+[![Stories in Ready](https://badge.waffle.io/InnovativeTravel/humilis.png?label=ready&title=Ready)](https://waffle.io/InnovativeTravel/humilis)
 humilis
 ==========
 
