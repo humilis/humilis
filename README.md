@@ -1,9 +1,9 @@
-[![Stories in Ready](https://badge.waffle.io/InnovativeTravel/humilis.png?label=ready&title=Ready)](https://waffle.io/InnovativeTravel/humilis)
 humilis
 ==========
 
 [![Circle CI](https://circleci.com/gh/InnovativeTravel/humilis.svg?style=svg)](https://circleci.com/gh/InnovativeTravel/humilis)
 [![PyPI](https://img.shields.io/pypi/v/humilis.svg?style=flat)](https://pypi.python.org/pypi/humilis)
+[![Stories in Ready](https://badge.waffle.io/InnovativeTravel/humilis.png?label=ready&title=Ready)](https://waffle.io/InnovativeTravel/humilis)
 
 Helps you deploy AWS infrastructure with [Cloudformation][cf].
 
