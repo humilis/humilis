@@ -134,8 +134,8 @@ class Environment():
     def get_layer(self, layer_name):
         """Gets a layer by name"""
         sel_layer = [layer for layer in self.layers
-                     if layer.cf_name == layer_name
-                     or layer.name == layer_name]
+                     if layer.cf_name == layer_name or
+                     layer.name == layer_name]
         if len(sel_layer) > 0:
             return sel_layer[0]
 
