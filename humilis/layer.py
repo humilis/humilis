@@ -70,11 +70,7 @@ class Layer:
         # User params override what is in the layer definition file
         self.user_params = user_params
         for pname, pvalue in user_params.items():
-            if pname not in self.yaml_params:
-                msg = "Unknown parameter {pname} for layer {layer}: ignored"\
-                    .format(pname=pname, layer=self.name)
-                self.logger.warning(msg)
-            else:
+            if pname in self.yaml_params:
                 self.yaml_params[pname]['value'] = pvalue
         self.__ec2 = None
         self.__s3 = None
