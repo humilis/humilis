@@ -8,7 +8,7 @@ import os
 try:
     import pypandoc
     long_description = pypandoc.convert('README.md', 'rst')
-except(IOError, ImportError):
+except(IOError, ImportError, RuntimeError):
     if os.path.isfile('README.md'):
         long_description = open('README.md').read()
     else:
