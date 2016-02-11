@@ -7,6 +7,8 @@ import os
 
 import boto3
 from boto3facade.cloudformation import Cloudformation
+from boto3facade.dynamodb import Dynamodb
+from boto3facade.kms import Kms
 import yaml
 
 from humilis.config import config
@@ -80,19 +82,20 @@ class Environment():
         """Sets and environment secret."""
         if not self.vault_layer:
             raise RequiresVaultError()
-        client = boto3.client('kms')
+        client = Kms(config.boto_config).client
         encrypted = client.encrypt(KeyId=self.kms_key_id,
                                    Plaintext=plaintext)['CiphertextBlob']
         client = boto3.client('dynamodb')
-        client.put_item(
+        resp = client.put_item(
             TableName=self.__secrets_table_name,
             Item={'id': {'S': key}, 'value': {'B': encrypted}})
+        return resp
 
     def get_secret(self, key):
         """Retrieves a secret."""
         if not self.vault_layer:
             raise RequiresVaultError()
-        client = boto3.client('dynamodb')
+        client = Dynamodb(config.boto_config).client
         encrypted = client.get_item(
             TableName=self.__secrets_table_name,
             Key={'id': {'S': key}})['Item']['value']['B']

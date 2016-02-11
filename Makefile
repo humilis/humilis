@@ -12,7 +12,7 @@ test: develop
 
 # clean the development envrironment
 clean:
-	-rm -rf .env
+	-rm -rf .env .tox
 
 pypi:
 	.env/bin/python setup.py sdist upload
