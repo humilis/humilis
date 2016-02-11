@@ -5,18 +5,19 @@
 import logging
 import os
 
+import boto3
 from boto3facade.cloudformation import Cloudformation
 import yaml
 
 from humilis.config import config
-from humilis.exceptions import FileFormatError
+from humilis.exceptions import FileFormatError, RequiresVaultError
 from humilis.layer import Layer
 import humilis.utils as utils
 
 
 class Environment():
     """Manages the deployment of a collection of humilis layers."""
-    def __init__(self, yml_path, logger=None, stage=None):
+    def __init__(self, yml_path, logger=None, stage=None, vault_layer=None):
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:
@@ -53,6 +54,10 @@ class Environment():
             layer_obj = Layer(self, layer_name, **layer_params)
             self.layers.append(layer_obj)
 
+        self.vault_layer = self.get_layer(vault_layer or 'secrets-vault')
+        self.__secrets_table_name = "secrets_{}_{}".format(self.name,
+                                                           self.stage)
+
     @property
     def outputs(self):
         """Outputs produced by each environment layer"""
@@ -62,6 +67,40 @@ class Environment():
             if ly is not None:
                 outputs[layer.name] = ly
         return outputs
+
+    @property
+    def kms_key_id(self):
+        """The ID of the KMS Key associated to the environment vault."""
+        if not self.vault_layer:
+            raise RequiresVaultError()
+        if self.vault_layer:
+            return self.outputs[self.vault_layer.name]['KmsKeyId']
+
+    def set_secret(self, key, plaintext):
+        """Sets and environment secret."""
+        if not self.vault_layer:
+            raise RequiresVaultError()
+        client = boto3.client('kms')
+        encrypted = client.encrypt(KeyId=self.kms_key_id,
+                                   Plaintext=plaintext)['CiphertextBlob']
+        client = boto3.client('dynamodb')
+        client.put_item(
+            TableName=self.__secrets_table_name,
+            Item={'id': {'S': key}, 'value': {'B': encrypted}})
+
+    def get_secret(self, key):
+        """Retrieves a secret."""
+        if not self.vault_layer:
+            raise RequiresVaultError()
+        client = boto3.client('dynamodb')
+        encrypted = client.get_item(
+            TableName=self.__secrets_table_name,
+            Key={'id': {'S': key}})['Item']['value']['B']
+
+        # Decrypt using KMS (assuming the secret value is a string)
+        client = boto3.client('kms')
+        plaintext = client.decrypt(CiphertextBlob=encrypted)['Plaintext']
+        return plaintext.decode()
 
     def create(self, output_file=None, update=False):
         """Creates or updates an environment."""
@@ -92,7 +131,8 @@ class Environment():
     def get_layer(self, layer_name):
         """Gets a layer by name"""
         sel_layer = [layer for layer in self.layers
-                     if layer.cf_name == layer_name]
+                     if layer.cf_name == layer_name
+                     or layer.name == layer_name]
         if len(sel_layer) > 0:
             return sel_layer[0]
 

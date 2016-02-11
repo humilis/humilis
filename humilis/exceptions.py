@@ -10,6 +10,11 @@ class LoggedException(Exception):
         super().__init__(msg)
 
 
+class RequiresVaultError(LoggedException):
+    """Trying to access a feature that requires an environment vault."""
+    pass
+
+
 class TakesTooLongError(LoggedException):
     """It has taken too long for AWS to do something"""
     pass
