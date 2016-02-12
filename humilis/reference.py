@@ -150,6 +150,10 @@ def _simple_deploy_package(path, layer, logger):
 
 def _is_jinja2_template(path):
     """Returns true if a file contains a jinja2 template."""
+    _, ext = os.path.splitext(path)
+    if ext in {'.pyc'}:
+        return False
+
     result = False
     with open(path, 'r') as f:
         for line in f:
