@@ -406,7 +406,7 @@ ref_value = ami.id
 ```
 
 
-## `file` references
+### `file` references
 
 `file` references allow you to refer to a local file. The file will be uploaded
 to S3 and the reference will evaluate to the corresponding S3 path.
@@ -468,3 +468,22 @@ the `dummy_function` lambda may look like this:
 Basically all your code needs to be included under directory `dummy_function`.
 In this case there is only one file: `dummy_function.py`. External dependencies
 need to be specified in your `setup.py`.
+
+
+## Secrets vault
+
+If your environment includes a [secrets vault layer][secrets-vault] you can use
+humilis to easily store secrets in the vault:
+
+[secrets-vault]: https://github.com/InnovativeTravel/humilis-secrets-vault
+
+```
+humilis set-secret --stage [STAGE] [ENVIRONMENT_FILE] [SECRET_KEY] [SECRET_VAL]
+```
+
+You can test that the secret was properly stored using the `get-secret`
+command:
+
+```
+humilis set-secret --stage [STAGE] [ENVIRONMENT_FILE] [SECRET_KEY]
+```

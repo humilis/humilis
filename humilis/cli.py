@@ -49,7 +49,7 @@ def create(environment, stage, output, pretend):
 @click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
               default=None, metavar='STAGE')
 def set_secret(environment, key, value, stage):
-    """Creates an environment."""
+    """Stores a secret in the vault."""
     env = Environment(environment, stage=stage)
     resp = env.set_secret(key, value)
     print(resp)
@@ -61,7 +61,7 @@ def set_secret(environment, key, value, stage):
 @click.option('--stage', help="Deployment stage, e.g. PRODUCTION, or DEV",
               default=None, metavar='STAGE')
 def get_secret(environment, key, stage):
-    """Creates an environment."""
+    """Gets a secret from the vault."""
     env = Environment(environment, stage=stage)
     resp = env.get_secret(key)
     print(resp)
