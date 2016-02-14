@@ -44,6 +44,7 @@ class Layer:
         self.params = {}
 
         # the parameters that will be used to compile meta.yaml
+        self.meta = {}
         meta_params = {p[0]: p[1] for p
                        in itertools.chain(self.loader_params.items(),
                                           user_params.items())}
@@ -91,8 +92,9 @@ class Layer:
                   if 'value' in v}
         params['_env'] = {'stage': self.env_stage, 'name': self.env_name}
         params['_os_env'] = os.environ
-        params['_layer'] = {'name': self.name,
-                            'description': self.meta.get('description', '')}
+        params['_layer'] = {
+            'name': self.name,
+            'description': self.meta.get('description', '')}
         return params
 
     @property
