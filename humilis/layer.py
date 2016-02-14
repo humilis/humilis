@@ -91,7 +91,8 @@ class Layer:
                   if 'value' in v}
         params['_env'] = {'stage': self.env_stage, 'name': self.env_name}
         params['_os_env'] = os.environ
-        params['_layer'] = {'name': self.name}
+        params['_layer'] = {'name': self.name,
+                            'description': self.meta.get('description', '')}
         return params
 
     @property
