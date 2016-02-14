@@ -74,14 +74,14 @@ class Environment():
     def kms_key_id(self):
         """The ID of the KMS Key associated to the environment vault."""
         if not self.vault_layer:
-            raise RequiresVaultError()
+            raise RequiresVaultError("Requires a secrets-vault layer")
         if self.vault_layer:
             return self.outputs[self.vault_layer.name]['KmsKeyId']
 
     def set_secret(self, key, plaintext):
         """Sets and environment secret."""
         if not self.vault_layer:
-            raise RequiresVaultError()
+            raise RequiresVaultError("Requires a secrets-vault layer")
         client = Kms(config.boto_config).client
         encrypted = client.encrypt(KeyId=self.kms_key_id,
                                    Plaintext=plaintext)['CiphertextBlob']
@@ -94,7 +94,7 @@ class Environment():
     def get_secret(self, key):
         """Retrieves a secret."""
         if not self.vault_layer:
-            raise RequiresVaultError()
+            raise RequiresVaultError("Requires a secrets-vault layer")
         client = Dynamodb(config.boto_config).client
         encrypted = client.get_item(
             TableName=self.__secrets_table_name,
