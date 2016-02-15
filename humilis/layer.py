@@ -275,16 +275,17 @@ class Layer:
             self.logger.info(msg)
 
         status = self.watch_events()
-        if status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE',
-                          'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'}:
+        if status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
             msg = "Unable to deploy layer {}: status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
 
         return self.outputs
 
-    def watch_events(self, progress_status={'CREATE_IN_PROGRESS',
-                                            'UPDATE_IN_PROGRESS'}):
+    def watch_events(self,
+                     progress_status={'CREATE_IN_PROGRESS',
+                                      'UPDATE_IN_PROGRESS',
+                                      'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'}):
         """Watches CF events during stack creation."""
         if not self.in_cf:
             self.logger.warning("Layer {} has not been deployed to CF: "
