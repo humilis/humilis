@@ -29,7 +29,9 @@ class Environment():
         self.stage = stage and stage.upper()
         self.basedir = os.path.split(yml_path)[0]
         with open(yml_path, 'r') as f:
-            self.meta = yaml.load(f).get(self.name)
+            meta = yaml.load(f)
+            key = list(meta.keys())[0]
+            self.meta = meta[key]
 
         if len(self.meta) == 0:
             raise FileFormatError(yml_path, logger=self.logger)
