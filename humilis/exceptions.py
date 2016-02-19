@@ -15,6 +15,11 @@ class RequiresVaultError(LoggedException):
     pass
 
 
+class MissingParentLayerError(LoggedException):
+    """A layer refers to a parent that cannot be found."""
+    pass
+
+
 class TakesTooLongError(LoggedException):
     """It has taken too long for AWS to do something"""
     pass

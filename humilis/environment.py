@@ -12,7 +12,8 @@ from boto3facade.kms import Kms
 import yaml
 
 from humilis.config import config
-from humilis.exceptions import FileFormatError, RequiresVaultError
+from humilis.exceptions import (FileFormatError, RequiresVaultError,
+                                MissingParentLayerError)
 from humilis.layer import Layer
 import humilis.utils as utils
 
@@ -57,7 +58,7 @@ class Environment():
             self.layers.append(layer_obj)
 
         self.vault_layer = self.get_layer(vault_layer or 'secrets-vault')
-        self.__secrets_table_name = "secrets_{}_{}".format(self.name,
+        self.__secrets_table_name = "{}-{}-secrets".format(self.name,
                                                            self.stage)
 
     @property
@@ -129,7 +130,12 @@ class Environment():
         for layer in self.layers:
             if layer.depends_on and len(layer.depends_on) > 0:
                 for parent_name in layer.depends_on:
-                    self.get_layer(parent_name).add_child(layer)
+                    parent_layer = self.get_layer(parent_name)
+                    if parent_layer is None:
+                        msg = "Layer '{}' parent stack '{}' not found".format(
+                            layer.name, parent_name)
+                        raise MissingParentLayerError(msg)
+                    parent_layer.add_child(layer)
 
     def get_layer(self, layer_name):
         """Gets a layer by name"""
