@@ -9,8 +9,8 @@ try:
     import pypandoc
     long_description = pypandoc.convert('README.md', 'rst')
 except(IOError, ImportError, RuntimeError):
-    if os.path.isfile('README.md'):
-        long_description = open('README.md').read()
+    if os.path.isfile("README.md"):
+        long_description = open("README.md").read()
     else:
         long_description = metadata.description
 
@@ -25,21 +25,22 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     install_requires=[
-        'PyYAML',
-        'Click',
-        'boto3',
-        'boto3facade>=0.1.3',
-        'jinja2'],
+        "PyYAML",
+        "Click",
+        "boto3",
+        "boto3facade>=0.1.3",
+        "keyring",
+        "jinja2"],
     classifiers=[
         "Programming Language :: Python :: 3"],
     # Allow tests to be run with `python setup.py test'.
     tests_require=[
-        'pytest>=2.5.1',
-        'mock>=1.0.1',
-        'flake8>=2.1.0'
+        "pytest>=2.5.1",
+        "mock>=1.0.1",
+        "flake8>=2.1.0"
     ],
     zip_safe=False,
     entry_points={
-        'console_scripts': [
-            'humilis=humilis.cli:main']}
+        "console_scripts": [
+            "humilis=humilis.cli:main"]}
 )

@@ -17,6 +17,7 @@ import boto3facade
 from boto3facade.s3 import S3
 from boto3facade.cloudformation import Cloudformation
 import jinja2
+import keyring
 
 from humilis.exceptions import ReferenceError
 import humilis.utils as utils
@@ -46,6 +47,18 @@ def _git_head():
     except CalledProcessError as err:
         if err.find('Not a git repository') == -1:
             raise
+
+
+@utils.reference_parser()
+def secret(layer, config, service, key):
+    """Retrieves a secret stored in the local keychain.
+
+    :param service: The name of the service the secret applies to
+    :param key: The key used to identify the secret within the server
+
+    :returns: The plaintext secret
+    """
+    return keyring.get_password(service, key)
 
 
 @utils.reference_parser()
