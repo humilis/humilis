@@ -50,7 +50,7 @@ def _git_head():
 
 
 @utils.reference_parser()
-def secret(layer, config, service, key):
+def secret(layer, config, service=None, key=None):
     """Retrieves a secret stored in the local keychain.
 
     :param service: The name of the service the secret applies to
