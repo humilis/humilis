@@ -3,9 +3,9 @@
 
 package = 'humilis'
 project = 'humilis'
-version = '0.2.5'
+version = '0.2.6'
 description = 'Helps you deploy infrastructure in the AWS cloud'
-authors = ['German Gomez-Herrero', 'Innovative Travel Ltd']
+authors = ['Innovative Travel Ltd', 'German Gomez-Herrero']
 authors_string = ', '.join(authors)
 emails = ['german@innovativetravel.eu']
 license = 'MIT'

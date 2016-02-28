@@ -116,6 +116,9 @@ def _deploy_package(path, layer, logger):
         if os.path.isfile(setup_file):
             # Install all depedendencies in the same dir
             pip.main(['install', tmppath, '-t', tmppath])
+        requirements_file = os.path.join(tmppath, 'requirements.txt')
+        if os.path.isfile(requirements_file):
+            pip.main(['install', '-r', requirements_file, '-t', tmppath])
 
         # Adding the HEAD hash is needed for CF to detect that the contents of
         # of the .zip file have changed when requesting a stack update.
