@@ -1,5 +1,5 @@
 PIP := .env/bin/pip
-TOX := .env/bin/tox
+TOX := .env/bin/detox
 PYTHON := .env/bin/python
 
 # create Python virtualenv
