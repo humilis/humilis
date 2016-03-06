@@ -4,12 +4,12 @@
 
 
 import datetime
+import pkg_resources
 import os
 import logging
 from configparser import ConfigParser
 
 import boto3facade.config
-import humilis.reference
 
 
 def _get_config_file():
@@ -20,6 +20,10 @@ def _get_config_file():
     return user_config
 
 CONFIG_FILE = _get_config_file()
+# The setuptools entry point group for reference parsers
+REFPARSERS_GROUP = "humilis.reference_parsers"
+# The setuptools entry point group for layers
+LAYERS_GROUP = "humilis.layers"
 
 
 class Config():
@@ -86,18 +90,13 @@ class Config():
             required_keys=required_keys,
             logger=logging.getLogger(self.LOGGER_NAME),
             fallback={'s3prefix': 'humilis'})
-        self.reference_parsers = self.search_reference_parsers()
+        self.reference_parsers = self.find_reference_parsers()
 
-    def search_reference_parsers(self):
+    def find_reference_parsers(self):
         """Registers all plugin reference parsers."""
         reference_parsers = {}
-        for attr_name in dir(humilis.reference):
-            attr = getattr(humilis.reference, attr_name)
-            if hasattr(attr, '__is_humilis_reference_parser__'):
-                name = getattr(attr, '__humilis_reference_parser_name__')
-                if name is None:
-                    name = attr_name
-                reference_parsers[name] = attr
+        for ep in pkg_resources.iter_entry_points(group=REFPARSERS_GROUP):
+            reference_parsers[ep.name] = ep.load()
         return reference_parsers
 
     def from_ini_file(self, section_name):

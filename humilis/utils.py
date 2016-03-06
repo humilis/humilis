@@ -61,15 +61,6 @@ def get_cf_name(env_name, layer_name, stage=None):
     return cf_name
 
 
-def reference_parser(name=None):
-    def decorator(func):
-        """Declares a function as a reference parser."""
-        setattr(func, '__is_humilis_reference_parser__', True)
-        setattr(func, '__humilis_reference_parser_name__', name)
-        return func
-    return decorator
-
-
 class TemplateLoader:
     @abc.abstractmethod
     def load_section(self, *args, **kwargs):

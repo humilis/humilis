@@ -1,6 +1,0 @@
-# Development/testing requirements
-pytest
-ipython
-pdbpp
-tox
-pypandoc

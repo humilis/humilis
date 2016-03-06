@@ -1,0 +1,6 @@
+# Development requirements
+ipython
+pdbpp
+pypandoc
+
+-r requirements-test.txt

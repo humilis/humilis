@@ -42,5 +42,14 @@ setup(
     zip_safe=False,
     entry_points={
         "console_scripts": [
-            "humilis=humilis.cli:main"]}
+            "humilis=humilis.cli:main"],
+        "humilis.reference_parsers": [
+            "secret=humilis.reference:secret",
+            "file=humilis.reference:file",
+            "lambda=humilis.reference:lambda_ref",
+            "layer=humilis.reference:layer",             # For backwards compat
+            "layer_resource=humilis.reference:layer",
+            "output=humilis.reference:layer",            # For backwards compat
+            "layer_output=humilis.reference:output",
+            "boto3=humilis.reference:boto3"]}
 )

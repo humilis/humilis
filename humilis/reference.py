@@ -49,7 +49,6 @@ def _git_head():
             raise
 
 
-@utils.reference_parser()
 def secret(layer, config, service=None, key=None):
     """Retrieves a secret stored in the local keychain.
 
@@ -61,7 +60,6 @@ def secret(layer, config, service=None, key=None):
     return keyring.get_password(service, key)
 
 
-@utils.reference_parser()
 def file(layer, config, path=None):
     """Uploads a local file to S3 and returns the corresponding S3 path.
 
@@ -79,7 +77,6 @@ def file(layer, config, path=None):
     return {'s3bucket': s3bucket, 's3key': s3key}
 
 
-@utils.reference_parser(name='lambda')
 def lambda_ref(layer, config, path=None):
     """Prepares a lambda deployment package and uploads it to S3.
 
@@ -197,7 +194,6 @@ def _preprocess_dir(path, params):
             _preprocess_file(filepath, params)
 
 
-@utils.reference_parser()
 def layer(layer, config, layer_name=None, resource_name=None):
     """Gets the physical ID of a resource in an already deployed layer.
 
@@ -223,7 +219,6 @@ def layer(layer, config, layer_name=None, resource_name=None):
     return resource[0].physical_resource_id
 
 
-@utils.reference_parser()
 def output(layer, config, layer_name=None, output_name=None):
     """Gets the value of an output produced by an already deployed layer.
 
@@ -248,7 +243,6 @@ def output(layer, config, layer_name=None, output_name=None):
     return output[0]
 
 
-@utils.reference_parser()
 def boto3(layer, config, service=None, call=None, output_attribute=None,
           output_key=None):
     """Calls a boto3facade method.
