@@ -62,12 +62,10 @@ def test_environment(environment_definition_path, test_config):
     env.delete()
 
 
-@pytest.yield_fixture(scope="module")
+@pytest.fixture(scope="module")
 def test_vpc_layer(cf, test_environment):
     """The VPC layer from the sample environment."""
-    layer = [l for l in test_environment.layers if l.name == 'vpc'][0]
-    yield layer
-    cf.delete_stack(layer.name)
+    return [l for l in test_environment.layers if l.name == 'vpc'][0]
 
 
 @pytest.yield_fixture(scope="module")
