@@ -8,10 +8,11 @@ PYTHON := .env/bin/python
 
 # install all needed for development
 develop: .env
-	$(PIP) install -r requirements-dev.txt tox detox
+	$(PIP) install -r requirements-dev.txt detox
 
 # run unit tests
-test: develop
+test: .env
+	$(PIP) install detox
 	$(TOX) -e unit --recreate
 
 # clean the development envrironment
