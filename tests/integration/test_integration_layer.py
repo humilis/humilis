@@ -25,8 +25,8 @@ def test_create_layer_object(test_environment, test_vpc_layer):
         layer.env_name,
         layer.name,
         stage=layer.env_stage)
-    assert len(layer.yaml_params) == 2
-    assert layer.yaml_params['vpc_cidr']['value'] == '10.0.0.0/16'
+    assert len(layer.yaml_params) == 3
+    assert layer.yaml_params['vpc_cidr']['value'] == '10.0.0.4/16'
     assert layer.tags.get('humilis:layer') == layer.name
     assert layer.tags.get('humilis:environment') == test_environment.name
 

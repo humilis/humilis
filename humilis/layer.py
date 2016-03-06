@@ -20,8 +20,8 @@ import datetime
 
 class Layer:
     """A layer of infrastructure that translates into a single CF stack"""
-    def __init__(self, environment, name, logger=None, loader=None,
-                 **user_params):
+    def __init__(self, environment, name, layer_type=None, logger=None,
+                 loader=None, **user_params):
         self.__environment_repr = repr(environment)
         self.cf = environment.cf
         if logger is None:
@@ -34,8 +34,20 @@ class Layer:
         self.env_basedir = environment.basedir
         self.depends_on = []
         self.section = {}
+
+        if layer_type is not None:
+            basedir = config.layers.get(layer_type)
+        else:
+            basedir = None
+
+        if basedir is None:
+            basedir = os.path.join(self.env_basedir, 'layers', self.name)
+
+        self.basedir = basedir
+
         if loader is None:
-            loader = DirTreeBackedObject(self.basedir, self.logger)
+            loader = DirTreeBackedObject(basedir, self.logger)
+
         self.loader = loader
         self.children = []
 
@@ -96,10 +108,6 @@ class Layer:
             'name': self.name,
             'description': self.meta.get('description', '')}
         return params
-
-    @property
-    def basedir(self):
-        return os.path.join(self.env_basedir, 'layers', self.name)
 
     @property
     def in_cf(self):
@@ -276,7 +284,7 @@ class Layer:
 
         status = self.watch_events()
         if status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
-            msg = "Unable to deploy layer {}: status is {}".format(
+            msg = "Unable to deploy layer '{}': status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
 

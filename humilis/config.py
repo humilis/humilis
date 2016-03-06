@@ -91,6 +91,7 @@ class Config():
             logger=logging.getLogger(self.LOGGER_NAME),
             fallback={'s3prefix': 'humilis'})
         self.reference_parsers = self.find_reference_parsers()
+        self.layers = self.find_layer_paths()
 
     def find_reference_parsers(self):
         """Registers all plugin reference parsers."""
@@ -98,6 +99,13 @@ class Config():
         for ep in pkg_resources.iter_entry_points(group=REFPARSERS_GROUP):
             reference_parsers[ep.name] = ep.load()
         return reference_parsers
+
+    def find_layer_paths(self):
+        """Register the paths to all available layer types."""
+        paths = {}
+        for ep in pkg_resources.iter_entry_points(group=LAYERS_GROUP):
+            paths[ep.name] = ep.load()()
+        return paths
 
     def from_ini_file(self, section_name):
         """Load configuration overrides from :data:`GLOBAL_CONFIG_FILE`.
