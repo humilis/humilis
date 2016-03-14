@@ -9,6 +9,7 @@ import boto3
 from boto3facade.cloudformation import Cloudformation
 from boto3facade.dynamodb import Dynamodb
 from boto3facade.kms import Kms
+import jinja2
 import yaml
 
 from humilis.config import config
@@ -26,11 +27,17 @@ class Environment():
         else:
             self.logger = logger
         self.__yml_path = yml_path
-        self.name = os.path.splitext(os.path.split(yml_path)[1])[0]
         self.stage = stage and stage.upper()
         self.basedir = os.path.split(yml_path)[0]
         with open(yml_path, 'r') as f:
-            self.meta = yaml.load(f).get(self.name)
+            if os.path.splitext(yml_path) == ".j2":
+                template = jinja2.Template(f.read(), stage=stage)
+                meta = yaml.load(template)
+            else:
+                meta = yaml.load(f)
+
+        self.name = list(meta.keys())[0]
+        self.meta = meta.get(self.name)
 
         if len(self.meta) == 0:
             raise FileFormatError(yml_path, logger=self.logger)
