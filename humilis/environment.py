@@ -30,7 +30,7 @@ class Environment():
         self.stage = stage and stage.upper()
         self.basedir = os.path.split(yml_path)[0]
         with open(yml_path, 'r') as f:
-            if os.path.splitext(yml_path) == ".j2":
+            if os.path.splitext(yml_path)[1] == ".j2":
                 template = jinja2.Template(f.read(), stage=stage)
                 meta = yaml.load(template)
             else:
