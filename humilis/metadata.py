@@ -3,7 +3,7 @@
 
 package = 'humilis'
 project = 'humilis'
-version = '0.3.5'
+version = '0.3.6'
 description = 'Helps you deploy infrastructure in the AWS cloud'
 authors = ['Innovative Travel Ltd', 'German Gomez-Herrero']
 authors_string = ', '.join(authors)
