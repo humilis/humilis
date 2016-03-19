@@ -4,6 +4,7 @@
 import logging
 
 import click
+import yaml
 
 from humilis.config import config
 from humilis.environment import Environment
@@ -35,9 +36,15 @@ def main(log, profile):
 @click.option("--output", help="Store environment outputs in a yaml file",
               default=None, metavar="FILE")
 @click.option("--pretend/--no-pretend", default=False)
-def create(environment, stage, output, pretend):
+@click.option("--parameters", help="Deployment parameters", default=None,
+              metavar="YAML_FILE")
+def create(environment, stage, output, pretend, parameters):
     """Creates an environment."""
-    env = Environment(environment, stage=stage)
+    if parameters:
+        with open(parameters, "r") as f:
+            parameters = yaml.load(f.read())
+
+    env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.create(output_file=output, update=False)
 
@@ -74,9 +81,14 @@ def get_secret(environment, key, stage):
 @click.option("--output", help="Store environment outputs in a yaml file",
               default=None, metavar='FILE')
 @click.option("--pretend/--no-pretend", default=False)
-def update(environment, stage, output, pretend):
+@click.option("--parameters", help="Deployment parameters", default=None,
+              metavar="YAML_FILE")
+def update(environment, stage, output, pretend, parameters):
     """Updates (or creates) an environment."""
-    env = Environment(environment, stage=stage)
+    if parameters:
+        with open(parameters, "r") as f:
+            parameters = yaml.load(f.read())
+    env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.create(output_file=output, update=True)
 

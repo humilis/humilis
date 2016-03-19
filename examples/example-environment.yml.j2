@@ -1,0 +1,28 @@
+---
+example-environment:
+
+    description:
+        Adapted from the example mega-stack in the cumulus project
+
+    layers:
+        # Layers will be created in the order given here
+        - layer: vpc
+          some_meta_parameter: {{some_meta_parameter}}
+          vpc_cidr: {{vpc_cidr}}
+          template_parameter: {{template_parameter}}
+
+        - layer: instance
+
+        - layer: namedinstance
+
+        - layer: streams
+
+        - layer: streams-roles
+
+        - layer: lambda-role
+
+        - layer: lambda
+
+        - layer: lambda2
+
+        - layer: lambda3

@@ -53,6 +53,18 @@ def environment_definition_path():
     yield os.path.join('examples', 'example-environment.yml')
 
 
+@pytest.yield_fixture(scope="session")
+def environment_definition_j2_path():
+    """Path to a sample environment parameters file."""
+    yield os.path.join('examples', 'example-environment.yml.j2')
+
+
+@pytest.yield_fixture(scope="session")
+def environment_params_path():
+    """Path to a sample environment definition yaml.j2 file."""
+    yield os.path.join('examples', 'parameters.yaml')
+
+
 @pytest.fixture(scope="module")
 def test_environment(environment_definition_path, test_config):
     """A humilis environment based on the sample environment definition."""

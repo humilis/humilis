@@ -21,7 +21,8 @@ import humilis.utils as utils
 
 class Environment():
     """Manages the deployment of a collection of humilis layers."""
-    def __init__(self, yml_path, logger=None, stage=None, vault_layer=None):
+    def __init__(self, yml_path, logger=None, stage=None, vault_layer=None,
+                 parameters=None):
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:
@@ -29,9 +30,12 @@ class Environment():
         self.__yml_path = yml_path
         self.stage = stage and stage.upper()
         self.basedir = os.path.split(yml_path)[0]
+        if parameters is None:
+            parameters = {}
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
-                template = jinja2.Template(f.read()).render(stage=stage)
+                template = jinja2.Template(f.read()).render(stage=stage,
+                                                            **parameters)
                 meta = yaml.load(template)
             else:
                 meta = yaml.load(f)
