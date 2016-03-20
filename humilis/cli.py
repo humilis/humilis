@@ -98,9 +98,15 @@ def update(environment, stage, output, pretend, parameters):
 @click.option("--stage", help="Deployment stage, e.g. PRODUCTION, or DEV",
               default=None, metavar='STAGE')
 @click.option("--pretend/--no-pretend", default=False)
-def delete(environment, stage, pretend):
+@click.option("--parameters", help="Deployment parameters", default=None,
+              metavar="YAML_FILE")
+def delete(environment, stage, pretend, parameters):
     """Deletes an environment that has been deployed to CF."""
-    env = Environment(environment, stage=stage)
+    if parameters:
+        with open(parameters, "r") as f:
+            parameters = yaml.load(f.read())
+
+    env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.delete()
 
