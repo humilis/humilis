@@ -197,8 +197,12 @@ class Layer:
                                    key=lambda t: t[1].get('priority', '1')):
             self.params[pname] = {}
             self.params[pname]['description'] = param.get('description', None)
-            self.params[pname]['value'] = self._parse_param_value(
-                param['value'])
+            try:
+                self.params[pname]['value'] = self._parse_param_value(
+                    param['value'])
+            except:
+                self.logger.error("Error parsing layer '{}'".format(self.name))
+                raise
 
     def print_params(self):
         """Prints the params used during layer creation."""
@@ -219,7 +223,12 @@ class Layer:
             return [self._parse_param_value(_) for _ in pval]
         elif isinstance(pval, dict) and 'ref' in pval:
             # A reference
-            return self._resolve_ref(pval['ref'])
+            try:
+                return self._resolve_ref(pval['ref'])
+            except:
+                self.logger.error("Error parsing reference: '{}'".format(
+                    pval["ref"]))
+                raise
         elif isinstance(pval, dict):
             return {k: self._parse_param_value(v) for k, v in pval.items()}
         else:
