@@ -329,7 +329,7 @@ class Layer:
                 already_seen.add(event.id)
 
             stack_status = self.cf.get_stack_status(self.cf_name)
-            time.sleep(3)
+            time.sleep(10)
         return stack_status
 
     def __repr__(self):
