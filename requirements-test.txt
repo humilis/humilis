@@ -1,3 +1,6 @@
 # Test requirements
 pytest
 pytest-cov
+
+# Install non-recommended keyring backends
+keyrings.alt
