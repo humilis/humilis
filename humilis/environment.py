@@ -72,8 +72,11 @@ class Environment():
         self.vault_layer = self.get_layer(vault_layer or 'secrets-vault')
         self.__secrets_table_name = "{}-{}-secrets".format(self.name,
                                                            self.stage)
-        self.__keychain_namespace = "{}:{}".format(self.name,
-                                                   self.stage.lower())
+        if self.stage:
+            self.__keychain_namespace = "{}:{}".format(self.name,
+                                                       self.stage.lower())
+        else:
+            self.__keychain_namespace = self.name
 
     @property
     def outputs(self):
