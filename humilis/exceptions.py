@@ -10,11 +10,6 @@ class LoggedException(Exception):
         super().__init__(msg)
 
 
-class RequiresVaultError(LoggedException):
-    """Trying to access a feature that requires an environment vault."""
-    pass
-
-
 class MissingParentLayerError(LoggedException):
     """A layer refers to a parent that cannot be found."""
     pass
@@ -29,6 +24,15 @@ class FileFormatError(LoggedException):
     """Error when parsing a layer or environment file."""
     def __init__(self, filename, msg=None, *args, **kwargs):
         message = "Wrongly formatted file {}".format(filename)
+        if msg is not None:
+            message = msg + " : " + msg
+        super().__init__(message, *args, **kwargs)
+
+
+class RequiresVaultError(LoggedException):
+    """Requires a secrets-vault layer in the same environment."""
+    def __init__(self, msg=None, *args, **kwargs):
+        message = "Requires a secrets-vault layer in the environment"
         if msg is not None:
             message = msg + " : " + msg
         super().__init__(message, *args, **kwargs)

@@ -1,6 +1,7 @@
 # -*- coding: utf-8 -*-
 
 
+import uuid
 import yaml
 
 from humilis.environment import Environment
@@ -16,3 +17,14 @@ def test_environment_params(environment_definition_j2_path,
 
     layer_params = env.layers[0].meta["parameters"]
     assert layer_params["vpc_cidr"]["value"] == params["vpc_cidr"]
+
+
+def test_set_get_delete_secret(test_environment):
+    """Tests setting and getting a secret for an environment."""
+    plaintext = str(uuid.uuid4())
+    key = str(uuid.uuid4())
+    test_environment.set_secret(key, plaintext)
+    retrieved_plaintext = test_environment.get_secret(key)
+    assert retrieved_plaintext == plaintext
+    test_environment.delete_secret(key)
+    assert test_environment.get_secret(key) is None

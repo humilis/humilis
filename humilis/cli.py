@@ -55,11 +55,12 @@ def create(environment, stage, output, pretend, parameters):
 @click.argument("value")
 @click.option("--stage", help="Deployment stage, e.g. PRODUCTION, or DEV",
               default=None, metavar="STAGE")
-def set_secret(environment, key, value, stage):
+@click.option("--pretend/--no-pretend", default=False)
+def set_secret(environment, key, value, stage, pretend):
     """Stores a secret in the vault."""
     env = Environment(environment, stage=stage)
-    resp = env.set_secret(key, value)
-    print(resp)
+    if not pretend:
+        env.set_secret(key, value)
 
 
 @main.command(name="get-secret")
@@ -67,11 +68,13 @@ def set_secret(environment, key, value, stage):
 @click.argument("key")
 @click.option("--stage", help="Deployment stage, e.g. PRODUCTION, or DEV",
               default=None, metavar="STAGE")
-def get_secret(environment, key, stage):
+@click.option("--pretend/--no-pretend", default=False)
+def get_secret(environment, key, stage, pretend):
     """Gets a secret from the vault."""
     env = Environment(environment, stage=stage)
-    resp = env.get_secret(key)
-    print(resp)
+    if not pretend:
+        resp = env.get_secret(key)
+        print(resp)
 
 
 @main.command()
