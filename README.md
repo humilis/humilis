@@ -1,7 +1,7 @@
 humilis
 ==========
 
-[![Build Status](https://travis-ci.org/InnovativeTravel/humilis.svg?branch=master)](https://travis-ci.org/InnovativeTravel/humilis)
+[![Build Status](https://travis-ci.org/humilis/humilis.svg?branch=master)](https://travis-ci.org/humilis/humilis)
 [![PyPI](https://img.shields.io/pypi/v/humilis.svg?style=flat)](https://pypi.python.org/pypi/humilis)
 [![Stories in Ready](https://badge.waffle.io/InnovativeTravel/humilis.png?label=ready&title=Ready)](https://waffle.io/InnovativeTravel/humilis)
 
