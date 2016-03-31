@@ -77,19 +77,20 @@ def file(layer, config, path=None):
     return {'s3bucket': s3bucket, 's3key': s3key}
 
 
-def lambda_ref(layer, config, path=None):
+def lambda_ref(layer, config, path=None, dependencies=None):
     """Prepares a lambda deployment package and uploads it to S3.
 
     :param layer: The Layer object for the layer declaring the reference.
     :param config: An object holding humilis configuration options.
     :param path: Path to the file, relative to the location of meta.yaml.
+    :param dependencies: A list of Python dependencies.
 
     :returns: S3 path where the deployment package has been uploaded.
     """
     fpath = os.path.abspath(os.path.join(layer.basedir, path))
     logger = layer.logger
     if os.path.isdir(fpath):
-        with _deploy_package(fpath, layer, logger) as fpath:
+        with _deploy_package(fpath, layer, logger, dependencies) as fpath:
             s3path = file(layer, config, fpath)
     else:
         path_no_ext, ext = os.path.splitext(fpath)
@@ -102,8 +103,24 @@ def lambda_ref(layer, config, path=None):
     return s3path
 
 
+def _install_dependencies(layer, path, dependencies):
+    """Install Python dependencies under the given path."""
+    for dep in dependencies:
+        deppath = os.path.abspath(os.path.join(layer.env_basedir, dep))
+        targetpath = os.path.join(path, os.path.basename(dep))
+        if os.path.isfile(deppath):
+            # A Python module
+            shutil.copyfile(deppath, targetpath)
+        elif os.path.isdir(deppath):
+            # A Python package
+            shutil.copytree(deppath, targetpath)
+        else:
+            # A pip-installable package
+            pip.main(['install', dep, '-t', path])
+
+
 @contextlib.contextmanager
-def _deploy_package(path, layer, logger):
+def _deploy_package(path, layer, logger, dependencies=None):
     """Creates a deployment package for multi-file lambda with deps."""
     with utils.move_aside(path) as tmppath:
         # removes __* and .* dirs
@@ -116,6 +133,9 @@ def _deploy_package(path, layer, logger):
         requirements_file = os.path.join(tmppath, 'requirements.txt')
         if os.path.isfile(requirements_file):
             pip.main(['install', '-r', requirements_file, '-t', tmppath])
+
+        if dependencies:
+            _install_dependencies(layer, tmppath, dependencies)
 
         # Adding the HEAD hash is needed for CF to detect that the contents of
         # of the .zip file have changed when requesting a stack update.

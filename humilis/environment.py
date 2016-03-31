@@ -72,7 +72,8 @@ class Environment():
         self.vault_layer = self.get_layer(vault_layer or 'secrets-vault')
         self.__secrets_table_name = "{}-{}-secrets".format(self.name,
                                                            self.stage)
-        self.__keychain_namespace = "{}-{}".format(self.name, self.stage)
+        self.__keychain_namespace = "{}:{}".format(self.name,
+                                                   self.stage.lower())
 
     @property
     def outputs(self):
@@ -97,16 +98,18 @@ class Environment():
         if not self.vault_layer:
             self.logger.warning("No secrets-vault layer in this environment: "
                                 "storing secret in local keychain only")
+            resp = None
         else:
             client = Kms(config.boto_config).client
             encrypted = client.encrypt(KeyId=self.kms_key_id,
                                        Plaintext=plaintext)['CiphertextBlob']
             client = boto3.client('dynamodb')
-            client.put_item(
+            resp = client.put_item(
                 TableName=self.__secrets_table_name,
                 Item={'id': {'S': key}, 'value': {'B': encrypted}})
 
         keyring.set_password(self.__keychain_namespace, key, plaintext)
+        return resp
 
     def get_secret(self, key):
         """Retrieves a secret."""
