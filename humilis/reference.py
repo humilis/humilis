@@ -19,7 +19,7 @@ from boto3facade.cloudformation import Cloudformation
 import jinja2
 import keyring
 
-from humilis.exceptions import ReferenceError
+from humilis.exceptions import ReferenceError, InvalidLambdaDependencyError
 import humilis.utils as utils
 
 
@@ -109,14 +109,30 @@ def _install_dependencies(layer, path, dependencies):
         deppath = os.path.abspath(os.path.join(layer.env_basedir, dep))
         targetpath = os.path.join(path, os.path.basename(dep))
         if os.path.isfile(deppath):
-            # A Python module
-            shutil.copyfile(deppath, targetpath)
+            ext = os.path.splitext(dep)[1]
+            if ext == ".py":
+                # A self-contained Python module
+                shutil.copyfile(deppath, targetpath)
+            elif ext == ".txt":
+                # A requirements file
+                pip.main(['install', '-r', dep, '-t', path])
+            else:
+                raise InvalidLambdaDependencyError(dep)
         elif os.path.isdir(deppath):
-            # A Python package
-            shutil.copytree(deppath, targetpath)
+            if os.path.isfile(os.path.join(deppath, "setup.py")):
+                # A local pip installable
+                pip.main(['install', deppath, '-t', path])
+            else:
+                # A self-contained Python package
+                shutil.copytree(deppath, targetpath)
         else:
-            # A pip-installable package
-            pip.main(['install', dep, '-t', path])
+            if dep.find(":") < 0:
+                # A Pypi package
+                pip.main(['install', dep, '-t', path])
+            else:
+                # A private index package
+                index = ":".join(dep.split(":")[:-1])
+                pip.main(['install', '-i', index, dep, '-t', path])
 
 
 @contextlib.contextmanager

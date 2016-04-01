@@ -45,6 +45,13 @@ class ReferenceError(LoggedException):
         super().__init__(msg, *args, **kwargs)
 
 
+class InvalidLambdaDependencyError(LoggedException):
+    """Error when trying to install a Lambda dependency."""
+    def __init__(self, ref, msg, *args, **kwargs):
+        msg = "Can't parse reference {}: {}".format(ref, msg)
+        super().__init__(msg, *args, **kwargs)
+
+
 class AlreadyInCfError(LoggedException):
     """Trying to re-deploy a layer or environment to CF."""
     pass

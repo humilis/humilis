@@ -433,8 +433,9 @@ __Parameters__:
   some simple conventions for this to work. More information below.
 
 * `dependencies`: A list of dependencies to be included in the Lambda 
-  deployment package. Dependencies may be pip installable packages, or paths to
-  local Python packages or modules.
+  deployment package. Dependencies may be either pip installable packages, or
+  paths to local Python packages or modules, or paths to local
+  `requirements` files.
 
 
 __Example__:
