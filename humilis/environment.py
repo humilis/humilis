@@ -78,6 +78,8 @@ class Environment():
         else:
             self.__keychain_namespace = self.name
 
+        self.__dynamodb = None
+
     @property
     def outputs(self):
         """Outputs produced by each environment layer"""
@@ -96,6 +98,13 @@ class Environment():
         if self.vault_layer:
             return self.outputs[self.vault_layer.name]['KmsKeyId']
 
+    @property
+    def dynamodb(self):
+        """Connection to AWS DynamoDB."""
+        if self.__dynamodb is None:
+            self.__dynamodb = Dynamodb(config.boto_config)
+        return self.__dynamodb
+
     def set_secret(self, key, plaintext):
         """Sets and environment secret."""
         if not self.vault_layer:
@@ -106,8 +115,7 @@ class Environment():
             client = Kms(config.boto_config).client
             encrypted = client.encrypt(KeyId=self.kms_key_id,
                                        Plaintext=plaintext)['CiphertextBlob']
-            client = boto3.client('dynamodb')
-            resp = client.put_item(
+            resp = self.dynamodb.client.put_item(
                 TableName=self.__secrets_table_name,
                 Item={'id': {'S': key}, 'value': {'B': encrypted}})
 
