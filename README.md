@@ -432,6 +432,10 @@ __Parameters__:
   directory of your lambda code. In the latter case your code needs to follow
   some simple conventions for this to work. More information below.
 
+* `dependencies`: A list of dependencies to be included in the Lambda 
+  deployment package. Dependencies may be pip installable packages, or paths to
+  local Python packages or modules.
+
 
 __Example__:
 
@@ -441,6 +445,13 @@ ref:
     parameters:
         # Path to the root directory containing your lambda code
         path: dummy_function
+        dependencies:
+            # The Lambda code requires Pypi's pyyaml
+            - pyyaml
+            # It also requires a local package in this path
+            - mycode/mypkgdir
+            # And this local module
+            - mycode/mymodule.py
 ```
 
 which will evaluate to a S3 path such as:
