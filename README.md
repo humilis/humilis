@@ -106,14 +106,17 @@ Define your infrastructure environment following the examples in the
 humilis create example-environment.yml
 ````
 
+To update the environment after it has been deployed:
+
+````
+humilis update example-environment.yml
+````
 
 And to delete it:
 
 ````
 humilis delete example-environment.yml
 ````
-
-For now you can't use humilis to update existing environments.
 
 
 # Humilis environments
