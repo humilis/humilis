@@ -28,10 +28,11 @@ setup(
         "PyYAML",
         "Click",
         "boto3",
-        "boto3facade>=0.1.3",
+        "boto3facade>=0.2.1",
         "keyring",
         "jinja2"],
     classifiers=[
+        "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3"],
     # Allow tests to be run with `python setup.py test'.
     tests_require=[

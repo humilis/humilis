@@ -13,7 +13,7 @@ develop: .env
 # run unit tests
 test: .env
 	$(PIP) install tox
-	$(TOX) -e unit
+	$(TOX)
 
 # run integration tests
 testi: .env
