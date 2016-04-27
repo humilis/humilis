@@ -44,7 +44,7 @@ pip install humilis
 or the development version if you prefer that:
 
 ````
-pip install git+https://github.com/germangh/humilis
+pip install git+https://github.com/humilis/humilis
 ````
 
 After installation you need to configure humilis. To configure globally for 
