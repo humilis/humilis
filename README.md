@@ -19,13 +19,30 @@ project. See [CUMULUS_LICENSE][cumulus_license] for license information.
 
 # Installation
 
-To install the latest "stable" version:
+Install the [AWS CLI][awscli]:
+
+[awscli]: https://aws.amazon.com/cli/
+
+```
+pip install awscli
+```
+
+Configure the AWS CLI:
+
+```
+aws configure
+```
+
+`humilis` will use whatever credentials you introduced when configuring your
+AWS CLI installation.
+
+You can now install the latest "stable" version of `humilis`:
 
 ```
 pip install humilis
 ```
 
-To install the development version:
+or the development version if you prefer that:
 
 ````
 pip install git+https://github.com/germangh/humilis
