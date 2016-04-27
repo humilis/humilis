@@ -10,11 +10,11 @@ Helps you deploy AWS infrastructure with [Cloudformation][cf].
 [cf]: https://aws.amazon.com/cloudformation/
 
 This project is originally based on the
-[cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py).
+[cumulus](https://github.com/germangh/cumulus/blob/master/cumulus/__init__.py)
 project. See [CUMULUS_LICENSE][cumulus_license] for license information.
 
 [cumulus]: https://github.com/cotdsa/cumulus
-[cumulus_license]: https://github.com/germangh/humilis/blob/master/CUMULUS_LICENSE
+[cumulus_license]: https://github.com/humilis/humilis/blob/master/CUMULUS_LICENSE
 
 
 # Installation
