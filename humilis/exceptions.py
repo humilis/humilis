@@ -7,7 +7,7 @@ class LoggedException(Exception):
     def __init__(self, msg, logger=None):
         if logger:
             logger.critical(msg)
-        super().__init__(msg)
+        super(LoggedException, self).__init__(msg)
 
 
 class MissingParentLayerError(LoggedException):
@@ -26,7 +26,7 @@ class FileFormatError(LoggedException):
         message = "Wrongly formatted file {}".format(filename)
         if msg is not None:
             message = msg + " : " + msg
-        super().__init__(message, *args, **kwargs)
+        super(FileFormatError, self).__init__(message, *args, **kwargs)
 
 
 class RequiresVaultError(LoggedException):
@@ -35,21 +35,22 @@ class RequiresVaultError(LoggedException):
         message = "Requires a secrets-vault layer in the environment"
         if msg is not None:
             message = msg + " : " + msg
-        super().__init__(message, *args, **kwargs)
+        super(RequiresVaultError, self).__init__(message, *args, **kwargs)
 
 
 class ReferenceError(LoggedException):
     """Error when trying to parse a template reference."""
     def __init__(self, ref, msg, *args, **kwargs):
         msg = "Can't parse reference {}: {}".format(ref, msg)
-        super().__init__(msg, *args, **kwargs)
+        super(ReferenceError, self).__init__(msg, *args, **kwargs)
 
 
 class InvalidLambdaDependencyError(LoggedException):
     """Error when trying to install a Lambda dependency."""
     def __init__(self, ref, msg, *args, **kwargs):
         msg = "Can't parse reference {}: {}".format(ref, msg)
-        super().__init__(msg, *args, **kwargs)
+        super(InvalidLambdaDependencyError, self).__init__(msg, *args,
+                                                           **kwargs)
 
 
 class AlreadyInCfError(LoggedException):
@@ -64,4 +65,4 @@ class CloudformationError(LoggedException):
             msg = "{}".format(msg)
         else:
             msg = "{}: {}".format(msg, cf_exception)
-        super().__init__(msg, **kwargs)
+        super(CloudformationError, self).__init__(msg, **kwargs)
