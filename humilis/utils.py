@@ -14,7 +14,7 @@ from sys import exit
 import tempfile
 
 import yaml
-import jinja2
+import jinja2 as j2
 
 from humilis.exceptions import FileFormatError
 
@@ -71,6 +71,8 @@ class DirTreeBackedObject(TemplateLoader):
     """Loads data from a directory tree of files in various formats."""
     def __init__(self, basedir, logger=None):
         self.basedir = basedir
+        self.env = j2.Environment(extensions=["jinja2.ext.with_"],
+                                  loader=j2.FileSystemLoader(basedir))
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:
@@ -129,14 +131,15 @@ class DirTreeBackedObject(TemplateLoader):
 
         return data
 
-    def load_file(self, filename, f, params={}):
-        filename, file_ext = os.path.splitext(filename)
+    def load_file(self, filepath, f, params={}):
+        filename, file_ext = os.path.splitext(filepath)
         if file_ext in {'.yml', '.yaml'}:
             data = yaml.load(f)
         elif file_ext == '.json':
             data = json.load(f)
         elif file_ext == '.j2':
-            template = jinja2.Template(f.read())
+            template = self.env.get_template(os.path.relpath(filepath,
+                                                             self.basedir))
             data = template.render(**params)
             data = self.load_file(filename, io.StringIO(data))
         else:
