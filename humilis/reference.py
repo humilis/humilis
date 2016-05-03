@@ -238,10 +238,36 @@ def layer(layer, config, layer_name=None, resource_name=None):
     :param layer_name: The name of the layer that contains the target resource.
     :param resource_name: The logical name of the target resource.
 
-    :returns: The physical ID of the resource
+    :returns: The physical ID of the resource.
     """
     stack_name = utils.get_cf_name(layer.env_name, layer_name,
                                    stage=layer.env_stage)
+    return _get_stack_resource(config, stack_name, resource_name)
+
+
+def environment(layer, config, environment_name=None, stage=None,
+                layer_name=None, resource_name=None):
+    """Gets the physical ID of a resource in another environment.
+
+    :param layer: The Layer object of the layer declaring the reference.
+    :param config: An object holding humilis configuration options.
+    :param layer_name: The name of the layer that contains the target resource.
+    :param resource_name: The logical name of the target resource.
+
+    :returns: The physical ID of the resource.
+    """
+    stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
+    return _get_stack_resource(config, stack_name, resource_name)
+
+
+def _get_stack_resource(config, stack_name, resource_name):
+    """Gets the physical ID of a resource in a CF Stack.
+
+    :param stack_name: The name of the CF stack.
+    :param resource_name: The logical name of the CF resource.
+
+    :returns: The physical ID of the resource.
+    """
     cf = Cloudformation(config)
     resource = cf.get_stack_resource(stack_name, resource_name)
 

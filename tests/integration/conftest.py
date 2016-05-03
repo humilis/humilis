@@ -62,6 +62,16 @@ def test_environment(environment_definition_path, test_config):
     env.delete()
 
 
+@pytest.yield_fixture(scope="function")
+def test_environment_pair(environment_definition_path, test_config):
+    """An environment that refers to another environment."""
+    env1 = Environment(os.path.join("examples", "example-environment-2.yml"))
+    env2 = Environment(os.path.join("examples", "example-environment-3.yml"))
+    yield env1, env2
+    env2.delete()
+    env1.delete()
+
+
 @pytest.yield_fixture(scope="module")
 def test_vpc_layer(cf, test_environment):
     """The VPC layer from the sample environment."""

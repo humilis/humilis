@@ -1,0 +1,12 @@
+---
+example-environment-2:
+
+    description:
+        One layer environment that deploys a VPC
+
+    layers:
+        # Layers will be created in the order given here
+        - layer: vpc
+          some_meta_parameter: 1
+          vpc_cidr: 10.0.0.4/16
+          template_parameter: "Hello World!"
