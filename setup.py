@@ -51,6 +51,7 @@ setup(
             "layer=humilis.reference:layer",             # For backwards compat
             "layer_resource=humilis.reference:layer",
             "output=humilis.reference:output",           # For backwards compat
+            "environment_resource=humilis.reference:environment",
             "layer_output=humilis.reference:output",
             "boto3=humilis.reference:boto3"],
         "humilis.layers": []}

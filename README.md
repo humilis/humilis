@@ -278,11 +278,20 @@ More information on reference parsers below.
 
 ## Available reference parsers
 
-### `layer` references
+### `layer_resource` references
 
-`layer` references allow you to refer to the physical ID of a resource that is 
-part of another layer. For instance, consider the following environment
-definition:
+`layer_resource` references allow you to refer to the physical ID of a resource
+that is part of another layer.
+
+__Parameters__:
+
+* `layer_name`: The name of the layer you are referring to
+* `resource_name`: The logical name of the layer resource
+
+
+__Example__:
+
+Consider the following environment definition:
 
 ```
 ---
@@ -296,7 +305,7 @@ my-environment:
 
 Obviously the `nat` layer that takes care of deploying the NAT in the public
 subnet will need to know the physical ID of that subnet. You achieve this by
-declaring a `layer` reference in the `meta.yaml` for the  `nat` layer:
+declaring a `layer_resource` reference in the `meta.yaml` for the  `nat` layer:
 
 ```
 ---
@@ -309,7 +318,7 @@ meta:
                 The physical ID of the subnet where the NAT will be placed
             value:
                 ref:
-                    parser: layer
+                    parser: layer_resource
                     parameters:
                         layer_name: vpc
                         # The logical name of the subnet in the vpc layer
@@ -320,7 +329,7 @@ When parsing `meta.yaml` humilis will replace this:
 
 ```
 ref:
-    parser: layer
+    parser: layer_resource
     parameters:
         layer_name: vpc
         # The logical name of the subnet in the vpc layer
@@ -349,20 +358,34 @@ resources:
             Ref: NatEip
 ```
 
+### `environment_resource` references
 
-### `output` references
+`environment_output` references allow you to refer to resources that belong
+to other humilis environments.
 
-`output` references allow you to refer to outputs produced by another layer. 
+
+__Parameters__:
+
+* `environment_name`: The name of the environment you are referring to
+* `layer_name`: The name of the layer you are referring to
+* `resource_name`: The logical name of the layer resource
+
+
+### `layer_output` references
+
+`layer_output` references allow you to refer to outputs produced by another
+layer.
 
 __Parameters__:
 
 * `layer_name`: The name of the layer you are referring to
 * `output_name`: The logical name of the output parameter
 
-In general you should prefer using `output` references over `layer` references.
-The output parameters produced by a layer define an informal _layer interface_
-that is more likely to remain constant than the logical names of resources
-within a layer.
+In general you should prefer using `layer_output` references over
+`layer_resource` references. The output parameters produced by a layer define
+an informal _layer interface_ that is more likely to remain constant than the
+logical names of resources within a layer.
+
 
 ### `boto3` references
 
@@ -460,7 +483,7 @@ __Parameters__:
 __Example__:
 
 ```
-ref: 
+ref:
     parser: lambda
     parameters:
         # Path to the root directory containing your lambda code
@@ -506,7 +529,7 @@ need to be specified in your `setup.py`.
 If your environment includes a [secrets vault layer][secrets-vault] you can use
 humilis to easily store secrets in the vault:
 
-[secrets-vault]: https://github.com/InnovativeTravel/humilis-secrets-vault
+[secrets-vault]: https://github.com/humilis/humilis-secrets-vault
 
 ```
 humilis set-secret --stage [STAGE] [ENVIRONMENT_FILE] [SECRET_KEY] [SECRET_VAL]
