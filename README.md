@@ -358,6 +358,18 @@ resources:
             Ref: NatEip
 ```
 
+### `environment_resource` references
+
+`environment_output` references allow you to refer to resources that belong
+to other humilis environments.
+
+
+__Parameters__:
+
+* `environment_name`: The name of the environment you are referring to
+* `layer_name`: The name of the layer you are referring to
+* `resource_name`: The logical name of the layer resource
+
 
 ### `layer_output` references
 
