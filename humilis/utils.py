@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
+"""Utilities."""
 import abc
 import contextlib
 import logging

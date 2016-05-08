@@ -1,8 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
 """Humilis configuration."""
-
-
 import datetime
 import pkg_resources
 import os
