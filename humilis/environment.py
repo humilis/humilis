@@ -15,7 +15,7 @@ import yaml
 
 from humilis.config import config
 from humilis.exceptions import (FileFormatError, RequiresVaultError,
-                                MissingParentLayerError)
+                                MissingParentLayerError, CloudformationError)
 from humilis.layer import Layer
 import humilis.utils as utils
 
@@ -85,7 +85,12 @@ class Environment():
         """Outputs produced by each environment layer"""
         outputs = {}
         for layer in self.layers:
-            ly = layer.outputs
+            try:
+                ly = layer.outputs
+            except CloudformationError:
+                self.logger.error("Could not retrieve outputs for layer"
+                                  " '{}'".format(layer.name))
+                ly = None
             if ly is not None:
                 outputs[layer.name] = ly
         return outputs
