@@ -9,7 +9,7 @@ import boto3
 from boto3facade.cloudformation import Cloudformation
 from boto3facade.dynamodb import Dynamodb
 from boto3facade.kms import Kms
-import jinja2
+import jinja2 as j2
 import keyring
 import yaml
 
@@ -30,14 +30,16 @@ class Environment():
             self.logger = logger
         self.__yml_path = yml_path
         self.stage = stage and stage.upper()
-        self.basedir = os.path.split(yml_path)[0]
+        self.basedir, envfile = os.path.split(yml_path)
+        self._j2_env = j2.Environment(
+            extensions=["jinja2.ext.with_"],
+            loader=j2.FileSystemLoader(self.basedir))
         if parameters is None:
             parameters = {}
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
-                template = jinja2.Template(f.read()).render(stage=stage,
-                                                            **parameters)
-                meta = yaml.load(template)
+                template = self._j2_env.get_template(envfile)
+                meta = yaml.load(template.render(stage=stage, **parameters))
             else:
                 meta = yaml.load(f)
 
