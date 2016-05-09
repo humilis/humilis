@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
+"""Humilis Layer."""
 import itertools
 import os
 import os.path

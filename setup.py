@@ -54,5 +54,7 @@ setup(
             "environment_resource=humilis.reference:environment",
             "layer_output=humilis.reference:output",
             "boto3=humilis.reference:boto3"],
+        "humilis.jinja2_filters": [
+            "uuid=humilis.j2:uuid"],
         "humilis.layers": []}
 )

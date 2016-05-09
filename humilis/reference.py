@@ -1,8 +1,4 @@
-# -*- coding: utf-8 -*-
-
 """Built-in reference parsers."""
-
-
 import contextlib
 import os
 import importlib

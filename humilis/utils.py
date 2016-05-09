@@ -13,6 +13,7 @@ import tempfile
 import yaml
 import jinja2 as j2
 
+import humilis.config
 from humilis.exceptions import FileFormatError
 
 
@@ -64,12 +65,19 @@ class TemplateLoader:
         pass
 
 
+def update_jinja2_env(env):
+    """Updates a Jinja2 env by adding custom functions and filters."""
+    for name, func in humilis.config.config.jinja2_functions.items():
+        env.filters[name] = func
+
+
 class DirTreeBackedObject(TemplateLoader):
     """Loads data from a directory tree of files in various formats."""
     def __init__(self, basedir, logger=None):
         self.basedir = basedir
         self.env = j2.Environment(extensions=["jinja2.ext.with_"],
                                   loader=j2.FileSystemLoader(basedir))
+        update_jinja2_env(self.env)
         if logger is None:
             self.logger = logging.getLogger(__name__)
         else:

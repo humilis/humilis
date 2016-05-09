@@ -1,7 +1,4 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-
-
+"""Humilis environment."""
 import logging
 import os
 
@@ -34,6 +31,8 @@ class Environment():
         self._j2_env = j2.Environment(
             extensions=["jinja2.ext.with_"],
             loader=j2.FileSystemLoader(self.basedir))
+        # Add custom functions and filters
+        utils.update_jinja2_env(self._j2_env)
         if parameters is None:
             parameters = {}
         with open(yml_path, 'r') as f:
