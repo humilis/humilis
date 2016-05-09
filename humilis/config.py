@@ -19,7 +19,7 @@ CONFIG_FILE = _get_config_file()
 # The setuptools entry point group for reference parsers
 REFPARSERS_GROUP = "humilis.reference_parsers"
 # Entry point for jinja2 custom functions
-J2_FUNCTIONS_GROUP = "humilis.jinja2_functions"
+J2_FILTERS_GROUP = "humilis.jinja2_filters"
 # The setuptools entry point group for layers
 LAYERS_GROUP = "humilis.layers"
 
@@ -90,7 +90,7 @@ class Config():
             fallback={'s3prefix': 'humilis'})
         self.reference_parsers = self.find_reference_parsers()
         self.layers = self.find_layer_paths()
-        self.jinja2_functions = self.find_jinja2_functions()
+        self.jinja2_filters = self.find_jinja2_filters()
 
     def find_reference_parsers(self):
         """Registers all plugin reference parsers."""
@@ -99,10 +99,10 @@ class Config():
             reference_parsers[ep.name] = ep.load()
         return reference_parsers
 
-    def find_jinja2_functions(self):
+    def find_jinja2_filters(self):
         """Registers all Jinja2 custom functions."""
         funcs = {}
-        for func in pkg_resources.iter_entry_points(group=J2_FUNCTIONS_GROUP):
+        for func in pkg_resources.iter_entry_points(group=J2_FILTERS_GROUP):
             funcs[func.name] = func.load()
         return funcs
 

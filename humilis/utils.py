@@ -67,7 +67,7 @@ class TemplateLoader:
 
 def update_jinja2_env(env):
     """Updates a Jinja2 env by adding custom functions and filters."""
-    for name, func in humilis.config.config.jinja2_functions.items():
+    for name, func in humilis.config.config.jinja2_filters.items():
         env.filters[name] = func
 
 
