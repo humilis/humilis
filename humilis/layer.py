@@ -281,6 +281,7 @@ class Layer:
                 self.logger.error(
                     "Error deploying stack '{}'".format(self.cf_name))
                 self.logger.error("Stack template: {}".format(cf_template))
+                raise
         elif update:
             self.logger.info("Updating layer '{}'".format(self.name))
             try:
