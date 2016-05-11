@@ -10,6 +10,7 @@ from humilis.exceptions import ReferenceError, CloudformationError
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
 from boto3facade.exceptions import NoUpdatesError
+from botocore.exceptions import ClientError
 import json
 import time
 import datetime
@@ -269,11 +270,17 @@ class Layer:
             self.logger.info("Creating layer '{}' (CF stack '{}')".format(
                 self.name, self.cf_name))
 
-            self.cf.create_stack(
-                self.cf_name,
-                json.dumps(self.compile(), indent=4),
-                self.sns_topic_arn,
-                self.tags)
+            cf_template = json.dumps(self.compile(), indent=4)
+            try:
+                self.cf.create_stack(
+                    self.cf_name,
+                    cf_template,
+                    self.sns_topic_arn,
+                    self.tags)
+            except ClientError:
+                self.logger.error(
+                    "Error deploying stack '{}'".format(self.cf_name))
+                self.logger.error("Stack template: {}".format(cf_template))
         elif update:
             self.logger.info("Updating layer '{}'".format(self.name))
             try:
