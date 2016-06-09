@@ -98,7 +98,7 @@ py.test tests
 Define your infrastructure environment following the examples in the 
 [examples directory][examples-dir]. Then to create the environment:
 
-[examples-dir]: https://github.com/germangh/humilis/tree/master/examples
+[examples-dir]: https://github.com/humilis/humilis/tree/master/examples
 
 
 ````
