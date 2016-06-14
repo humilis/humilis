@@ -1,4 +1,5 @@
 """Humilis configuration."""
+
 import datetime
 import pkg_resources
 import os

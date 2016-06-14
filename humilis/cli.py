@@ -1,4 +1,5 @@
 """Command line interface."""
+
 import logging
 
 import click

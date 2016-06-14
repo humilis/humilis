@@ -1,9 +1,9 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
+"""Setuptools entry point."""
 
-from setuptools import setup, find_packages
-import humilis.metadata as metadata
 import os
+from setuptools import setup, find_packages
+
+import humilis
 
 try:
     import pypandoc
@@ -12,16 +12,16 @@ except(IOError, ImportError, RuntimeError):
     if os.path.isfile("README.md"):
         long_description = open("README.md").read()
     else:
-        long_description = metadata.description
+        long_description = "AWS cloudformation-based deployment framework"
 
 setup(
-    name=metadata.project,
-    version=metadata.version,
-    author=metadata.authors[0],
-    author_email=metadata.emails[0],
-    url=metadata.url,
-    license=metadata.license,
-    description=metadata.description,
+    name="humilis",
+    version=humilis.__version__,
+    author="German Gomez-Herrero",
+    author_email="german@findhotel.net",
+    url="http://github.com/InnovativeTravel/humilis",
+    license="MIT",
+    description="AWS cloudformation-based deployment framework",
     long_description=long_description,
     packages=find_packages(),
     install_requires=[

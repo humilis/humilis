@@ -1,9 +1,8 @@
-# -*- coding: utf-8 -*-
+"""AWS Cloudformation-based deployment framework."""
 
 import os
 import inspect
-import humilis.metadata as metadata
 
 
-__version__ = metadata.version
+__version__ = "0.4.12"
 __dir__ = os.path.dirname(inspect.getfile(inspect.currentframe()))
