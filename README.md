@@ -258,7 +258,7 @@ meta:
 ```
 
 Every reference must have a `parser` key that identifies the parser that
-should be used to parse the reference. There are also two option keys:
+should be used to parse the reference. There are also two optional keys:
 
 * `parameters`: allows you to pass parameters to the reference parser. You can
    pass either named parameters (as a dict) or positional arguments (as a 
@@ -270,7 +270,7 @@ should be used to parse the reference. There are also two option keys:
   layer. For example, the `lambda` parser, when parsing templated  lambda code,
   it uses previously parsed layer parameters as template parameters.
 
-More information on reference parsers below.
+More information on the reference parsers that are bundled with humilis below.
 
 [cf-ref]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-ref.html
 [cf-getatt]: http://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/intrinsic-function-reference-getatt.html
@@ -522,6 +522,30 @@ the `dummy_function` lambda may look like this:
 Basically all your code needs to be included under directory `dummy_function`.
 In this case there is only one file: `dummy_function.py`. External dependencies
 need to be specified in your `setup.py`.
+
+
+### `secret` references
+
+`secret` references retrieve a secret using Python's [keyring][keyrig] module.
+
+[keyring]: https://pypi.python.org/pypi/keyring
+
+
+__Parameters__:
+
+* `service`: The name of the service the secret is associated to.
+
+* `key`: The key (e.g. the username) that identifies the secret.
+
+
+__Example__:
+
+```
+ref:
+    parser: secret
+    parameters: {"service": "mysqldb", "key": "adminuser"}
+```
+
 
 
 ## Secrets vault
