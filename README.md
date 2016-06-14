@@ -547,6 +547,16 @@ ref:
 ```
 
 
+## Custom Jinja2 filters
+
+Humilis defines the following [custom Jinja2 filters][jinja2filters]:
+
+[jinja2filters]: http://jinja.pocoo.org/docs/dev/templates/#filters
+
+* `uuid`: A random UUID. Example: `{{''|uuid}}`.
+* `password(length=8)`: A random password. Example: `{{10|password}}`.
+
+
 
 ## Secrets vault
 

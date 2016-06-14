@@ -55,6 +55,8 @@ setup(
             "layer_output=humilis.reference:output",
             "boto3=humilis.reference:boto3"],
         "humilis.jinja2_filters": [
-            "uuid=humilis.j2:uuid"],
+            "password=humilis.j2:password",
+            "uuid=humilis.j2:uuid4",
+            "uuid4=humilis.j2:uuid4"],
         "humilis.layers": []}
 )
