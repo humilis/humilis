@@ -19,7 +19,7 @@ setup(
     version=humilis.__version__,
     author="German Gomez-Herrero",
     author_email="german@findhotel.net",
-    url="http://github.com/InnovativeTravel/humilis",
+    url="http://github.com/humilis/humilis",
     license="MIT",
     description="AWS cloudformation-based deployment framework",
     long_description=long_description,
