@@ -138,7 +138,6 @@ def _deploy_package(path, layer, logger, dependencies=None):
     with utils.move_aside(path) as tmppath:
         # removes __* and .* dirs
         _cleanup_dir(tmppath)
-        _preprocess_dir(tmppath, layer.loader_params)
         setup_file = os.path.join(tmppath, 'setup.py')
         if os.path.isfile(setup_file):
             # Install all depedendencies in the same dir
@@ -149,6 +148,9 @@ def _deploy_package(path, layer, logger, dependencies=None):
 
         if dependencies:
             _install_dependencies(layer, tmppath, dependencies)
+
+        # render Jinja2 templated files
+        _preprocess_dir(tmppath, layer.loader_params)
 
         # Adding the HEAD hash is needed for CF to detect that the contents of
         # of the .zip file have changed when requesting a stack update.
