@@ -8,7 +8,6 @@ from boto3facade.cloudformation import Cloudformation
 from boto3facade.dynamodb import Dynamodb
 from boto3facade.kms import Kms
 import jinja2 as j2
-import keyring
 import yaml
 
 from humilis.config import config
@@ -115,9 +114,9 @@ class Environment():
     def set_secret(self, key, plaintext):
         """Sets and environment secret."""
         if not self.vault_layer:
-            self.logger.warning("No secrets-vault layer in this environment: "
-                                "storing secret in local keychain only")
-            resp = None
+            msg = "No secrets-vault layer in this environment"
+            self.logger.error(msg)
+            raise RequiresVaultError(msg)
         else:
             client = Kms(config.boto_config).client
             encrypted = client.encrypt(KeyId=self.kms_key_id,
@@ -125,16 +124,14 @@ class Environment():
             resp = self.dynamodb.client.put_item(
                 TableName=self.__secrets_table_name,
                 Item={'id': {'S': key}, 'value': {'B': encrypted}})
-
-        keyring.set_password(self.__keychain_namespace, key, plaintext)
-        return resp
+            return resp
 
     def get_secret(self, key):
         """Retrieves a secret."""
         if not self.vault_layer:
-            self.logger.warning("No secrets-vault layer in this environment: "
-                                "retrieving secret from local keychain")
-            return keyring.get_password(self.__keychain_namespace, key)
+            msg = "No secrets-vault layer in this environment"
+            self.logger.error(msg)
+            raise RequiresVaultError(msg)
         else:
             client = Dynamodb(config.boto_config).client
             encrypted = client.get_item(
@@ -149,19 +146,16 @@ class Environment():
     def delete_secret(self, key):
         """Deletes a secret."""
         if not self.vault_layer:
-            self.logger.warning("No secrets-vault layer in this environment: "
-                                "deleting secret from local keychain only")
-            return keyring.delete_password(self.__keychain_namespace, key)
+            msg = "No secrets-vault layer in this environment"
+            self.logger.error(msg)
+            raise RequiresVaultError(msg)
         else:
             client = Dynamodb(config.boto_config).client
-            encrypted = client.delete_item(
+            resp = client.delete_item(
                 TableName=self.__secrets_table_name,
                 Key={'id': {'S': key}})['Item']['value']['B']
 
-            # Decrypt using KMS (assuming the secret value is a string)
-            client = boto3.client('kms')
-            plaintext = client.decrypt(CiphertextBlob=encrypted)['Plaintext']
-            return plaintext.decode()
+            return resp
 
     def create(self, output_file=None, update=False):
         """Creates or updates an environment."""
