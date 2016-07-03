@@ -14,7 +14,7 @@ import boto3facade
 from boto3facade.s3 import S3
 from boto3facade.cloudformation import Cloudformation
 import jinja2
-import keyring
+from s3keyring.s3 import S3Keyring
 
 from humilis.exceptions import ReferenceError, InvalidLambdaDependencyError
 import humilis.utils as utils
@@ -54,7 +54,13 @@ def secret(layer, config, service=None, key=None):
 
     :returns: The plaintext secret
     """
-    return keyring.get_password(service, key)
+    s3keyring_config = os.path.join(layer.env_basedir, ".s3keyring.ini")
+    if os.path.isfile(s3keyring_config):
+        kr = S3Keyring(config_file=s3keyring_config)
+    else:
+        kr = S3Keyring()
+
+    return kr.get_password(service, key)
 
 
 def file(layer, config, path=None):

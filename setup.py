@@ -32,7 +32,7 @@ setup(
         "PyYAML",
         "Click",
         "boto3",
-        "keyring",
+        "s3keyring",
         "boto3facade>=0.2.1",
         "jinja2"],
     classifiers=[
