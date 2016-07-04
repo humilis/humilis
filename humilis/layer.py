@@ -334,6 +334,7 @@ class Layer:
                     ))
                 already_seen.add(event.id)
 
+            time.sleep(10)
             stack_status = self.cf.get_stack_status(self.cf_name)
             time.sleep(10)
         return stack_status
