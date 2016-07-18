@@ -129,7 +129,10 @@ def _install_dependencies(layer, path, dependencies):
                 # A self-contained Python package
                 shutil.copytree(deppath, targetpath)
         else:
-            if dep.find(":") < 0:
+            if dep.find("git+") >= 0:
+                # A git repo
+                pip.main(['install', '-e', dep, '-t', path])
+            elif dep.find(":") < 0:
                 # A Pypi package
                 pip.main(['install', dep, '-t', path])
             else:
