@@ -15,6 +15,11 @@ class MissingParentLayerError(LoggedException):
     pass
 
 
+class MissingPluginError(LoggedException):
+    """A plug-in needs to be installed."""
+    pass
+
+
 class TakesTooLongError(LoggedException):
     """It has taken too long for AWS to do something"""
     pass

@@ -7,7 +7,8 @@ import re
 import logging
 from humilis.config import config
 from humilis.utils import DirTreeBackedObject, get_cf_name
-from humilis.exceptions import ReferenceError, CloudformationError
+from humilis.exceptions import (ReferenceError, CloudformationError,
+                                MissingPluginError)
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
 from boto3facade.exceptions import NoUpdatesError
@@ -36,6 +37,11 @@ class Layer:
 
         if layer_type is not None:
             basedir = config.layers.get(layer_type)
+            if not basedir:
+                msg = ("The plugin providing the layer type '{}' is not "
+                       "installed in this system. Please install it and "
+                       "try again.").format(layer_type)
+                raise MissingPluginError(msg)
         else:
             basedir = None
 
