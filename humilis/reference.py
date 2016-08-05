@@ -118,7 +118,7 @@ def _install_dependencies(layer, path, dependencies):
                 shutil.copyfile(deppath, targetpath)
             elif ext == ".txt":
                 # A requirements file
-                pip.main(['install', '-r', dep, '-t', path])
+                pip.main(['install', '-r', deppath, '-t', path])
             else:
                 raise InvalidLambdaDependencyError(dep)
         elif os.path.isdir(deppath):
@@ -134,11 +134,12 @@ def _install_dependencies(layer, path, dependencies):
                 pip.main(['install', '-e', dep, '-t', path])
             elif dep.find(":") < 0:
                 # A Pypi package
-                pip.main(['install', dep, '-t', path])
+                pip.main(['install', dep, '-t', path, '--upgrade'])
             else:
                 # A private index package
                 index = ":".join(dep.split(":")[:-1])
-                pip.main(['install', '-i', index, dep, '-t', path])
+                pip.main(['install', '-i', index, dep, '-t', path,
+                          '--upgrade'])
 
 
 @contextlib.contextmanager
