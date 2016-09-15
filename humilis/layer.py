@@ -34,6 +34,7 @@ class Layer:
         self.env_basedir = environment.basedir
         self.depends_on = []
         self.section = {}
+        self.type = layer_type
 
         if layer_type is not None:
             basedir = config.layers.get(layer_type)
