@@ -26,6 +26,8 @@ class Layer:
         self.cf = environment.cf
         if logger is None:
             self.logger = logging.getLogger(__name__)
+            # To prevent warnings
+            self.logger.addHandler(logging.NullHandler())
         else:
             self.logger = logger
         self.name = name

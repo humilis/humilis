@@ -23,6 +23,8 @@ class Environment():
                  parameters=None):
         if logger is None:
             self.logger = logging.getLogger(__name__)
+            # To prevent warnings
+            self.logger.addHandler(logging.NullHandler())
         else:
             self.logger = logger
         self.__yml_path = yml_path

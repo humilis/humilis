@@ -83,6 +83,7 @@ class DirTreeBackedObject(TemplateLoader):
         update_jinja2_env(self.env)
         if logger is None:
             self.logger = logging.getLogger(__name__)
+            self.logger.addHandler(logging.NullHandler())
         else:
             self.logger = logger
 

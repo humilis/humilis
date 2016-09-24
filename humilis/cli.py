@@ -24,7 +24,13 @@ def validate_log_level(ctx, param, value):
 @click.option("--profile", default='default', metavar='NAME',
               help="The name of configuration profile.")
 def main(log, profile):
-    logging.basicConfig(level=getattr(logging, log))
+    logger = logging.getLogger("humilis")
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter(
+        '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
+    logger.setLevel(getattr(logging, log))
     config.boto_config.activate_profile(profile)
 
 
