@@ -46,21 +46,26 @@ def _git_head():
             raise
 
 
-def secret(layer, config, service=None, key=None):
-    """Retrieves a secret stored in the local keychain.
+def secret(layer, config, service=None, key=None, group=None):
+    """Retrieves a secret stored in a S3 keyring.
 
-    :param service: The name of the service the secret applies to
+    :param service: An alias of group, for backwards compatibility
     :param key: The key used to identify the secret within the server
+    :param group: The name of the group of secrets
 
     :returns: The plaintext secret
     """
+
+    if not group:
+        group = service
+
     s3keyring_config = os.path.join(layer.env_basedir, ".s3keyring.ini")
     if os.path.isfile(s3keyring_config):
         kr = S3Keyring(config_file=s3keyring_config)
     else:
         kr = S3Keyring()
 
-    return kr.get_password(service, key)
+    return kr.get_password(group, key)
 
 
 def file(layer, config, path=None):
