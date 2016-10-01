@@ -81,13 +81,22 @@ class Config():
         # s3prefix: A base prefix for any file that humilis uploads to S3
         keys = boto3facade.config.DEFAULT_KEYS + ['s3prefix']
         required_keys = boto3facade.config.DEFAULT_REQUIRED_KEYS
+
+        # Set up logging
+        logger = logging.getLogger(self.LOGGER_NAME)
+        handler = logging.StreamHandler()
+        formatter = logging.Formatter(
+            '%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+        handler.setFormatter(formatter)
+        logger.addHandler(handler)
+
         self.boto_config = boto3facade.config.Config(
             env_prefix=self.ENVAR_PREFIX,
             config_file=CONFIG_FILE,
             active_profile=self.DEFAULT_BOTO_PROFILE,
             keys=keys,
             required_keys=required_keys,
-            logger=logging.getLogger(self.LOGGER_NAME),
+            logger=logger,
             fallback={'s3prefix': 'humilis'})
         self.reference_parsers = self.find_reference_parsers()
         self.layers = self.find_layer_paths()
