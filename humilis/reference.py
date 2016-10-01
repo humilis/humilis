@@ -229,8 +229,13 @@ def _preprocess_file(path, params):
     """Renders in place a jinja2 template."""
     if not _is_jinja2_template(path):
         return
-    with open(path, 'r') as f:
-        result = jinja2.Template(f.read()).render(params)
+    basedir, filename = os.path.split(path)
+    env = jinja2.Environment(
+        extensions=["jinja2.ext.with_"],
+        loader=jinja2.FileSystemLoader(basedir))
+    # Add custom functions and filters
+    utils.update_jinja2_env(env)
+    result = env.get_template(filename).render(params)
     with open(path, 'w') as f:
         f.write(result)
 
