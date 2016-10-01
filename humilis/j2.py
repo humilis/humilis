@@ -16,3 +16,7 @@ def password(size, **kwargs):
         ''.join(set(string.punctuation).difference(set("@\"/'\\")))
     pwd = ''.join(random.choice(chars) for _ in range(size))
     return pwd
+
+
+def is_list(obj, **kwargs):
+    return isinstance(obj, list)
