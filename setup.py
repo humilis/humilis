@@ -60,6 +60,7 @@ setup(
             "boto3=humilis.reference:boto3"],
         "humilis.jinja2_filters": [
             "password=humilis.j2:password",
+            "is_list=humilis.j2:is_list",
             "uuid=humilis.j2:uuid4",
             "uuid4=humilis.j2:uuid4"],
         "humilis.layers": []}
