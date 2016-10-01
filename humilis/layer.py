@@ -75,7 +75,9 @@ class Layer:
 
         self.sns_topic_arn = environment.sns_topic_arn
         self.tags = {
+            'humilis:environment': self.env_name,
             'humilis:layer': self.name,
+            'humilis:stage': self.env_stage,
             'humilis:created': str(datetime.datetime.now())}
         for tagname, tagvalue in environment.tags.items():
             self.tags[tagname] = tagvalue
