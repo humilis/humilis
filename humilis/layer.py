@@ -122,7 +122,8 @@ class Layer:
     @property
     def in_cf(self):
         """Returns true if the layer has been already deployed to CF."""
-        return self.cf_name in {stk['StackName'] for stk in self.cf.stacks}
+        return self.cf_name in {stk['StackName'] for stk
+                                in self.cf.stacks(clear_cache=True)}
 
     @property
     def ec2(self):
@@ -164,7 +165,7 @@ class Layer:
     def dependencies_met(self):
         """Checks whether all stack dependencies have been deployed."""
         current_cf_stack_names = {stack.get('StackName') for stack
-                                  in self.cf.stacks}
+                                  in self.cf.stacks()}
         for dep in self.depends_on:
             if dep not in current_cf_stack_names:
                 return False
@@ -309,7 +310,8 @@ class Layer:
             self.logger.info(msg)
 
         status = self.watch_events()
-        if status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
+        if status is None \
+                or status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
             msg = "Unable to deploy layer '{}': status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
@@ -328,7 +330,7 @@ class Layer:
         stack_status = self.cf.get_stack_status(self.cf_name)
         already_seen = set()
         cm = config.EVENT_STATUS_COLOR_MAP
-        while stack_status in progress_status:
+        while (stack_status is None) or (stack_status in progress_status):
             events = self.cf.get_stack_events(self.cf_name)
             new_events = [ev for ev in events if ev.id not in already_seen]
             for event in new_events:
@@ -345,9 +347,8 @@ class Layer:
                     ))
                 already_seen.add(event.id)
 
-            time.sleep(10)
+            time.sleep(5)
             stack_status = self.cf.get_stack_status(self.cf_name)
-            time.sleep(10)
         return stack_status
 
     def __repr__(self):
