@@ -122,8 +122,7 @@ class Layer:
     @property
     def in_cf(self):
         """Returns true if the layer has been already deployed to CF."""
-        return self.cf_name in {stk['StackName'] for stk
-                                in self.cf.stacks(clear_cache=True)}
+        return self.cf_name in {stk['StackName'] for stk in self.cf.stacks}
 
     @property
     def ec2(self):
@@ -165,7 +164,7 @@ class Layer:
     def dependencies_met(self):
         """Checks whether all stack dependencies have been deployed."""
         current_cf_stack_names = {stack.get('StackName') for stack
-                                  in self.cf.stacks()}
+                                  in self.cf.stacks}
         for dep in self.depends_on:
             if dep not in current_cf_stack_names:
                 return False
@@ -323,10 +322,6 @@ class Layer:
                                       'UPDATE_IN_PROGRESS',
                                       'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'}):
         """Watches CF events during stack creation."""
-        if not self.in_cf:
-            self.logger.warning("Layer {} has not been deployed to CF: "
-                                "nothing to watch".format(self.name))
-            return
         stack_status = self.cf.get_stack_status(self.cf_name)
         already_seen = set()
         cm = config.EVENT_STATUS_COLOR_MAP
