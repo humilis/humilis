@@ -33,7 +33,7 @@ setup(
         "Click",
         "boto3",
         "s3keyring",
-        "boto3facade>=0.4.1",
+        "boto3facade>=0.4.2",
         "jinja2"],
     classifiers=[
         "Programming Language :: Python :: 2",
