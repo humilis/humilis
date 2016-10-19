@@ -289,6 +289,7 @@ class Layer:
                     cf_template,
                     self.sns_topic_arn,
                     self.tags)
+                self.wait_for_status_change()
             except ClientError:
                 self.logger.error(
                     "Error deploying stack '{}'".format(self.cf_name))
@@ -302,6 +303,7 @@ class Layer:
                     self.cf_name,
                     cf_template,
                     self.sns_topic_arn)
+                self.wait_for_status_change()
             except NoUpdatesError:
                 msg = "No updates on layer '{}'".format(self.name)
                 self.logger.warning(msg)
@@ -314,14 +316,17 @@ class Layer:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
             self.logger.info(msg)
 
+
+        return self.outputs
+
+    def wait_for_status_change(self):
+        """Wait for the status deployment state to change."""
         status = self.watch_events()
         if status is None \
                 or status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
             msg = "Unable to deploy layer '{}': status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
-
-        return self.outputs
 
     def watch_events(self,
                      progress_status={'CREATE_IN_PROGRESS',
