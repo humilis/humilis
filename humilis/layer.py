@@ -310,8 +310,7 @@ class Layer:
 
         status = self.watch_events()
         if status is None \
-                or status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE',
-                                  'UPDATE_ROLLBACK_COMPLETE'}:
+                or status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
             msg = "Unable to deploy layer '{}': status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
