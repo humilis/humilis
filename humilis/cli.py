@@ -131,6 +131,8 @@ def _ensure_defaults(parameters):
             for pname, pvalue in parameters["_default"]:
                 stage_params[pname] = stage_params.get(pname, pvalue)
 
+    return parameters
+
 
 if __name__ == '__main__':
     main()
