@@ -128,7 +128,7 @@ def _ensure_defaults(parameters):
     """Apply default values to unspecified stage parameters."""
     if "_default" in parameters:
         for stage, stage_params in parameters.items():
-            for pname, pvalue in parameters["_default"]:
+            for pname, pvalue in parameters["_default"].items():
                 stage_params[pname] = stage_params.get(pname, pvalue)
 
     return parameters
