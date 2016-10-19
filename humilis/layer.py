@@ -296,14 +296,20 @@ class Layer:
                 raise
         elif update:
             self.logger.info("Updating layer '{}'".format(self.name))
+            cf_template = json.dumps(self.compile(), indent=4)
             try:
                 self.cf.update_stack(
                     self.cf_name,
-                    json.dumps(self.compile(), indent=4),
+                    cf_template,
                     self.sns_topic_arn)
             except NoUpdatesError:
                 msg = "No updates on layer '{}'".format(self.name)
                 self.logger.warning(msg)
+            except:
+                self.logger.error(
+                    "Error deploying stack '{}'".format(self.cf_name))
+                self.logger.error("Stack template: {}".format(cf_template))
+                raise
         else:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
             self.logger.info(msg)
