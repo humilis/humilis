@@ -42,7 +42,7 @@ def create(environment, stage, output, pretend, parameters):
     """Creates an environment."""
     if parameters:
         with open(parameters, "r") as f:
-            parameters = yaml.load(f.read())
+            parameters = _ensure_defaults(yaml.load(f.read()))
 
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
@@ -122,6 +122,14 @@ def delete(environment, stage, pretend, parameters):
 def configure(ask, local):
     """Configure humilis."""
     config.boto_config.configure(ask=ask, local=local)
+
+
+def _ensure_defaults(parameters):
+    """Apply default values to unspecified stage parameters."""
+    if "_default" in parameters:
+        for stage, stage_params in parameters.items():
+            for pname, pvalue in parameters["_default"]:
+                stage_params[pname] = stage_params.get(pname, pvalue)
 
 
 if __name__ == '__main__':
