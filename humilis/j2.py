@@ -2,12 +2,18 @@
 
 import string
 import random
+import time
 import uuid
 
 
 def uuid4(size=32, *args, **kwargs):
     """Generate a random UUID string."""
     return str(uuid.uuid4())[:min(size, 32)]
+
+
+def timestamp(*args, **kwargs):
+    """Generate a Unix timestamp."""
+    return time.time()
 
 
 def password(size, **kwargs):
