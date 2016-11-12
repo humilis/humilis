@@ -231,8 +231,8 @@ class Layer:
         if isinstance(pval, list):
             # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
-        elif isinstance(pval, dict) and 'ref' in pval:
-            # A reference
+        elif isinstance(pval, dict) and 'ref' in pval and 'parser' in pval:
+            # A reference with a humilis parser
             try:
                 return self._resolve_ref(pval['ref'])
             except:
