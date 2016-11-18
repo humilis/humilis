@@ -151,12 +151,8 @@ class Layer:
     @property
     def outputs(self):
         """Layer outputs. Throws an exception if layer is not ok."""
-        if not self.ok:
-            msg = ("Attempting to read outputs from a layer that has not "
-                   "been fully deployed yet")
-            raise CloudformationError(msg, logger=self.logger)
-        ly = self.cf.stack_outputs[self.cf_name]
-        if ly is not None:
+        ly = self.cf.stack_outputs.get(self.cf_name)
+        if ly:
             ly = {o['OutputKey']: o['OutputValue'] for o in ly}
         return ly
 
