@@ -135,7 +135,7 @@ class DirTreeBackedObject(TemplateLoader):
                                      "%s was found" %
                                      (filename, section.title(), data_key))
                 exit(1)
-            for k, v in list(this_data.values())[0].items():
+            for k, v in (list(this_data.values())[0] or {}).items():
                 data[k] = v
 
         return data
