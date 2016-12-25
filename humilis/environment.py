@@ -37,6 +37,8 @@ class Environment():
         utils.update_jinja2_env(self._j2_env)
         if parameters is None:
             parameters = {}
+
+        parameters.update(os.environ)
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
                 template = self._j2_env.get_template(envfile)
