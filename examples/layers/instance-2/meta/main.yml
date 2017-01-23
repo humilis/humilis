@@ -23,7 +23,7 @@ meta:
                         layer_name: vpc
                         resource_name: VPC
         subnet:
-            description: The physical ID of the subnet where the instance will be 
+            description: The physical ID of the subnet where the instance will be
                 launched
             value:
                 ref:

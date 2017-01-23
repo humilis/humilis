@@ -82,7 +82,10 @@ def file(layer, config, path=None):
     s3 = S3(config)
     s3.cp(full_path, s3bucket, s3key)
     layer.logger.info("{} -> {}/{}".format(full_path, s3bucket, s3key))
-    return {'s3bucket': s3bucket, 's3key': s3key}
+    if layer.type == "sam":
+        return os.path.join("s3://", s3bucket, s3key)
+    else:
+        return {'s3bucket': s3bucket, 's3key': s3key}
 
 
 def lambda_ref(layer, config, path=None, dependencies=None):
