@@ -50,7 +50,8 @@ class Environment():
         self.meta = meta.get(self.name)
 
         if len(self.meta) == 0:
-            raise FileFormatError(yml_path, logger=self.logger)
+            raise FileFormatError(yml_path, "Error getting environment name ",
+                                  logger=self.logger)
 
         self.cf = Cloudformation(config.boto_config)
         self.sns_topic_arn = self.meta.get('sns-topic-arn', [])

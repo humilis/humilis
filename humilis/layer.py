@@ -16,6 +16,7 @@ from botocore.exceptions import ClientError
 import json
 import time
 import datetime
+from uuid import uuid4
 
 
 class Layer:
@@ -191,7 +192,8 @@ class Layer:
             'Mappings': self.section.get('mappings', {}),
             'Parameters': self.section.get('parameters', {}),
             'Resources': self.section.get('resources', {}),
-            'Outputs': self.section.get('outputs', {})
+            'Outputs': self.section.get('outputs', {}),
+            'Transform': self.section.get('transform', {}).get('Value', {})
         }
         return cf_template
 
@@ -280,47 +282,58 @@ class Layer:
                 self.name, self.cf_name))
 
             cf_template = json.dumps(self.compile(), indent=4)
-            try:
-                self.cf.create_stack(
-                    self.cf_name,
-                    cf_template,
-                    self.sns_topic_arn,
-                    self.tags)
-                self.wait_for_status_change()
-            except ClientError:
-                self.logger.error(
-                    "Error deploying stack '{}'".format(self.cf_name))
-                self.logger.error("Stack template: {}".format(cf_template))
-                raise
+            self.create_with_changeset(cf_template)
         elif update:
-            self.logger.info("Updating layer '{}'".format(self.name))
             cf_template = json.dumps(self.compile(), indent=4)
             try:
-                self.cf.update_stack(
-                    self.cf_name,
-                    cf_template,
-                    self.sns_topic_arn)
-                self.wait_for_status_change()
+                self.create_with_changeset(cf_template, update)
             except NoUpdatesError:
-                msg = "No updates on layer '{}'".format(self.name)
+                msg = "Nothing to update on stack '{}'".format(self.cf_name)
                 self.logger.warning(msg)
-            except:
-                self.logger.error(
-                    "Error deploying stack '{}'".format(self.cf_name))
-                self.logger.error("Stack template: {}".format(cf_template))
-                raise
         else:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
             self.logger.info(msg)
 
-
         return self.outputs
+
+    def create_with_changeset(self, cf_template, update=False):
+        """Use a changeset to create a stack."""
+        changeset_type = "CREATE"
+        if update:
+            changeset_type = "UPDATE"
+        changeset_name = self.cf_name + str(uuid4())
+        try:
+            self.cf.client.create_change_set(
+                StackName=self.cf_name,
+                TemplateBody=cf_template,
+                Capabilities=["CAPABILITY_IAM"],
+                NotificationARNs=self.sns_topic_arn,
+                Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()],
+                ChangeSetName=changeset_name,
+                ChangeSetType=changeset_type)
+            self.wait_for_status_change()
+            if update:
+                self.wait_changeset_creation(changeset_name)
+                changeset = self.cf.client.describe_change_set(
+                    ChangeSetName=changeset_name,
+                    StackName=self.cf_name)
+                if not changeset["Changes"]:
+                    raise NoUpdatesError("Nothing to update")
+            self.cf.client.execute_change_set(ChangeSetName=changeset_name,
+                                              StackName=self.cf_name)
+            self.wait_for_status_change()
+        except ClientError:
+            self.logger.error(
+                "Error deploying stack '{}'".format(self.cf_name))
+            self.logger.error("Stack template: {}".format(cf_template))
+            raise
 
     def wait_for_status_change(self):
         """Wait for the status deployment state to change."""
         status = self.watch_events()
         if status is None \
-                or status not in {'CREATE_COMPLETE', 'UPDATE_COMPLETE'}:
+                or status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE",
+                                  "REVIEW_IN_PROGRESS"}:
             msg = "Unable to deploy layer '{}': status is {}".format(
                 self.name, status)
             raise CloudformationError(msg, logger=self.logger)
@@ -353,6 +366,22 @@ class Layer:
             time.sleep(5)
             stack_status = self.cf.get_stack_status(self.cf_name)
         return stack_status
+
+    def wait_changeset_creation(self, changeset_name,
+                                progress_status={"CREATE_PENDING",
+                                                 "CREATE_IN_PROGRESS"}):
+        """Wait for a changeset to be in the right status to be executed."""
+        status = self.cf.client.describe_change_set(
+            ChangeSetName=changeset_name, StackName=self.cf_name)["Status"]
+        while (status is None) or (status in progress_status):
+            status = self.cf.client.describe_change_set(
+                ChangeSetName=changeset_name, StackName=self.cf_name)["Status"]
+            time.sleep(5)
+        if status != "CREATE_COMPLETE":
+            msg = "Unable to deploy layer '{}': changeset status is {}".format(
+                self.name, status)
+            raise CloudformationError(msg, logger=self.logger)
+        return status
 
     def __repr__(self):
         return str(self)
