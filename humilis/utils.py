@@ -127,7 +127,8 @@ class DirTreeBackedObject(TemplateLoader):
                 continue
 
             if len(this_data) != 1:
-                raise FileFormatError(filename, self.logger)
+                raise FileFormatError(filename, "Error loading layer section",
+                                      self.logger)
 
             data_key = list(this_data.keys())[0]
             if data_key.lower() != section.lower():

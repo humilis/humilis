@@ -33,7 +33,8 @@ class Config():
     KEYS_DIR = os.path.join(os.path.expanduser('~'), '.ssh')
     # Default amount of time to wait for CF to carry out an operation
     CF_TEMPLATE_VERSION = datetime.date(2010, 9, 9)
-    LAYER_SECTIONS = ['parameters', 'mappings', 'resources', 'outputs']
+    LAYER_SECTIONS = ['parameters', 'mappings', 'resources', 'outputs',
+                      'transform']
     LOG_LEVEL = 'info'
 
     # Coloring for the events' messages

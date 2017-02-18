@@ -6,8 +6,9 @@ import importlib
 import pip
 import subprocess
 from subprocess import CalledProcessError
-import tempfile
 import shutil
+import tempfile
+import uuid
 from zipfile import ZipFile
 
 import boto3facade
@@ -82,7 +83,10 @@ def file(layer, config, path=None):
     s3 = S3(config)
     s3.cp(full_path, s3bucket, s3key)
     layer.logger.info("{} -> {}/{}".format(full_path, s3bucket, s3key))
-    return {'s3bucket': s3bucket, 's3key': s3key}
+    if layer.type == "sam":
+        return os.path.join("s3://", s3bucket, s3key)
+    else:
+        return {'s3bucket': s3bucket, 's3key': s3key}
 
 
 def lambda_ref(layer, config, path=None, dependencies=None):
@@ -361,3 +365,43 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
         return result.get(output_key)
     else:
         return result
+
+
+def j2_template(layer, config, path=None, s3_upload=False, params=None):
+    """Render a j2 template and return the local or s3 path of the result.
+
+    :param layer: The layer object for the layer declaring the reference.
+    :param config: An object holding humilis configuration options.
+    :param path: The path of the j2 template to render. Relative to meta.yml.
+    :param s3_upload: Upload the rendered template to s3 or not.
+    :param params: A dict containing the values to render the template.
+
+    :returns: The local or s3 path of the rendered template.
+    """
+    if params is None:
+        msg = ("Missing params for j2 rendering in layer '{}' "
+               "and env '{}'").format(layer.name, layer.env_name)
+        ref = "j2_template '{}')".format(path)
+        raise ReferenceError(ref, msg, logger=layer.logger)
+    basefile, j2_ext = os.path.splitext(path)
+    if j2_ext not in {".j2"}:
+        msg = ("The file is not a Jinja2 template. layer : '{}', "
+               "env : '{}'".format(layer.name, layer.env_name))
+        ref = "j2_template '{}')".format(path)
+        raise ReferenceError(ref, msg, logger=layer.logger)
+
+    _, ext = os.path.splitext(basefile)
+    _, filename = os.path.split(path)
+    env = jinja2.Environment(
+        extensions=["jinja2.ext.with_"],
+        loader=jinja2.FileSystemLoader(layer.basedir))
+    result = env.get_template(filename).render(params)
+    output_path = os.path.join(layer.env_basedir, "ref-j2_template_" +
+                               str(uuid.uuid4()) + ext)
+    with open(output_path, "w") as f:
+        f.write(result)
+    if s3_upload:
+        s3path = file(layer, config, output_path)
+        return s3path
+
+    return output_path

@@ -57,7 +57,8 @@ setup(
             "output=humilis.reference:output",           # For backwards compat
             "environment_resource=humilis.reference:environment",
             "layer_output=humilis.reference:output",
-            "boto3=humilis.reference:boto3"],
+            "boto3=humilis.reference:boto3",
+            "j2_template=humilis.reference:j2_template"],
         "humilis.jinja2_filters": [
             "password=humilis.j2:password",
             "is_list=humilis.j2:is_list",

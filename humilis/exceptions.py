@@ -29,7 +29,7 @@ class FileFormatError(LoggedException):
     def __init__(self, filename, msg=None, *args, **kwargs):
         message = "Wrongly formatted file {}".format(filename)
         if msg is not None:
-            message = msg + " : " + msg
+            message = msg + " : " + message
         super(FileFormatError, self).__init__(message, *args, **kwargs)
 
 
@@ -38,7 +38,7 @@ class RequiresVaultError(LoggedException):
     def __init__(self, msg=None, *args, **kwargs):
         message = "Requires a secrets-vault layer in the environment"
         if msg is not None:
-            message = msg + " : " + msg
+            message = msg + " : " + message
         super(RequiresVaultError, self).__init__(message, *args, **kwargs)
 
 
