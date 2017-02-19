@@ -401,7 +401,10 @@ def j2_template(layer, config, path=None, s3_upload=False, params=None):
     with open(output_path, "w") as f:
         f.write(result)
     if s3_upload:
-        s3path = file(layer, config, output_path)
-        return s3path
+        s3bucket, s3key = _get_s3path(layer, config, output_path)
+        s3 = S3(config)
+        s3.cp(output_path, s3bucket, s3key)
+        layer.logger.info("{} -> {}/{}".format(output_path, s3bucket, s3key))
+        return os.path.join("s3://", s3bucket, s3key)
 
     return output_path
