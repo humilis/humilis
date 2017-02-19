@@ -4,5 +4,5 @@ import os
 import inspect
 
 
-__version__ = "0.9.9"
+__version__ = "1.0.0"
 __dir__ = os.path.dirname(inspect.getfile(inspect.currentframe()))
