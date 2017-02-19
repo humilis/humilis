@@ -43,6 +43,7 @@ def create(environment, stage, output, pretend, parameters):
     if parameters:
         with open(parameters, "r") as f:
             parameters = _ensure_defaults(yaml.load(f.read()))
+        parameters = parameters.get(stage, parameters.get("_default"))
 
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
@@ -126,6 +127,8 @@ def configure(ask, local):
 
 def _ensure_defaults(parameters):
     """Apply default values to unspecified stage parameters."""
+    if parameters is None:
+        return {}
     if "_default" in parameters:
         for stage, stage_params in parameters.items():
             for pname, pvalue in parameters["_default"].items():

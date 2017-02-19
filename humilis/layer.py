@@ -19,6 +19,18 @@ import datetime
 from uuid import uuid4
 
 
+def _is_legacy_reference(value):
+    """True if a parameter value is a reference using legacy syntax."""
+    return isinstance(value, dict) and 'ref' in value and \
+        'parser' in value["ref"]
+
+
+def _is_reference(value):
+    """True if a parameter value is a reference."""
+    return isinstance(value, dict) and len(value) == 1 and \
+        list(value.keys())[0][0] == '$'
+
+
 class Layer:
     """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, layer_type=None, logger=None,
@@ -228,29 +240,25 @@ class Layer:
     def _parse_param_value(self, pval):
         """Parses layer parameter values."""
         if isinstance(pval, list):
-            # A list of values: parse each one individually
             return [self._parse_param_value(_) for _ in pval]
-        elif isinstance(pval, dict) and 'ref' in pval and \
-                'parser' in pval['ref']:
-            # A reference with a humilis parser
-            try:
-                return self._resolve_ref(pval['ref'])
-            except:
-                self.logger.error("Error parsing reference: '{}'".format(
-                    pval["ref"]))
-                raise
+        elif _is_reference(pval):
+            return self._resolve_ref(
+                list(pval.keys())[0][1:], list(pval.values())[0])
+        elif _is_legacy_reference(pval):
+            return self._resolve_ref(
+                pval['ref']['parser'], pval['ref'].get('parameters', {}))
         elif isinstance(pval, dict):
             return {k: self._parse_param_value(v) for k, v in pval.items()}
         else:
             return pval
 
-    def _resolve_ref(self, ref):
+    def _resolve_ref(self, parsername, parameters):
         """Resolves references."""
-        parser = config.reference_parsers.get(ref.get('parser'))
-        if parser is None:
-            msg = "Invalid reference in layer {}".format(self.cf_name)
+        parser = config.reference_parsers.get(parsername)
+        if not parser:
+            msg = "Invalid reference parser '{}' in layer '{}'".format(
+                parsername, self.cf_name)
             raise ReferenceError(ref, msg, logger=self.logger)
-        parameters = ref.get('parameters', {})
         result = parser(self, config.boto_config, **parameters)
         return result
 
