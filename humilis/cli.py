@@ -92,6 +92,8 @@ def update(environment, stage, output, pretend, parameters):
     if parameters:
         with open(parameters, "r") as f:
             parameters = yaml.load(f.read())
+        parameters = parameters.get(stage, parameters.get("_default"))
+
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.create(output_file=output, update=True)
