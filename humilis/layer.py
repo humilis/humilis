@@ -200,7 +200,8 @@ class Layer:
         # Package the layer as a CF template
         cf_template = {
             'AWSTemplateFormatVersion': str(config.CF_TEMPLATE_VERSION),
-            'Description': self.meta.get('description', ''),
+            'Description': self.params.get(
+                'description', self.meta.get('description', '')),
             'Mappings': self.section.get('mappings', {}),
             'Parameters': self.section.get('parameters', {}),
             'Resources': self.section.get('resources', {}),
