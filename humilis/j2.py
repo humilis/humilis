@@ -1,5 +1,6 @@
 """Jinja2 custom functions and filters."""
 
+from datetime import datetime
 import string
 import random
 import time
@@ -14,6 +15,11 @@ def uuid4(size=32, *args, **kwargs):
 def timestamp(*args, **kwargs):
     """Generate a Unix timestamp."""
     return time.time()
+
+
+def iso_timestamp(*args, **kwargs):
+    """An ISO format timestamp."""
+    return datetime.now().isoformat()
 
 
 def password(size, **kwargs):
