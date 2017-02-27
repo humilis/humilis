@@ -64,6 +64,7 @@ setup(
             "is_list=humilis.j2:is_list",
             "uuid=humilis.j2:uuid4",
             "timestamp=humilis.j2:timestamp",
+            "iso_timestamp=humilis.j2:iso_timestamp",
             "uuid4=humilis.j2:uuid4"],
         "humilis.layers": []}
 )
