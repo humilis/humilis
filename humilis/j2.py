@@ -7,10 +7,16 @@ import time
 import uuid
 
 
-def uuid4(size=32, *args, **kwargs):
+def uuid4(size=32, cache=False, *args, **kwargs):
     """Generate a random UUID string."""
-    return str(uuid.uuid4())[:min(size, 32)]
-
+    if cache:
+        value = getattr(uuid4, "cache", None)
+        if not value:
+            value = str(uuid.uuid4())[:min(size, 32)]
+            setattr(uuid4, "cache", value)
+    else:
+        value = str(uuid.uuid4())[:min(size, 32)]
+    return value
 
 def timestamp(*args, **kwargs):
     """Generate a Unix timestamp."""
