@@ -89,7 +89,7 @@ def file(layer, config, path=None):
         return {'s3bucket': s3bucket, 's3key': s3key}
 
 
-def lambda_ref(layer, config, path=None, dependencies=None):
+def lambda_ref(layer, config, path=None, dependencies=None, **params):
     """Prepares a lambda deployment package and uploads it to S3.
 
     :param layer: The Layer object for the layer declaring the reference.
@@ -102,14 +102,14 @@ def lambda_ref(layer, config, path=None, dependencies=None):
     fpath = os.path.abspath(os.path.join(layer.basedir, path))
     logger = layer.logger
     if os.path.isdir(fpath):
-        with _deploy_package(fpath, layer, logger, dependencies) as fpath:
+        with _deploy_package(fpath, layer, logger, dependencies, params) as fpath:
             s3path = file(layer, config, fpath)
     else:
         path_no_ext, ext = os.path.splitext(fpath)
         if ext == '.zip':
             s3path = file(layer, config, fpath)
         else:
-            with _simple_deploy_package(fpath, layer, logger) as fpath:
+            with _simple_deploy_package(fpath, layer, logger, params) as fpath:
                 s3path = file(layer, config, fpath)
 
     return s3path
@@ -152,13 +152,15 @@ def _install_dependencies(layer, path, dependencies):
 
 
 @contextlib.contextmanager
-def _deploy_package(path, layer, logger, dependencies=None):
+def _deploy_package(path, layer, logger, dependencies, params):
     """Creates a deployment package for multi-file lambda with deps."""
     with utils.move_aside(path) as tmppath:
         # removes __* and .* dirs
         _cleanup_dir(tmppath)
         # render Jinja2 templated files
-        _preprocess_dir(tmppath, layer.loader_params)
+        template_params = layer.loader_params
+        template_params.update(params)
+        _preprocess_dir(tmppath, template_params)
         setup_file = os.path.join(tmppath, 'setup.py')
         if os.path.isfile(setup_file):
             # Install all depedendencies in the same dir
@@ -173,7 +175,7 @@ def _deploy_package(path, layer, logger, dependencies=None):
         # Adding the HEAD hash is needed for CF to detect that the contents of
         # of the .zip file have changed when requesting a stack update.
         gc = _git_head()
-        suffix = ('-' + gc, '')[gc is None]
+        suffix = ('-' + gc + str(uuid.uuid4()), str(uuid.uuid4()))[gc is None]
         tmpdir = tempfile.mkdtemp()
         basename = os.path.basename(path)
         zipfile = os.path.join(tmpdir, "{}{}{}".format(basename, suffix,
@@ -196,11 +198,13 @@ def _cleanup_dir(path):
 
 
 @contextlib.contextmanager
-def _simple_deploy_package(path, layer, logger):
+def _simple_deploy_package(path, layer, logger, params):
     """Creates a deployment package for a one-file no-deps lambda."""
     logger.info("Creating deployment package for '{}'".format(path))
     with utils.move_aside(path) as tmppath:
-        _preprocess_file(tmppath, layer.loader_params)
+        template_params = layer.loader_params
+        template_params.update(params)
+        _preprocess_file(tmppath, template_params)
         path_no_ext, ext = os.path.splitext(tmppath)
         basename = os.path.basename(path_no_ext)
         gc = _git_head()
@@ -230,7 +234,7 @@ def _is_jinja2_template(path):
 
 
 def _preprocess_file(path, params):
-    """Renders in place a jinja2 template."""
+    """Render in place a jinja2 template."""
     if not _is_jinja2_template(path):
         return
     basedir, filename = os.path.split(path)
