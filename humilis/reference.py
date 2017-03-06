@@ -268,7 +268,7 @@ def layer(layer, config, layer_name=None, resource_name=None):
     """
     stack_name = utils.get_cf_name(layer.env_name, layer_name,
                                    stage=layer.env_stage)
-    return _get_stack_resource(config, stack_name, resource_name)
+    return _get_stack_resource(layer, config, stack_name, resource_name)
 
 
 def environment(layer, config, environment_name=None, stage=None,
@@ -283,10 +283,10 @@ def environment(layer, config, environment_name=None, stage=None,
     :returns: The physical ID of the resource.
     """
     stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
-    return _get_stack_resource(config, stack_name, resource_name)
+    return _get_stack_resource(layer, config, stack_name, resource_name)
 
 
-def _get_stack_resource(config, stack_name, resource_name):
+def _get_stack_resource(layer, config, stack_name, resource_name):
     """Gets the physical ID of a resource in a CF Stack.
 
     :param stack_name: The name of the CF stack.
