@@ -38,6 +38,11 @@ class Environment():
         if parameters is None:
             parameters = {}
 
+        if "_default" in parameters:
+            def_params = parameters.get("_default", {})
+            del parameters["_default"]
+            parameters.update(def_params)
+
         parameters.update(os.environ)
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
