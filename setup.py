@@ -54,9 +54,11 @@ setup(
             "lambda=humilis.reference:lambda_ref",
             "layer=humilis.reference:layer",             # For backwards compat
             "layer_resource=humilis.reference:layer",
+            "layer_output=humilis.reference:layer",
             "output=humilis.reference:output",           # For backwards compat
             "environment_resource=humilis.reference:environment",
-            "layer_output=humilis.reference:output",
+            "environment_output=humilis.reference:environment",
+            "environment=humilis.reference:environment",
             "boto3=humilis.reference:boto3",
             "j2_template=humilis.reference:j2_template"],
         "humilis.jinja2_filters": [

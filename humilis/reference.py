@@ -256,34 +256,57 @@ def _preprocess_dir(path, params):
             _preprocess_file(filepath, params)
 
 
-def layer(layer, config, layer_name=None, resource_name=None):
+def layer(layer, config, layer_name=None, resource_name=None,
+          output_name=None):
     """Gets the physical ID of a resource in an already deployed layer.
 
     :param layer: The Layer object for the layer declaring the reference.
     :param config: An object holding humilis configuration options.
     :param layer_name: The name of the layer that contains the target resource.
     :param resource_name: The logical name of the target resource.
+    :param output_name: The name of the layer output.
 
     :returns: The physical ID of the resource.
     """
-    stack_name = utils.get_cf_name(layer.env_name, layer_name,
-                                   stage=layer.env_stage)
-    return _get_stack_resource(layer, config, stack_name, resource_name)
+    if not (resource_name or output_name) or (resource_name and output_name):
+        raise ValueError(
+            "Exactly one of these two parameters should be provider: either"
+            "'resource_name' or 'output_name'")
+
+    if resource_name:
+        stack_name = utils.get_cf_name(layer.env_name, layer_name,
+                                       stage=layer.env_stage)
+        return _get_stack_resource(layer, config, stack_name, resource_name)
+    else:
+        return output(layer, config, layer_name=layer_name)
+
 
 
 def environment(layer, config, environment_name=None, stage=None,
-                layer_name=None, resource_name=None):
+                layer_name=None, resource_name=None, output_name=None):
     """Gets the physical ID of a resource in another environment.
 
     :param layer: The Layer object of the layer declaring the reference.
     :param config: An object holding humilis configuration options.
     :param layer_name: The name of the layer that contains the target resource.
     :param resource_name: The logical name of the target resource.
+    :param output_name: The name of the layer output
 
     :returns: The physical ID of the resource.
     """
-    stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
-    return _get_stack_resource(layer, config, stack_name, resource_name)
+
+    if not (resource_name or output_name) or (resource_name and output_name):
+        raise ValueError(
+            "Exactly one of these two parameters should be provider: either"
+            "'resource_name' or 'output_name'")
+    if resource_name:
+        stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
+        return _get_stack_resource(layer, config, stack_name, resource_name)
+    else:
+        return output(
+            layer, config, layer_name=layer_name,
+            environment_name=environment_name, output_name=output_name)
+
 
 
 def _get_stack_resource(layer, config, stack_name, resource_name):
@@ -307,7 +330,8 @@ def _get_stack_resource(layer, config, stack_name, resource_name):
     return resource[0].physical_resource_id
 
 
-def output(layer, config, layer_name=None, output_name=None):
+def output(layer, config, layer_name=None, output_name=None,
+           environment_name=None, stage=None):
     """Gets the value of an output produced by an already deployed layer.
 
     :param layer: The Layer object for the layer declaring the reference.
@@ -315,8 +339,11 @@ def output(layer, config, layer_name=None, output_name=None):
     :param layer_name: The logical name of the layer that produced the output.
     :param output_name: The logical name of the output parameter.
     """
-    stack_name = utils.get_cf_name(layer.env_name, layer_name,
-                                   stage=layer.env_stage)
+    if not environment_name or not stage:
+        environment_name = layer.env_name
+        stage = layer.env_stage
+
+    stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
     cf = Cloudformation(config)
     output = cf.get_stack_output(stack_name, output_name)
     if len(output) < 1:
