@@ -304,7 +304,7 @@ def environment(layer, config, environment_name=None, stage=None,
         return _get_stack_resource(layer, config, stack_name, resource_name)
     else:
         return output(
-            layer, config, layer_name=layer_name,
+            layer, config, layer_name=layer_name, stage=stage,
             environment_name=environment_name, output_name=output_name)
 
 
@@ -345,7 +345,12 @@ def output(layer, config, layer_name=None, output_name=None,
 
     stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)
     cf = Cloudformation(config)
-    output = cf.get_stack_output(stack_name, output_name)
+    try:
+        output = cf.get_stack_output(stack_name, output_name)
+    except AttributeError:
+        raise ReferenceError(
+            "Could not retrieve output '{}' from CF stack '{}'",
+            output_name, stack_name)
     if len(output) < 1:
         all_stack_outputs = [x['OutputKey'] for x
                              in cf.stack_outputs[stack_name]]
