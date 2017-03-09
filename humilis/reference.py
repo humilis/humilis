@@ -278,7 +278,8 @@ def layer(layer, config, layer_name=None, resource_name=None,
                                        stage=layer.env_stage)
         return _get_stack_resource(layer, config, stack_name, resource_name)
     else:
-        return output(layer, config, layer_name=layer_name)
+        return output(layer, config, layer_name=layer_name,
+                      output_name=output_name)
 
 
 
