@@ -349,9 +349,10 @@ def output(layer, config, layer_name=None, output_name=None,
     try:
         output = cf.get_stack_output(stack_name, output_name)
     except AttributeError:
-        raise ReferenceError(
-            "Could not retrieve output '{}' from CF stack '{}'",
-            output_name, stack_name)
+        msg = "No output '{}' in CF stack '{}'".format(output_name, stack_name)
+        ref = "output/{}/{}/{}/{}".format(environment_name, layer_name, stage,
+                                          output_name)
+        raise ReferenceError(ref, msg)
     if len(output) < 1:
         all_stack_outputs = [x['OutputKey'] for x
                              in cf.stack_outputs[stack_name]]

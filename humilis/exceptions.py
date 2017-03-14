@@ -45,7 +45,7 @@ class RequiresVaultError(LoggedException):
 class ReferenceError(LoggedException):
     """Error when trying to parse a template reference."""
     def __init__(self, ref, msg, *args, **kwargs):
-        msg = "Can't parse reference {}: {}".format(ref, msg)
+        msg = "Can't produce reference {}: {}".format(ref, msg)
         super(ReferenceError, self).__init__(msg, *args, **kwargs)
 
 
