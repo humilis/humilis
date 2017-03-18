@@ -93,7 +93,7 @@ class Environment():
 
     @property
     def outputs(self):
-        """Outputs produced by each environment layer"""
+        """Outputs produced by each environment layer."""
         outputs = {}
         for layer in self.layers:
             try:
@@ -105,6 +105,21 @@ class Environment():
             if ly is not None:
                 outputs[layer.name] = ly
         return outputs
+
+    @property
+    def resources(self):
+        """Resources produced by each environment layer."""
+        resources = {}
+        for layer in self.layers:
+            try:
+                ly = layer.resources
+            except CloudformationError:
+                self.logger.error("Could not retrieve resources for layer"
+                                  " '{}'".format(layer.name))
+                ly = None
+            if ly is not None:
+                resources[layer.name] = ly
+        return resources
 
     @property
     def kms_key_id(self):

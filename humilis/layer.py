@@ -163,10 +163,18 @@ class Layer:
 
     @property
     def outputs(self):
-        """Layer outputs. Throws an exception if layer is not ok."""
+        """Layer CF outputs."""
         ly = self.cf.stack_outputs.get(self.cf_name)
         if ly:
             ly = {o['OutputKey']: o['OutputValue'] for o in ly}
+        return ly
+
+    @property
+    def resources(self):
+        """Layer CF resources."""
+        ly = self.cf.get_stack_resources(self.cf_name)
+        if ly:
+            ly = {o.logical_id: o.physical_resource_id for o in ly}
         return ly
 
     @property
