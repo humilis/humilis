@@ -324,7 +324,7 @@ class Layer:
             self.cf.client.create_change_set(
                 StackName=self.cf_name,
                 TemplateBody=cf_template,
-                Capabilities=["CAPABILITY_IAM"],
+                Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
                 NotificationARNs=self.sns_topic_arn,
                 Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()],
                 ChangeSetName=changeset_name,
