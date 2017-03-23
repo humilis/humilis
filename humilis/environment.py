@@ -29,7 +29,8 @@ class Environment():
             self.logger = logger
         self.__yml_path = yml_path
         self.stage = stage and stage.upper()
-        self.basedir, envfile = os.path.split(yml_path)
+        basedir, envfile = os.path.split(yml_path)
+        self.basedir = os.path.abspath(basedir)
         self._j2_env = j2.Environment(
             extensions=["jinja2.ext.with_"],
             loader=j2.FileSystemLoader(self.basedir))

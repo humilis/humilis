@@ -125,7 +125,8 @@ class Layer:
         # some references in the parameter list: thus the if 'value' in v
         params = {k: v['value'] for k, v in self.params.items()
                   if 'value' in v}
-        params['_env'] = {'stage': self.env_stage, 'name': self.env_name}
+        params['_env'] = {'stage': self.env_stage, 'name': self.env_name,
+                          'basedir': self.env_basedir}
         params['_os_env'] = os.environ
         params['_layer'] = {
             'name': self.name,
