@@ -96,6 +96,7 @@ class Environment():
     def outputs(self):
         """Outputs produced by each environment layer."""
         outputs = {}
+        self.cf.flush_cache()
         for layer in self.layers:
             try:
                 ly = layer.outputs
