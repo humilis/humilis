@@ -47,14 +47,15 @@ def _git_head():
             raise
 
 
-def secret(layer, config, service=None, key=None, group=None):
+def secret(layer, config, service=None, key=None, group=None, kms_key_id=None):
     """Retrieves a secret stored in a S3 keyring.
 
     :param service: An alias of group, for backwards compatibility
     :param key: The key used to identify the secret within the server
     :param group: The name of the group of secrets
+    :param kms_key_id: The ID of the KMS Key to encrypt the secret
 
-    :returns: The plaintext secret
+    :returns: The plaintext or encrypted secret
     """
 
     if not group:
@@ -66,7 +67,9 @@ def secret(layer, config, service=None, key=None, group=None):
     else:
         kr = S3Keyring()
 
-    return kr.get_password(group, key)
+    secret = kr.get_password(group, key)
+    if kms_key_id:
+        return boto3.client('kms').encrypt(KeyId=kms_key_id, Plaintext=secret)
 
 
 def file(layer, config, path=None):
@@ -393,13 +396,11 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
     args = call.get('args', [])
     kwargs = call.get('kwargs', {})
     result = method(*args, **kwargs)
-    # If the result is a sequence, we return just the first item
-    if hasattr(result, '__iter__'):
-        result = list(result)[0]
-
+    if isinstance(result, list) and len(result) == 1:
+        result = result[0]
     if output_attribute is not None:
-        return getattr(result, output_attribute)
-    elif output_key is not None:
+        result = getattr(result, output_attribute)
+    if output_key is not None:
         return result.get(output_key)
     else:
         return result
