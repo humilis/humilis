@@ -396,6 +396,10 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
     args = call.get('args', [])
     kwargs = call.get('kwargs', {})
     result = method(*args, **kwargs)
+    if not isinstance(result, str) and not isinstance(result, dict) and \
+        hasattr(result, '__iter__'):
+            # Convert iterables to lists
+            result = list(result)
     if isinstance(result, list) and len(result) == 1:
         result = result[0]
     if output_attribute is not None:
