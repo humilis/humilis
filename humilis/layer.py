@@ -112,6 +112,11 @@ class Layer:
         self.__s3 = None
 
     @property
+    def termination_protection(self):
+        """Is termination protection set for this layer?."""
+        return self.meta['parameters'].get('termination_protection', False)
+
+    @property
     def cf_name(self):
         """The name of the CF stack associated to this layer."""
         return get_cf_name(self.env_name, self.name, stage=self.env_stage)

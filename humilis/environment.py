@@ -228,7 +228,12 @@ class Environment():
     def delete(self):
         """Deletes the complete environment from CF."""
         for layer in reversed(self.layers):
-            layer.delete()
+            if layer.termination_protection:
+                self.logger.warning(
+                    "Layer '%s' has termination protection set: "
+                    "will not be deleted", layer.name)
+            else:
+                layer.delete()
 
     @property
     def in_cf(self):
