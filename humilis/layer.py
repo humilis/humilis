@@ -114,8 +114,8 @@ class Layer:
     @property
     def termination_protection(self):
         """Is termination protection set for this layer?."""
-        return self.meta['parameters'].get('termination_protection', {}).get(
-            'value', False)
+        return self.meta.get('parameters', {}).get(
+            'termination_protection', {}).get('value', False)
 
     @property
     def cf_name(self):
