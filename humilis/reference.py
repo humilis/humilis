@@ -400,8 +400,14 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
         hasattr(result, '__iter__'):
             # Convert iterables to lists
             result = list(result)
-    if isinstance(result, list) and len(result) == 1:
-        result = result[0]
+    if isinstance(result, list):
+        if len(result) == 1:
+            result = result[0]
+        else:
+            raise ReferenceError("boto3/{}/{}".format(service, call),
+                "Must produce exactly one result but {} were produced".format(
+                len(result)))
+
     if output_attribute is not None:
         result = getattr(result, output_attribute)
     if output_key is not None:
