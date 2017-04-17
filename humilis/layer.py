@@ -70,7 +70,6 @@ class Layer:
             loader = DirTreeBackedObject(basedir, self.logger)
 
         self.loader = loader
-        self.children = []
 
         # These param set will be sent to the template compiler and will be
         # populated once the layers this layer depend on have been created.
@@ -82,10 +81,6 @@ class Layer:
                        in itertools.chain(self.loader_params.items(),
                                           user_params.items())}
         self.meta = self.loader.load_section('meta', params=meta_params)
-        for dep in self.meta.get('dependencies', []):
-            dep_cf_name = get_cf_name(self.env_name, dep, stage=self.env_stage)
-            self.depends_on.append(dep_cf_name)
-
         self.sns_topic_arn = environment.sns_topic_arn
         self.tags = {
             'humilis:environment': self.env_name,
@@ -129,14 +124,33 @@ class Layer:
         # Not that some param values may not have been populated when this
         # property is accessed since that may happen during the parsing of
         # some references in the parameter list: thus the if 'value' in v
+
+        # For backwards compatibility, to be deprecated
         params = {k: v['value'] for k, v in self.params.items()
                   if 'value' in v}
+
+        params["__vars"] = dict(params)
+
+        # For backwards compatibility, to be deprecated
         params['_env'] = {'stage': self.env_stage, 'name': self.env_name,
                           'basedir': self.env_basedir}
         params['_os_env'] = os.environ
-        params['_layer'] = {
-            'name': self.name,
-            'description': self.meta.get('description', '')}
+        params['_layer'] = {'name': self.name}
+        params['env'] = os.environ
+
+        # The new format:
+        params['__env'] = os.environ
+        params['__context'] = {
+            'environment': {
+                'name': self.env_name,
+                'basedir': self.env_basedir},
+            'stage': self.env_stage,
+            'layer': {
+                'name': self.name,
+                'basedir': self.basedir}}
+
+        # For backwards compatibility
+        params["context"] = params["__context"]
         return params
 
     @property
@@ -159,11 +173,6 @@ class Layer:
         return self.__s3
 
     @property
-    def children_in_cf(self):
-        """List of (already created) children layers."""
-        return [x for x in self.children if x.in_cf]
-
-    @property
     def ok(self):
         """Layer is fully deployed in CF and ready for use"""
         return self.cf.stack_ok(self.cf_name)
@@ -183,24 +192,6 @@ class Layer:
         if ly:
             ly = {o.logical_id: o.physical_resource_id for o in ly}
         return ly
-
-    @property
-    def dependencies_met(self):
-        """Checks whether all stack dependencies have been deployed."""
-        current_cf_stack_names = {stack.get('StackName') for stack
-                                  in self.cf.stacks}
-        for dep in self.depends_on:
-            if dep not in current_cf_stack_names:
-                return False
-        return True
-
-    def add_child(self, child):
-        """Adds a child layer to this layer."""
-        self.children.append(child)
-        # Don't use a comma as a separator. For whatever reason CF seems to
-        # occasionally break when tag values contain commas.
-        self.tags['humilis:children'] = ':'.join((x.name for x
-                                                  in self.children))
 
     def compile(self):
         """Loads all files associated to a layer."""
@@ -282,23 +273,12 @@ class Layer:
         """Deletes a stack in CF."""
         msg = "Deleting stack {} from CF".format(self.cf_name)
         self.logger.info(msg)
-        if len(self.children_in_cf) > 0:
-            msg = "Layer {} has dependencies ({}): will not be deleted".\
-                format(self.name, [x.name for x in self.children_in_cf])
-            self.logger.info(msg)
-        else:
-            self.cf.delete_stack(self.cf_name)
+        self.cf.delete_stack(self.cf_name)
 
     def create(self, update=False):
         """Deploys a layer as a CF stack."""
         msg = "Starting checks for layer {}".format(self.name)
         self.logger.info(msg)
-
-        if not self.dependencies_met:
-            msg = "Dependencies for layer {layer} are not met, skipping"\
-                .format(layer=self.name)
-            self.logger.critical(msg)
-            return
 
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
@@ -353,45 +333,65 @@ class Layer:
             self.logger.error("Stack template: {}".format(cf_template))
             raise
 
-    def wait_for_status_change(self):
-        """Wait for the status deployment state to change."""
-        status = self.watch_events()
-        if status is None \
+
+    @staticmethod
+    def _is_bad_status(status):
+        """True if a stack status is not healthy."""
+        return status is None \
                 or status not in {"CREATE_COMPLETE", "UPDATE_COMPLETE",
                                   "REVIEW_IN_PROGRESS",
-                                  "UPDATE_ROLLBACK_COMPLETE"}:
-            msg = "Unable to deploy layer '{}': status is {}".format(
-                self.name, status)
-            raise CloudformationError(msg, logger=self.logger)
+                                  "UPDATE_ROLLBACK_COMPLETE"}
+
+    def _print_events(self, already_seen=None):
+        """Prints the events reported by AWS."""
+        if already_seen is None:
+            already_seen = set()
+
+        events = self.cf.get_stack_events(self.cf_name)
+        new_events = [ev for ev in events if ev.id not in already_seen]
+        cm = config.EVENT_STATUS_COLOR_MAP
+        for event in new_events:
+            self.logger.info(
+                "{color}{status}\033[0m {restype} {logid} "
+                "{reason}".format(
+                    color=cm.get(event.resource_status, ''),
+                    status=event.resource_status,
+                    restype=event.resource_type,
+                    logid=event.logical_resource_id,
+                    reason=event.resource_status_reason or "",
+                ))
+            already_seen.add(event.id)
+
+        return already_seen
+
+    def wait_for_status_change(self):
+        """Wait for the status deployment state to change."""
+        status, seen_events = self.watch_events()
+        if self._is_bad_status(status):
+            # One retry, also to flush all events
+            status, seen_events = self.watch_events(already_seen=seen_events)
+            if self._is_bad_status(status):
+                # One retry
+                msg = "Unable to deploy layer '{}': status is {}".format(
+                    self.name, status)
+                raise CloudformationError(msg, logger=self.logger)
+        return status
 
     def watch_events(self,
                      progress_status={'CREATE_IN_PROGRESS',
                                       'UPDATE_IN_PROGRESS',
-                                      'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'}):
+                                      'UPDATE_COMPLETE_CLEANUP_IN_PROGRESS'},
+                     already_seen=None):
         """Watches CF events during stack creation."""
         stack_status = self.cf.get_stack_status(self.cf_name)
-        already_seen = set()
-        cm = config.EVENT_STATUS_COLOR_MAP
+        if already_seen is None:
+            already_seen = set()
         while (stack_status is None) or (stack_status in progress_status):
-            events = self.cf.get_stack_events(self.cf_name)
-            new_events = [ev for ev in events if ev.id not in already_seen]
-            for event in new_events:
-                self.logger.info(
-                    "{time} {color}{status}\033[0m {restype} {logid} {physid} "
-                    "{reason}".format(
-                        time=event.timestamp.isoformat(),
-                        color=cm.get(event.resource_status, ''),
-                        status=event.resource_status,
-                        restype=event.resource_type,
-                        logid=event.logical_resource_id,
-                        physid=event.physical_resource_id,
-                        reason=event.resource_status_reason,
-                    ))
-                already_seen.add(event.id)
-
+            already_seen = self._print_events(already_seen)
             time.sleep(5)
             stack_status = self.cf.get_stack_status(self.cf_name)
-        return stack_status
+
+        return stack_status, already_seen
 
     def wait_changeset_creation(self, changeset_name,
                                 progress_status={"CREATE_PENDING",

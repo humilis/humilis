@@ -381,6 +381,7 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
 
     :returns: The call response, or its corresp. attribute or key.
     """
+    import pdb; pdb.set_trace()
     facade_name = service.title()
     if not hasattr(boto3facade, service):
         ref = "boto3facade.{}.{}.{}: {}".format(service, facade_name,

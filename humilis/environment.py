@@ -186,7 +186,6 @@ class Environment():
 
     def create(self, output_file=None, update=False):
         """Creates or updates an environment."""
-        self.populate_hierarchy()
         for layer in self.layers:
             layer.create(update=update)
         self.logger.info({"outputs": self.outputs})
@@ -204,18 +203,6 @@ class Environment():
         with open(output_file, "w") as f:
             f.write(yaml.dump(self.outputs, indent=4,
                               default_flow_style=False))
-
-    def populate_hierarchy(self):
-        """Adds tags to env layers indicating parent-child dependencies."""
-        for layer in self.layers:
-            if layer.depends_on and len(layer.depends_on) > 0:
-                for parent_name in layer.depends_on:
-                    parent_layer = self.get_layer(parent_name)
-                    if parent_layer is None:
-                        msg = "Layer '{}' parent stack '{}' not found".format(
-                            layer.name, parent_name)
-                        raise MissingParentLayerError(msg)
-                    parent_layer.add_child(layer)
 
     def get_layer(self, layer_name):
         """Gets a layer by name"""

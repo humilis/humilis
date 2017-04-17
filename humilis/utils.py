@@ -143,18 +143,22 @@ class DirTreeBackedObject(TemplateLoader):
 
     def load_file(self, filepath, f, params={}):
         filename, file_ext = os.path.splitext(filepath)
-        if file_ext in {'.yml', '.yaml'}:
-            data = yaml.load(f)
-        elif file_ext == '.json':
-            data = json.load(f)
-        elif file_ext == '.j2':
-            template = self.env.get_template(os.path.relpath(filepath,
-                                                             self.basedir))
-            data = template.render(**params)
-            data = self.load_file(filename, io.StringIO(data))
-        else:
-            self.logger.critical("Error loading %s: unknown file "
-                                 "extension %s" % filename, file_ext)
-            exit(1)
+        try:
+            if file_ext in {'.yml', '.yaml'}:
+                data = yaml.load(f)
+            elif file_ext == '.json':
+                data = json.load(f)
+            elif file_ext == '.j2':
+                template = self.env.get_template(os.path.relpath(filepath,
+                                                                 self.basedir))
+                data = template.render(**params)
+                data = self.load_file(filename, io.StringIO(data))
+            else:
+                self.logger.critical("Error loading %s: unknown file "
+                                     "extension %s" % filename, file_ext)
+                exit(1)
+        except:
+            self.logger.error("Error loading {}".format(filepath))
+            raise
 
         return data
