@@ -1,0 +1,30 @@
+---
+humilis-firehose:
+    description:
+        A dummy environment used for testing the firehose layer.
+
+    layers:
+        # Creates a S3 bucket to test S3 delivery
+        - layer: storage
+
+        - layer: logging
+
+        - layer: delivery
+          log_group:
+              ref:
+                  parser: "output"
+                  parameters: {"layer_name": "logging", "output_name": "LogGroupName"}
+          layer_type: firehose
+          s3_buffer_seconds: 60
+          s3_compression: UNCOMPRESSED
+          s3_bucket_name:
+              ref:
+                  parser: output
+                  parameters:
+                      layer_name: storage
+                      output_name: BucketName
+          streams:
+              - name: DeliveryStream1
+                s3_prefix: stream1/
+              - name: DeliveryStream2
+                s3_prefix: stream2/

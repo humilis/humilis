@@ -101,19 +101,19 @@ Define your infrastructure environment following the examples in the
 
 
 ````
-humilis create example-environment.yml
+humilis create examples/humilis-firehose.yaml
 ````
 
 To update the environment after it has been deployed:
 
 ````
-humilis update example-environment.yml
+humilis update examples/humilis-firehose.yaml
 ````
 
 And to delete it:
 
 ````
-humilis delete example-environment.yml
+humilis delete examples/humilis-firehose.yaml
 ````
 
 
@@ -192,7 +192,7 @@ environment we used above then your directory tree should look like this:
 A layer must contain at least two files: 
 
 * `meta.yaml`: Meta information about the layer such as a description,
-  dependencies with other layers, and layer parameters.
+  and layer parameters.
 * `resources.yaml`: Basically a CF template with the resources that the layer
    contains.
 

@@ -1,8 +1,0 @@
----
-example-environment-3:
-
-    description:
-        Creates a layer that uses a reference to an already deployed environment
-
-    layers:
-        - layer: instance-2

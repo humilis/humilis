@@ -1,7 +1,0 @@
-resources:
-    {% for stream in ['visit', 'search', 'lead', 'booking'] %}
-        {{stream.title()}}Stream:
-            Type: 'AWS::Kinesis::Stream'
-            Properties:
-                ShardCount: {{ shardcount[stream] }}
-    {% endfor %}

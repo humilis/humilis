@@ -1,0 +1,6 @@
+---
+resources:
+    RestApi:
+      Type: "AWS::ApiGateway::RestApi"
+      Properties:
+          Name: "API Gateway Microservice"

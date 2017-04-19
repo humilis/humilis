@@ -1,0 +1,11 @@
+---
+meta:
+    description:
+        Creates a Cloudwatch log group for this environment
+
+    parameters:
+        retention_days:
+            description:
+                The number of retention day for the logs
+            value:
+                7

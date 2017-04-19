@@ -1,0 +1,4 @@
+---
+outputs:
+    ApiId:
+      Value: {"Ref": "RestApi"}

@@ -1,0 +1,8 @@
+---
+meta:
+    description:
+        Creates a S3 bucket to store the events
+    tags:
+        "cost:chapter": "data"
+        "cost:squad": "product"
+        "cost:project": "polku"

@@ -57,7 +57,6 @@ def secret(layer, config, service=None, key=None, group=None, kms_key_id=None):
 
     :returns: The plaintext or encrypted secret
     """
-
     if not group:
         group = service
 
@@ -381,7 +380,6 @@ def boto3(layer, config, service=None, call=None, output_attribute=None,
 
     :returns: The call response, or its corresp. attribute or key.
     """
-    import pdb; pdb.set_trace()
     facade_name = service.title()
     if not hasattr(boto3facade, service):
         ref = "boto3facade.{}.{}.{}: {}".format(service, facade_name,

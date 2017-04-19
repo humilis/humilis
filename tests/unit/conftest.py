@@ -47,19 +47,13 @@ def test_keypair(ec2, randomstr):
 @pytest.yield_fixture(scope="session")
 def environment_definition_path():
     """Path to a sample environment definition yaml file."""
-    yield os.path.join('examples', 'example-environment.yml')
+    yield os.path.join('examples', 'humilis-firehose.yaml')
 
 
 @pytest.yield_fixture(scope="session")
 def environment_definition_j2_path():
     """Path to a sample environment parameters file."""
-    yield os.path.join('examples', 'example-environment.yml.j2')
-
-
-@pytest.yield_fixture(scope="session")
-def environment_params_path():
-    """Path to a sample environment definition yaml.j2 file."""
-    yield os.path.join('examples', 'parameters.yaml')
+    yield os.path.join('examples', 'humilis-microservice.yaml.j2')
 
 
 @pytest.fixture(scope="module")

@@ -1,0 +1,7 @@
+---
+resources:
+    LogGroup:
+      Type: "AWS::Logs::LogGroup"
+      Properties: 
+        LogGroupName: {{_env.name}}-{{_env.stage}}
+        RetentionInDays: {{retention_days}}

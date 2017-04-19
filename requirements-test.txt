@@ -4,3 +4,7 @@ pytest-cov
 
 # Install non-recommended keyring backends
 keyrings.alt
+
+humilis-es
+humilis-firehose
+git+https://github.com/humilis/humilis-microservice.git

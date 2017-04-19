@@ -1,0 +1,32 @@
+---
+humilis-microservice:
+    description:
+        A dummy environment used for testing the microservice plugin.
+
+    layers:
+        - layer: microservice
+          layer_type: microservice
+          lambda_environment:
+            GLOBAL_VAR: GLOBAL_VAL
+          resources:
+              - description: "Returns request payload plus a timestamp"
+                path: echo
+                api_key_required: yes
+                lambda_environment:
+                    RES1: RES1VAL
+                lambda_dependencies:
+                    - user-agents
+                    - mycode/mypkg
+                handler: "mypkg:echo"
+                request_parameters:
+                  "querystring.ip": yes
+
+              - description: "Parses the provided UA string"
+                path: parseua
+                api_key_required: yes
+                lambda_environment:
+                    RES2: RES2VAL
+                lambda_dependencies:
+                    - user-agents
+                    - mycode/mypkg
+                handler: "mypkg:uaparse"
