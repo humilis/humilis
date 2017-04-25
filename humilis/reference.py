@@ -69,6 +69,7 @@ def secret(layer, config, service=None, key=None, group=None, kms_key_id=None):
     secret = kr.get_password(group, key)
     if kms_key_id:
         return boto3.client('kms').encrypt(KeyId=kms_key_id, Plaintext=secret)
+    return secret
 
 
 def file(layer, config, path=None):
