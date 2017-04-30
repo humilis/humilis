@@ -59,7 +59,7 @@ def environment_definition_j2_path():
 @pytest.fixture(scope="module")
 def test_environment(environment_definition_path, test_config):
     """A humilis environment based on the sample environment definition."""
-    return Environment(environment_definition_path)
+    return Environment(environment_definition_path, stage="dummy")
 
 
 @pytest.fixture(scope="module")

@@ -40,11 +40,6 @@ def main(log, profile):
               metavar="YAML_FILE")
 def create(environment, stage, output, pretend, parameters):
     """Creates an environment."""
-    if parameters:
-        with open(parameters, "r") as f:
-            parameters = _ensure_defaults(yaml.load(f.read()))
-        parameters = parameters.get(stage, parameters.get("_default"))
-
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.create(output_file=output, update=False)
@@ -89,11 +84,6 @@ def get_secret(environment, key, stage, pretend):
               metavar="YAML_FILE")
 def update(environment, stage, output, pretend, parameters):
     """Updates (or creates) an environment."""
-    if parameters:
-        with open(parameters, "r") as f:
-            parameters = yaml.load(f.read())
-        parameters = parameters.get(stage, parameters.get("_default"))
-
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.create(output_file=output, update=True)
@@ -108,10 +98,6 @@ def update(environment, stage, output, pretend, parameters):
               metavar="YAML_FILE")
 def delete(environment, stage, pretend, parameters):
     """Deletes an environment that has been deployed to CF."""
-    if parameters:
-        with open(parameters, "r") as f:
-            parameters = yaml.load(f.read())
-
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
         env.delete()
@@ -125,18 +111,6 @@ def delete(environment, stage, pretend, parameters):
 def configure(ask, local):
     """Configure humilis."""
     config.boto_config.configure(ask=ask, local=local)
-
-
-def _ensure_defaults(parameters):
-    """Apply default values to unspecified stage parameters."""
-    if parameters is None:
-        return {}
-    if "_default" in parameters:
-        for stage, stage_params in parameters.items():
-            for pname, pvalue in parameters["_default"].items():
-                stage_params[pname] = stage_params.get(pname, pvalue)
-
-    return parameters
 
 
 if __name__ == '__main__':

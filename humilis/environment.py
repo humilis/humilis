@@ -27,6 +27,10 @@ class Environment():
             self.logger.addHandler(logging.NullHandler())
         else:
             self.logger = logger
+
+        if stage is None:
+            raise ValueError("stage can't be None")
+
         self.__yml_path = yml_path
         self.stage = stage and stage.upper()
         basedir, envfile = os.path.split(yml_path)
@@ -36,15 +40,8 @@ class Environment():
             loader=j2.FileSystemLoader(self.basedir))
         # Add custom functions and filters
         utils.update_jinja2_env(self._j2_env)
-        if parameters is None:
-            parameters = {}
 
-        if "_default" in parameters:
-            def_params = parameters.get("_default", {})
-            del parameters["_default"]
-            parameters.update(def_params)
-
-        parameters.update(os.environ)
+        parameters = self._preprocess_parameters(parameters)
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
                 template = self._j2_env.get_template(envfile)
@@ -91,6 +88,20 @@ class Environment():
             self.__keychain_namespace = self.name
 
         self.__dynamodb = None
+
+    @staticmethod
+    def _preprocess_parameters(parameters):
+        """Apply default values to unspecified stage parameters."""
+        if parameters is None:
+            return {}
+        if isinstance(parameters, str):
+            # A file path
+            with open(parameters, "r") as f:
+                parameters = yaml.load(f.read())
+        if stage in parameters or "_default" in parameters:
+            parameters = parameters.get(stage, {}).update(
+                parameters.get("_default", {}))
+        return parameters
 
     @property
     def outputs(self):
