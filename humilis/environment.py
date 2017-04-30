@@ -85,8 +85,7 @@ class Environment():
                                                    self.stage.lower())
         self.__dynamodb = None
 
-    @staticmethod
-    def _preprocess_parameters(parameters):
+    def _preprocess_parameters(self, parameters):
         """Apply default values to unspecified stage parameters."""
         if parameters is None:
             return {}
