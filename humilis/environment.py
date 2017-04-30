@@ -81,12 +81,8 @@ class Environment():
         self.vault_layer = self.get_layer(vault_layer or 'secrets-vault')
         self.__secrets_table_name = "{}-{}-secrets".format(self.name,
                                                            self.stage)
-        if self.stage:
-            self.__keychain_namespace = "{}:{}".format(self.name,
-                                                       self.stage.lower())
-        else:
-            self.__keychain_namespace = self.name
-
+        self.__keychain_namespace = "{}:{}".format(self.name,
+                                                   self.stage.lower())
         self.__dynamodb = None
 
     @staticmethod
@@ -98,8 +94,8 @@ class Environment():
             # A file path
             with open(parameters, "r") as f:
                 parameters = yaml.load(f.read())
-        if stage in parameters or "_default" in parameters:
-            parameters = parameters.get(stage, {}).update(
+        if self.stage in parameters or "_default" in parameters:
+            parameters = parameters.get(self.stage, {}).update(
                 parameters.get("_default", {}))
         return parameters
 
