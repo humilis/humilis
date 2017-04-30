@@ -94,8 +94,8 @@ class Environment():
             with open(parameters, "r") as f:
                 parameters = yaml.load(f.read())
         if self.stage in parameters or "_default" in parameters:
-            parameters = parameters.get(self.stage, {}).update(
-                parameters.get("_default", {}))
+            parameters = parameters.get(self.stage, {})
+            parameters.update(parameters.get("_default", {}))
         return parameters
 
     @property
