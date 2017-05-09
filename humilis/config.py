@@ -80,7 +80,7 @@ class Config():
         # can easily customize:
         #
         # s3prefix: A base prefix for any file that humilis uploads to S3
-        keys = boto3facade.config.DEFAULT_KEYS + ['s3prefix']
+        keys = boto3facade.config.DEFAULT_KEYS + ['s3prefix', 'aws_region']
         required_keys = boto3facade.config.DEFAULT_REQUIRED_KEYS
 
         # Set up logging

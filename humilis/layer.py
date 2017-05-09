@@ -11,6 +11,7 @@ from humilis.exceptions import (ReferenceError, CloudformationError,
                                 MissingPluginError)
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
+from boto3facade.cloudformation import Cloudformation
 from boto3facade.exceptions import NoUpdatesError
 from botocore.exceptions import ClientError
 import json
@@ -34,9 +35,14 @@ def _is_reference(value):
 class Layer:
     """A layer of infrastructure that translates into a single CF stack"""
     def __init__(self, environment, name, layer_type=None, logger=None,
-                 loader=None, **user_params):
+                 loader=None, humilis_profile=None, **user_params):
         self.__environment_repr = repr(environment)
-        self.cf = environment.cf
+        self.environment = environment
+        if not humilis_profile:
+            self.cf = self.environment.cf
+        else:
+            config.boto_config.activate_profile(humilis_profile)
+            self.cf = Cloudformation(config.boto_config)
         if logger is None:
             self.logger = logging.getLogger(__name__)
             # To prevent warnings
@@ -327,7 +333,7 @@ class Layer:
             self.cf.client.execute_change_set(ChangeSetName=changeset_name,
                                               StackName=self.cf_name)
             self.wait_for_status_change()
-        except ClientError:
+        except:
             self.logger.error(
                 "Error deploying stack '{}'".format(self.cf_name))
             self.logger.error("Stack template: {}".format(cf_template))
