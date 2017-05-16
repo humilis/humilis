@@ -301,6 +301,12 @@ class Layer:
             except NoUpdatesError:
                 msg = "Nothing to update on stack '{}'".format(self.cf_name)
                 self.logger.warning(msg)
+            except Exception as err:
+                import pdb; pdb.set_trace()
+                self.logger.error(
+                    "Error deploying stack '{}'".format(self.cf_name))
+                self.logger.error("Stack template: {}".format(cf_template))
+                raise
         else:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
             self.logger.info(msg)
@@ -313,32 +319,25 @@ class Layer:
         if update:
             changeset_type = "UPDATE"
         changeset_name = self.cf_name + str(uuid4())
-        try:
-            self.cf.client.create_change_set(
-                StackName=self.cf_name,
-                TemplateBody=cf_template,
-                Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
-                NotificationARNs=self.sns_topic_arn,
-                Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()],
+        self.cf.client.create_change_set(
+            StackName=self.cf_name,
+            TemplateBody=cf_template,
+            Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
+            NotificationARNs=self.sns_topic_arn,
+            Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()],
+            ChangeSetName=changeset_name,
+            ChangeSetType=changeset_type)
+        self.wait_for_status_change()
+        self.wait_changeset_creation(changeset_name)
+        if update:
+            changeset = self.cf.client.describe_change_set(
                 ChangeSetName=changeset_name,
-                ChangeSetType=changeset_type)
-            self.wait_for_status_change()
-            self.wait_changeset_creation(changeset_name)
-            if update:
-                changeset = self.cf.client.describe_change_set(
-                    ChangeSetName=changeset_name,
-                    StackName=self.cf_name)
-                if not changeset["Changes"]:
-                    raise NoUpdatesError("Nothing to update")
-            self.cf.client.execute_change_set(ChangeSetName=changeset_name,
-                                              StackName=self.cf_name)
-            self.wait_for_status_change()
-        except:
-            self.logger.error(
-                "Error deploying stack '{}'".format(self.cf_name))
-            self.logger.error("Stack template: {}".format(cf_template))
-            raise
-
+                StackName=self.cf_name)
+            if not changeset["Changes"]:
+                raise NoUpdatesError("Nothing to update")
+        self.cf.client.execute_change_set(ChangeSetName=changeset_name,
+                                          StackName=self.cf_name)
+        self.wait_for_status_change()
 
     @staticmethod
     def _is_bad_status(status):
