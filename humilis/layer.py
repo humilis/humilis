@@ -302,7 +302,6 @@ class Layer:
                 msg = "Nothing to update on stack '{}'".format(self.cf_name)
                 self.logger.warning(msg)
             except Exception as err:
-                import pdb; pdb.set_trace()
                 self.logger.error(
                     "Error deploying stack '{}'".format(self.cf_name))
                 self.logger.error("Stack template: {}".format(cf_template))
