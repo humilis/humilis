@@ -177,7 +177,10 @@ def _deploy_package(path, layer, logger, dependencies, params):
 
         # Adding the HEAD hash is needed for CF to detect that the contents of
         # of the .zip file have changed when requesting a stack update.
-        gc = _git_head()
+        try:
+            gc = _git_head()
+        except:
+            gc = ''
         suffix = ('-' + gc + str(uuid.uuid4()), str(uuid.uuid4()))[gc is None]
         tmpdir = tempfile.mkdtemp()
         basename = os.path.basename(path)
