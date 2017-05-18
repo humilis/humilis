@@ -45,10 +45,9 @@ class Environment():
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
                 template = self._j2_env.get_template(envfile)
-                __context = {'stage': stage}
                 meta = yaml.load(template.render(
                     stage=stage,    # Backwards compatibility
-                    __context=ctx,
+                    __context={'stage': stage},
                     __env=os.environ,
                     **parameters))
             else:
