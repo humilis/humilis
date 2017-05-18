@@ -45,7 +45,12 @@ class Environment():
         with open(yml_path, 'r') as f:
             if os.path.splitext(yml_path)[1] == ".j2":
                 template = self._j2_env.get_template(envfile)
-                meta = yaml.load(template.render(stage=stage, **parameters))
+                __context = {'stage': stage}
+                meta = yaml.load(template.render(
+                    stage=stage,    # Backwards compatibility
+                    __context=ctx,
+                    __env=os.environ,
+                    **parameters))
             else:
                 meta = yaml.load(f)
 
@@ -91,8 +96,15 @@ class Environment():
             return {}
         if isinstance(parameters, str):
             # A file path
-            with open(parameters, "r") as f:
-                parameters = yaml.load(f.read())
+            if os.path.splitext(parameters)[1] == ".j2":
+                _, pfile = os.path.split(parameters)
+                template = self._j2_env.get_template(pfile)
+                parameters = yaml.load(template.render(
+                    __context={'stage': stage},
+                    __env=os.environ))
+            else:
+                with open(parameters, "r") as f:
+                    parameters = yaml.load(f.read())
         if self.stage in parameters or "_default" in parameters:
             stage_params = parameters.get(self.stage, {})
             stage_params.update(parameters.get("_default", {}))
