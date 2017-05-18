@@ -4,8 +4,6 @@ import contextlib
 import os
 import importlib
 import pip
-import subprocess
-from subprocess import CalledProcessError
 import shutil
 import tempfile
 import uuid
@@ -35,16 +33,6 @@ def _get_s3path(layer, config, full_path):
         file_name=os.path.basename(full_path))
     s3bucket = config.profile.get('bucket')
     return (s3bucket, s3key)
-
-
-def _git_head():
-    """Adds the git HEAD hash to a filename."""
-    try:
-        c = subprocess.check_output(['git', 'rev-parse', 'HEAD']).decode()
-        return c.rstrip()
-    except CalledProcessError as err:
-        if err.find('Not a git repository') == -1:
-            raise
 
 
 def secret(layer, config, service=None, key=None, group=None, kms_key_id=None):
@@ -175,10 +163,7 @@ def _deploy_package(path, layer, logger, dependencies, params):
         if dependencies:
             _install_dependencies(layer, tmppath, dependencies)
 
-        # Adding the HEAD hash is needed for CF to detect that the contents of
-        # of the .zip file have changed when requesting a stack update.
-        gc = _git_head()
-        suffix = ('-' + gc + str(uuid.uuid4()), str(uuid.uuid4()))[gc is None]
+        suffix = str(uuid.uuid4())
         tmpdir = tempfile.mkdtemp()
         basename = os.path.basename(path)
         zipfile = os.path.join(tmpdir, "{}{}{}".format(basename, suffix,
