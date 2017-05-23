@@ -328,8 +328,10 @@ def output(layer, config, layer_name=None, output_name=None,
     :param layer_name: The logical name of the layer that produced the output.
     :param output_name: The logical name of the output parameter.
     """
-    if not environment_name or not stage:
+    if not environment_name:
         environment_name = layer.env_name
+
+    if not stage:
         stage = layer.env_stage
 
     stack_name = utils.get_cf_name(environment_name, layer_name, stage=stage)

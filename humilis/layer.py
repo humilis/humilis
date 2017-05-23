@@ -292,28 +292,33 @@ class Layer:
 
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
-        try:
-            if not self.in_cf:
-                self.logger.info("Creating layer '{}' (CF stack '{}')".format(
-                    self.name, self.cf_name))
+        if not self.in_cf:
+            self.logger.info("Creating layer '{}' (CF stack '{}')".format(
+                self.name, self.cf_name))
 
-                cf_template = json.dumps(self.compile(), indent=4)
+            cf_template = json.dumps(self.compile(), indent=4)
+            try:
                 self.create_with_changeset(cf_template)
-            elif update:
-                cf_template = json.dumps(self.compile(), indent=4)
-                try:
-                    self.create_with_changeset(cf_template, update)
-                except NoUpdatesError:
-                    msg = "Nothing to update on stack '{}'".format(self.cf_name)
-                    self.logger.warning(msg)
-            else:
-                msg = "Layer '{}' already in CF: not creating".format(self.name)
-                self.logger.info(msg)
-        except Exception as err:
-            self.logger.error(
-                "Error deploying stack '{}'".format(self.cf_name))
-            self.logger.error("Stack template: {}".format(cf_template))
-            raise
+            except Exception:
+                self.logger.error(
+                    "Error deploying stack '{}'".format(self.cf_name))
+                self.logger.error("Stack template: {}".format(cf_template))
+                raise
+        elif update:
+            cf_template = json.dumps(self.compile(), indent=4)
+            try:
+                self.create_with_changeset(cf_template, update)
+            except NoUpdatesError:
+                msg = "Nothing to update on stack '{}'".format(self.cf_name)
+                self.logger.warning(msg)
+            except Exception:
+                self.logger.error(
+                    "Error deploying stack '{}'".format(self.cf_name))
+                self.logger.error("Stack template: {}".format(cf_template))
+                raise
+        else:
+            msg = "Layer '{}' already in CF: not creating".format(self.name)
+            self.logger.info(msg)
 
         return self.outputs
 
