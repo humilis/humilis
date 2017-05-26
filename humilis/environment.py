@@ -99,7 +99,7 @@ class Environment():
                 _, pfile = os.path.split(parameters)
                 template = self._j2_env.get_template(pfile)
                 parameters = yaml.load(template.render(
-                    __context={'stage': stage},
+                    __context={'stage': self.stage},
                     __env=os.environ))
             else:
                 with open(parameters, "r") as f:
