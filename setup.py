@@ -30,6 +30,7 @@ setup(
     packages=find_packages(),
     install_requires=[
         "PyYAML",
+        "six",
         "Click",
         "boto3",
         "s3keyring>=0.2.3",
@@ -38,12 +39,6 @@ setup(
     classifiers=[
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3"],
-    # Allow tests to be run with `python setup.py test'.
-    tests_require=[
-        "pytest>=2.5.1",
-        "mock>=1.0.1",
-        "flake8>=2.1.0"
-    ],
     zip_safe=False,
     entry_points={
         "console_scripts": [

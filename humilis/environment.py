@@ -9,6 +9,7 @@ from boto3facade.dynamodb import Dynamodb
 from boto3facade.kms import Kms
 import jinja2 as j2
 import yaml
+import six
 
 from humilis.config import config
 from humilis.exceptions import (FileFormatError, RequiresVaultError,
@@ -93,7 +94,7 @@ class Environment():
         """Apply default values to unspecified stage parameters."""
         if parameters is None:
             return {}
-        if isinstance(parameters, str):
+        if isinstance(parameters, six.string_types):
             # A file path
             if os.path.splitext(parameters)[1] == ".j2":
                 _, pfile = os.path.split(parameters)
