@@ -6,6 +6,7 @@ import os.path
 import re
 import logging
 import time
+import uuid
 from humilis.config import config
 from humilis.utils import DirTreeBackedObject, get_cf_name
 from humilis.exceptions import (ReferenceError, CloudformationError,
