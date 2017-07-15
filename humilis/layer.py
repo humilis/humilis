@@ -5,10 +5,12 @@ import os
 import os.path
 import re
 import logging
+import time
 from humilis.config import config
 from humilis.utils import DirTreeBackedObject, get_cf_name
 from humilis.exceptions import (ReferenceError, CloudformationError,
                                 MissingPluginError)
+import boto3
 from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
 from boto3facade.cloudformation import Cloudformation
