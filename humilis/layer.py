@@ -56,6 +56,10 @@ class Layer:
         self.depends_on = []
         self.section = {}
         self.type = layer_type
+        self.s3_prefix = "{base}{env}/{layer}/".format(
+            base=config.boto_config.profile.get("s3prefix"),
+            env=environment.name,
+            layer=name)
 
         if layer_type is not None:
             basedir = config.layers.get(layer_type)
@@ -322,15 +326,25 @@ class Layer:
 
         return self.outputs
 
+    def _upload_cf_template(self, cf_template):
+        """Upload CF template to S3."""
+        bucket = config.boto_config.profile.get('bucket')
+        s3 = boto3.resource('s3')
+        key = "{}{}-{}.json".format(
+            self.s3_prefix, round(time.time()), str(uuid.uuid4()))
+        s3.Bucket(bucket).put_object(Key=key, Body=cf_template.encode())
+        return "s3://{}/{}".format(bucket, key)
+
     def create_with_changeset(self, cf_template, update=False):
         """Use a changeset to create a stack."""
         changeset_type = "CREATE"
         if update:
             changeset_type = "UPDATE"
         changeset_name = self.cf_name + str(uuid4())
+        template_url = self._upload_cf_template(cf_template)
         self.cf.client.create_change_set(
             StackName=self.cf_name,
-            TemplateBody=cf_template,
+            TemplateURL=template_url,
             Capabilities=["CAPABILITY_IAM", "CAPABILITY_NAMED_IAM"],
             NotificationARNs=self.sns_topic_arn,
             Tags=[{"Key": k, "Value": v} for k, v in self.tags.items()],
