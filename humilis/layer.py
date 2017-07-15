@@ -304,16 +304,17 @@ class Layer:
             self.logger.info("Creating layer '{}' (CF stack '{}')".format(
                 self.name, self.cf_name))
 
-            cf_template = json.dumps(self.compile(), indent=4)
+            cf_template = self.compile()
             try:
                 self.create_with_changeset(cf_template)
             except Exception:
                 self.logger.error(
                     "Error deploying stack '{}'".format(self.cf_name))
-                self.logger.error("Stack template: {}".format(cf_template))
+                self.logger.error("Stack template: {}".format(
+                    json.dumps(cf_template, indent=4)))
                 raise
         elif update:
-            cf_template = json.dumps(self.compile(), indent=4)
+            cf_template = self.compile()
             try:
                 self.create_with_changeset(cf_template, update)
             except NoUpdatesError:
@@ -322,7 +323,8 @@ class Layer:
             except Exception:
                 self.logger.error(
                     "Error deploying stack '{}'".format(self.cf_name))
-                self.logger.error("Stack template: {}".format(cf_template))
+                self.logger.error("Stack template: {}".format(
+                    json.dumps(cf_template, indent=4)))
                 raise
         else:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
@@ -336,7 +338,8 @@ class Layer:
         s3 = boto3.resource('s3')
         key = "{}{}-{}.json".format(
             self.s3_prefix, round(time.time()), str(uuid.uuid4()))
-        s3.Bucket(bucket).put_object(Key=key, Body=cf_template.encode())
+        cf_template = json.dumps(cf_template).encode()
+        s3.Bucket(bucket).put_object(Key=key, Body=cf_template)
         return "https://s3-{}.amazonaws.com/{}/{}".format(
             config.boto_config.profile['aws_region'], bucket, key)
 
