@@ -59,9 +59,10 @@ class Layer:
         self.depends_on = []
         self.section = {}
         self.type = layer_type
-        self.s3_prefix = "{base}{env}/{layer}/".format(
+        self.s3_prefix = "{base}{env}/{stage}/{layer}/".format(
             base=config.boto_config.profile.get("s3prefix"),
             env=environment.name,
+            stage=environment.stage,
             layer=name)
 
         if layer_type is not None:
@@ -336,7 +337,8 @@ class Layer:
         key = "{}{}-{}.json".format(
             self.s3_prefix, round(time.time()), str(uuid.uuid4()))
         s3.Bucket(bucket).put_object(Key=key, Body=cf_template.encode())
-        return "s3://{}/{}".format(bucket, key)
+        return "https://s3-{}.amazonaws.com/{}/{}".format(
+            config.boto_config.profile['aws_region'], bucket, key)
 
     def create_with_changeset(self, cf_template, update=False):
         """Use a changeset to create a stack."""
