@@ -335,11 +335,10 @@ class Layer:
     def _upload_cf_template(self, cf_template):
         """Upload CF template to S3."""
         bucket = config.boto_config.profile.get('bucket')
-        s3 = boto3.resource('s3')
         key = "{}{}-{}.json".format(
             self.s3_prefix, round(time.time()), str(uuid.uuid4()))
         cf_template = json.dumps(cf_template).encode()
-        s3.Bucket(bucket).put_object(Key=key, Body=cf_template)
+        S3().resource.Bucket(bucket).put_object(Key=key, Body=cf_template)
         return "https://s3-{}.amazonaws.com/{}/{}".format(
             config.boto_config.profile['aws_region'], bucket, key)
 
