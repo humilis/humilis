@@ -63,7 +63,7 @@ class Layer:
             base=config.boto_config.profile.get("s3prefix"),
             env=self.environment.name,
             stage=self.environment.stage,
-            layer=name)
+            layer=__name)
 
         if layer_type is not None:
             basedir = config.layers.get(layer_type)
