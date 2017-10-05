@@ -37,10 +37,10 @@ def _is_reference(value):
 
 class Layer:
     """A layer of infrastructure that translates into a single CF stack"""
-    def __init__(self, environment, name, layer_type=None, logger=None,
+    def __init__(self, __env, __name, layer_type=None, logger=None,
                  loader=None, humilis_profile=None, **user_params):
-        self.__environment_repr = repr(environment)
-        self.environment = environment
+        self.__environment_repr = repr(__env)
+        self.environment = __env
         if not humilis_profile:
             self.cf = self.environment.cf
         else:
@@ -52,17 +52,17 @@ class Layer:
             self.logger.addHandler(logging.NullHandler())
         else:
             self.logger = logger
-        self.name = name
-        self.env_name = environment.name
-        self.env_stage = environment.stage
-        self.env_basedir = environment.basedir
+        self.name = __name
+        self.env_name = self.environment.name
+        self.env_stage = self.environment.stage
+        self.env_basedir = self.environment.basedir
         self.depends_on = []
         self.section = {}
         self.type = layer_type
         self.s3_prefix = "{base}{env}/{stage}/{layer}/".format(
             base=config.boto_config.profile.get("s3prefix"),
-            env=environment.name,
-            stage=environment.stage,
+            env=self.environment.name,
+            stage=self.environment.stage,
             layer=name)
 
         if layer_type is not None:
@@ -95,13 +95,13 @@ class Layer:
                        in itertools.chain(self.loader_params.items(),
                                           user_params.items())}
         self.meta = self.loader.load_section('meta', params=meta_params)
-        self.sns_topic_arn = environment.sns_topic_arn
+        self.sns_topic_arn = self.environment.sns_topic_arn
         self.tags = {
             'humilis:environment': self.env_name,
             'humilis:layer': self.name,
             'humilis:stage': self.env_stage,
             'humilis:created': str(datetime.datetime.now())}
-        for tagname, tagvalue in environment.tags.items():
+        for tagname, tagvalue in self.environment.tags.items():
             self.tags[tagname] = tagvalue
 
         for tagname, tagvalue in self.meta.get('tags', {}).items():
