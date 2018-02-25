@@ -25,6 +25,7 @@ clean:
 	rm -rf .env .tox
 	rm -rf tests/__pycache__ tests/unit/__pycache__ tests/integration/__pycache__
 	rm -rf humilis/__pycache__
+	rm -rf .pytest_cache
 
 
 pypi:

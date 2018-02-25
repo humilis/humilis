@@ -60,3 +60,5 @@ target/
 .env
 
 .python-version
+
+.pytest_cache
