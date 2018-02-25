@@ -48,7 +48,11 @@ class Environment():
                 template = self._j2_env.get_template(envfile)
                 meta = yaml.load(template.render(
                     stage=stage,    # Backwards compatibility
-                    __context={'stage': stage},
+                    __context={
+                        'stage': stage,
+                        'aws': {
+                            'account_id': boto3.client('sts').get_caller_identity().get('Account')}
+                        }
                     __env=os.environ,
                     **parameters))
             else:
