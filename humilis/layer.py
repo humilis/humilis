@@ -157,11 +157,17 @@ class Layer:
         params['__context'] = {
             'environment': {
                 'name': self.env_name,
-                'basedir': self.env_basedir},
+                'basedir': self.env_basedir
+            },
             'stage': self.env_stage,
             'layer': {
                 'name': self.name,
-                'basedir': self.basedir}}
+                'basedir': self.basedir
+            },
+            'aws': {
+                'account_id': boto3.client('sts').get_caller_identity().get('Account')
+            }
+        }
 
         # For backwards compatibility
         params["context"] = params["__context"]
