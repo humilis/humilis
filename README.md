@@ -525,7 +525,7 @@ need to be specified in your `setup.py`.
 
 ### `secret` references
 
-`secret` references retrieve a secret using Python's [keyring][keyrig] module.
+`secret` references retrieve a secret using Python's [keyring][keyring] module.
 
 [keyring]: https://pypi.python.org/pypi/keyring
 
@@ -554,23 +554,3 @@ Humilis defines the following [custom Jinja2 filters][jinja2filters]:
 
 * `uuid`: A random UUID. Example: `{{''|uuid}}`.
 * `password(length=8)`: A random password. Example: `{{10|password}}`.
-
-
-
-## Secrets vault
-
-If your environment includes a [secrets vault layer][secrets-vault] you can use
-humilis to easily store secrets in the vault:
-
-[secrets-vault]: https://github.com/humilis/humilis-secrets-vault
-
-```
-humilis set-secret --stage [STAGE] [ENVIRONMENT_FILE] [SECRET_KEY] [SECRET_VAL]
-```
-
-You can test that the secret was properly stored using the `get-secret`
-command:
-
-```
-humilis set-secret --stage [STAGE] [ENVIRONMENT_FILE] [SECRET_KEY]
-```
