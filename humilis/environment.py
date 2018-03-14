@@ -231,7 +231,7 @@ class Environment():
                 f.write(yaml.dump(self.outputs, indent=4,
                                   default_flow_style=False))
             else:
-                f.write(json.dump(self.outputs, indent=4))
+                f.write(json.dumps(self.outputs, indent=4))
 
     def get_layer(self, layer_name):
         """Gets a layer by name"""
