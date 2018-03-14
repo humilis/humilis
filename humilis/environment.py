@@ -8,6 +8,7 @@ from boto3facade.cloudformation import Cloudformation
 from boto3facade.dynamodb import Dynamodb
 from boto3facade.kms import Kms
 import jinja2 as j2
+import json
 import yaml
 import six
 
