@@ -217,16 +217,20 @@ class Environment():
             self.write_outputs(output_file)
 
     def write_outputs(self, output_file=None):
-        """Writes layer outputs to a YAML file."""
+        """Writes layer outputs to a YAML or JSON file."""
         if output_file is None:
             output_file = "{environment}-{stage}.outputs.yaml"
 
         output_file = output_file.format(environment=self.name,
                                          stage=self.stage)
 
+        _, ext = os.path.splitext(output_file)
         with open(output_file, "w") as f:
-            f.write(yaml.dump(self.outputs, indent=4,
-                              default_flow_style=False))
+            if ext.lower() == "yaml":
+                f.write(yaml.dump(self.outputs, indent=4,
+                                  default_flow_style=False))
+            else:
+                f.write(json.dump(self.outputs, indent=4))
 
     def get_layer(self, layer_name):
         """Gets a layer by name"""
