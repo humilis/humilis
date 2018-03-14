@@ -227,7 +227,7 @@ class Environment():
 
         _, ext = os.path.splitext(output_file)
         with open(output_file, "w") as f:
-            if ext.lower() == "yaml":
+            if ext.lower() == ".yaml":
                 f.write(yaml.dump(self.outputs, indent=4,
                                   default_flow_style=False))
             else:
