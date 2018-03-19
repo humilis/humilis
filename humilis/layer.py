@@ -18,6 +18,7 @@ from boto3facade.cloudformation import Cloudformation
 from boto3facade.exceptions import NoUpdatesError
 from botocore.exceptions import ClientError
 import json
+import yaml
 import time
 import datetime
 from uuid import uuid4
@@ -299,10 +300,11 @@ class Layer:
         self.logger.info(msg)
         self.cf.delete_stack(self.cf_name)
 
-    def create(self, update=False):
+    def create(self, update=False, debug=False):
         """Deploys a layer as a CF stack."""
         msg = "Starting checks for layer {}".format(self.name)
         self.logger.info(msg)
+        cf_template = None
 
         # CAPABILITY_IAM is needed only for layers that contain certain
         # resources, but we add it  always for simplicity.
@@ -335,6 +337,13 @@ class Layer:
         else:
             msg = "Layer '{}' already in CF: not creating".format(self.name)
             self.logger.info(msg)
+
+        if debug and cf_template:
+            directory = os.path.join(self.env_basedir, "debug_output")
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            with open(os.path.join(directory, self.name + ".yaml"), "w") as f:
+                yaml.dump(cf_template, f, default_flow_style=False)
 
         return self.outputs
 
