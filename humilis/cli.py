@@ -38,11 +38,12 @@ def main(log, profile):
 @click.option("--pretend/--no-pretend", default=False)
 @click.option("--parameters", help="Deployment parameters", default=None,
               metavar="YAML_FILE")
-def create(environment, stage, output, pretend, parameters):
+@click.option("--debug/--no-debug", help="Enable debug mode", default=False)
+def create(environment, stage, output, pretend, parameters, debug):
     """Creates an environment."""
     env = Environment(environment, stage=stage, parameters=parameters)
     if not pretend:
-        env.create(output_file=output, update=False)
+        env.create(output_file=output, update=False, debug=debug)
 
 
 @main.command(name="set-secret")

@@ -209,10 +209,10 @@ class Environment():
 
             return resp
 
-    def create(self, output_file=None, update=False):
+    def create(self, output_file=None, update=False, debug=False):
         """Creates or updates an environment."""
         for layer in self.layers:
-            layer.create(update=update)
+            layer.create(update=update, debug=debug)
         self.logger.info({"outputs": self.outputs})
         if output_file is not None:
             self.write_outputs(output_file)
