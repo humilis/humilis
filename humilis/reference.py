@@ -3,8 +3,9 @@
 import contextlib
 import os
 import importlib
-import pip
 import shutil
+import subprocess
+import sys
 import tempfile
 import uuid
 from zipfile import ZipFile
@@ -118,28 +119,33 @@ def _install_dependencies(layer, path, dependencies):
                 shutil.copyfile(deppath, targetpath)
             elif ext == ".txt":
                 # A requirements file
-                pip.main(['install', '-r', deppath, '-t', path])
+                subprocess.check_call([sys.executable, '-m', 'pip',
+                                       'install', '-r', deppath, '-t', path])
             else:
                 raise InvalidLambdaDependencyError(dep)
         elif os.path.isdir(deppath):
             if os.path.isfile(os.path.join(deppath, "setup.py")):
                 # A local pip installable
-                pip.main(['install', deppath, '-t', path])
+                subprocess.check_call([sys.executable, '-m', 'pip',
+                                       'install', deppath, '-t', path])
             else:
                 # A self-contained Python package
                 shutil.copytree(deppath, targetpath)
         else:
             if dep.find("git+") >= 0:
                 # A git repo
-                pip.main(['install', '-e', dep, '-t', path])
+                subprocess.check_call([sys.executable, '-m', 'pip',
+                                       'install', '-e', dep, '-t', path])
             elif dep.find(":") < 0:
                 # A Pypi package
-                pip.main(['install', dep, '-t', path, '--upgrade'])
+                subprocess.check_call([sys.executable, '-m', 'pip',
+                                       'install', dep, '-t', path, '--upgrade'])
             else:
                 # A private index package
                 index = ":".join(dep.split(":")[:-1])
-                pip.main(['install', '-i', index, dep, '-t', path,
-                          '--upgrade'])
+                subprocess.check_call([
+                    sys.executable, '-m', 'pip',
+                    'install', '-i', index, dep, '-t', path, '--upgrade'])
 
 
 @contextlib.contextmanager
@@ -155,10 +161,13 @@ def _deploy_package(path, layer, logger, dependencies, params):
         setup_file = os.path.join(tmppath, 'setup.py')
         if os.path.isfile(setup_file):
             # Install all depedendencies in the same dir
-            pip.main(['install', tmppath, '-t', tmppath])
+            subprocess.check_call([sys.executable, '-m', 'pip',
+                                   'install', tmppath, '-t', tmppath])
         requirements_file = os.path.join(tmppath, 'requirements.txt')
         if os.path.isfile(requirements_file):
-            pip.main(['install', '-r', requirements_file, '-t', tmppath])
+            subprocess.check_call([
+                sys.executable, '-m', 'pip',
+                'install', '-r', requirements_file, '-t', tmppath])
 
         if dependencies:
             _install_dependencies(layer, tmppath, dependencies)

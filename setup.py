@@ -35,11 +35,7 @@ setup(
         "boto3",
         "s3keyring>=0.2.3",
         "boto3facade>=0.5.9",
-        "jinja2",
-        # The latest pip version breaks humilis as the API pip.main was removed
-        # Before updating to latest pip version (10.x.x) check this:
-        # https://pip.pypa.io/en/latest/user_guide/#using-pip-from-your-program
-        "pip==9.0.3"],
+        "jinja2"],
     classifiers=[
         "Programming Language :: Python :: 2",
         "Programming Language :: Python :: 3"],
