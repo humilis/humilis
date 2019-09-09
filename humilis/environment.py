@@ -55,9 +55,9 @@ class Environment():
                             'account_id': boto3.client('sts').get_caller_identity().get('Account')}
                         },
                     __env=os.environ,
-                    **parameters))
+                    **parameters), Loader=yaml.FullLoader)
             else:
-                meta = yaml.load(f)
+                meta = yaml.load(f, Loader=yaml.FullLoader)
 
         self.name = list(meta.keys())[0]
         self.meta = meta.get(self.name)
@@ -106,10 +106,10 @@ class Environment():
                 template = self._j2_env.get_template(pfile)
                 parameters = yaml.load(template.render(
                     __context={'stage': self.stage},
-                    __env=os.environ))
+                    __env=os.environ), Loader=yaml.FullLoader)
             else:
                 with open(parameters, "r") as f:
-                    parameters = yaml.load(f.read())
+                    parameters = yaml.load(f.read(), Loader=yaml.FullLoader)
         if self.stage in parameters or "_default" in parameters:
             stage_params = parameters.get("_default", {})
             stage_params.update(parameters.get(self.stage, {}))

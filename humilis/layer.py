@@ -16,10 +16,8 @@ from boto3facade.s3 import S3
 from boto3facade.ec2 import Ec2
 from boto3facade.cloudformation import Cloudformation
 from boto3facade.exceptions import NoUpdatesError
-from botocore.exceptions import ClientError
 import json
 import yaml
-import time
 import datetime
 from uuid import uuid4
 
