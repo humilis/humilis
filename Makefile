@@ -1,6 +1,7 @@
 PIP := .env/bin/pip
 TOX := .env/bin/tox
 PYTHON := .env/bin/python
+TWINE := .env/bin/twine
 
 # create Python virtualenv
 .env:
@@ -28,5 +29,6 @@ clean:
 	rm -rf .pytest_cache
 
 
-pypi:
-	$(PYTHON) setup.py sdist upload
+pypi: develop
+	$(PYTHON) setup.py sdist
+	$(TWINE) upload dist/*

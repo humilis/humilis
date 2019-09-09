@@ -2,5 +2,6 @@
 pypandoc
 ipython
 pdbpp
+twine
 
 -r requirements-test.txt
