@@ -145,7 +145,7 @@ class DirTreeBackedObject(TemplateLoader):
         filename, file_ext = os.path.splitext(filepath)
         try:
             if file_ext in {'.yml', '.yaml'}:
-                data = yaml.load(f)
+                data = yaml.load(f, Loader=yaml.FullLoader)
             elif file_ext == '.json':
                 data = json.load(f)
             elif file_ext == '.j2':
