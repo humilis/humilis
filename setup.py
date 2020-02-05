@@ -32,8 +32,6 @@ setup(
         "PyYAML<=5.2",
         "six",
         "Click",
-        "awscli==1.16.258",
-        "boto3==1.9.244",
         "s3keyring>=0.2.3",
         "boto3facade>=0.5.9",
         "jinja2"],
