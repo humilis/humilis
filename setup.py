@@ -29,7 +29,7 @@ setup(
     long_description=long_description,
     packages=find_packages(),
     install_requires=[
-        "PyYAML",
+        "PyYAML<=5.2",
         "six",
         "Click",
         "awscli==1.16.258",
