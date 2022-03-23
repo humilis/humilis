@@ -156,7 +156,8 @@ class Layer:
         params['__context'] = {
             'environment': {
                 'name': self.env_name,
-                'basedir': self.env_basedir
+                'basedir': self.env_basedir,
+                'tags': self.environment.tags
             },
             'stage': self.env_stage,
             'layer': {
