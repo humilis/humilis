@@ -227,6 +227,7 @@ class Layer:
         default_description = "{}-{} ({})".format(
             self.environment.name, self.name, self.environment.stage)
         description = self.params.get('description', {}).get('value') or \
+                self.environment.meta['description'] or \
                 self.meta.get('description') or \
                 default_description
         cf_template = {
