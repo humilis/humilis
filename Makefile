@@ -30,5 +30,6 @@ clean:
 
 
 pypi: develop
+	rm -rf dist
 	$(PYTHON) setup.py sdist
 	$(TWINE) upload dist/*
