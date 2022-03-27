@@ -38,7 +38,6 @@ class Environment():
         basedir, envfile = os.path.split(yml_path)
         self.basedir = os.path.abspath(basedir)
         self._j2_env = j2.Environment(
-            extensions=["jinja2.ext.with_"],
             loader=j2.FileSystemLoader(self.basedir))
         # Add custom functions and filters
         utils.update_jinja2_env(self._j2_env)

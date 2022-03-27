@@ -76,8 +76,7 @@ class DirTreeBackedObject(TemplateLoader):
     """Loads data from a directory tree of files in various formats."""
     def __init__(self, basedir, logger=None):
         self.basedir = basedir
-        self.env = j2.Environment(extensions=["jinja2.ext.with_"],
-                                  loader=j2.FileSystemLoader(basedir),
+        self.env = j2.Environment(loader=j2.FileSystemLoader(basedir),
                                   trim_blocks=True,
                                   lstrip_blocks=True)
         update_jinja2_env(self.env)
