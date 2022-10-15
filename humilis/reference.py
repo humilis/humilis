@@ -236,7 +236,6 @@ def _preprocess_file(path, params):
         return
     basedir, filename = os.path.split(path)
     env = jinja2.Environment(
-        extensions=["jinja2.ext.with_"],
         loader=jinja2.FileSystemLoader(basedir))
     # Add custom functions and filters
     utils.update_jinja2_env(env)
@@ -438,7 +437,6 @@ def j2_template(layer, config, path=None, s3_upload=False, params=None):
     _, ext = os.path.splitext(basefile)
     _, filename = os.path.split(path)
     env = jinja2.Environment(
-        extensions=["jinja2.ext.with_"],
         loader=jinja2.FileSystemLoader(layer.basedir))
     result = env.get_template(filename).render(params)
     output_path = os.path.join(layer.env_basedir, "ref-j2_template_" +
