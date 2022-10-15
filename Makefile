@@ -28,7 +28,6 @@ clean:
 	rm -rf humilis/__pycache__
 	rm -rf .pytest_cache
 
-
 pypi: develop
 	rm -rf dist
 	$(PYTHON) setup.py sdist
